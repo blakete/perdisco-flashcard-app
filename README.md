@@ -8,6 +8,11 @@ Definition (Verb): to learn thoroughly, to learn completely, to get by heart.
 4. **Dual Coding**: Combine verbal/written explanations with visuals or diagrams.
 5. **Interleaving**: Mix topics to improve discrimination and flexibility.
 
+## Why This Works
+* **Feynman + Active Recall**: Forces retrieval and deep processing (Chi et al., 1994 show self-explanation boosts learning).
+* **Spacing** + Interleaving: Matches cognitive load to memory decay (Dunlosky, 2013).
+* **Dual Coding**: Visuals + verbalization engage multiple memory pathways (Paivio, 1971).
+
 ## Workflow
 1. **Encode with Feynman + Flashcards**
     1. Before creating flashcards, try to explain the concept verbally or in writing as if teaching someone. Use analogies and mental images.
@@ -32,8 +37,3 @@ Definition (Verb): to learn thoroughly, to learn completely, to get by heart.
     * Mistake Log: Track recurring errors (e.g., "Confused Theorem A with Theorem B").
     * Targeted SRS Tags: Flag error-prone cards in Anki for extra reviews.
     * Self-Testing: Every 2 weeks, solve novel problems (e.g., proofs, derivations) under timed conditions.
-
-## Why This Works
-* **Feynman + Active Recall**: Forces retrieval and deep processing (Chi et al., 1994 show self-explanation boosts learning).
-* **Spacing** + Interleaving: Matches cognitive load to memory decay (Dunlosky, 2013).
-* **Dual Coding**: Visuals + verbalization engage multiple memory pathways (Paivio, 1971).
