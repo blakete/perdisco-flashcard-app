@@ -1,5 +1,5 @@
-# perdisco
-Learn thoroughly and master course content using this tool.
+# Perdisco
+Definition (Verb): to learn thoroughly, to learn completely, to get by heart.
 
 ## Core Principles
 1. **Active Recall**: Retrieving information strengthens memory more than passive review.
