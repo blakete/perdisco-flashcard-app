@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Flashcards Quiz</title>
+  <!-- Polyfill -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <!-- MathJax configuration -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    };
+  </script>
+  <!-- MathJax for LaTeX rendering -->
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+  <!-- Simple CSS styling -->
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background: #eef;
+    }
+    .flashcard {
+      margin: 20px auto;
+      padding: 20px;
+      border: 2px solid #ccc;
+      width: 60%;
+      min-height: 150px;
+      max-width: 500px;
+      /* align-items: center; */
+      text-align: left;
+      background: #fff;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+      font-size: 1.5em;
+    }
+    #card-info, #extra-info, #tags-info {
+      margin-top: 10px;
+      font-size: 1.2em;
+      color: #555;
+    }
+    #controls {
+      margin: 20px auto;
+      width: 60%;
+    }
+    #controls input, #controls button {
+      font-size: 1em;
+      padding: 5px 10px;
+    }
+    .slider-container {
+      margin-top: 10px;
+    }
+    /* Ensure MathJax inline math renders inline with the text */
+    mjx-container[jax="CHTML"] {
+      display: inline !important;
+      vertical-align: baseline !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      font-size: 1em !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- Tag Filter Section -->
+  <div id="controls">
+    <label for="tag-filter">Filter by Tag:</label>
+    <input type="text" id="tag-filter" placeholder="Enter tag (e.g., linear algebra)">
+    <button id="apply-filter">Apply Filter</button>
+    <button id="clear-filter">Clear Filter</button>
+  </div>
+
+  <!-- Flashcard Display -->
+  <div class="flashcard" id="flashcard"></div>
+  <div id="card-info"></div>
+  
+  <!-- Extra Info about the card -->
+  <div id="extra-info"></div>
+
+  <!-- Importance Slider -->
+  <div class="slider-container">
+    <label for="importance-slider" style="font-size: 1.2em; color: #555;">Importance (0-10): </label>
+    <input type="range" id="importance-slider" min="0" max="10" value="0">
+    <span id="importance-value" style="font-size: 1.2em; color: #555;">0</span>
+    <button id="save-importance">Save</button>
+  </div>
+
+  <!-- Understanding Slider -->
+  <div class="slider-container">
+    <label for="understanding-slider" style="font-size: 1.2em; color: #555;">Understanding (0-10): </label>
+    <input type="range" id="understanding-slider" min="0" max="10" value="0">
+    <span id="understanding-value" style="font-size: 1.2em; color: #555;">0</span>
+    <button id="save-understanding">Save</button>
+  </div>
+
+  <!-- Tag info about the card -->
+  <div id="tags-info"></div>
+
+  <script>
+    // Flashcards data passed from Flask
+    const allFlashcards = {{ flashcards | tojson }};
+    let flashcards = allFlashcards.slice(); // current filtered list
+    let currentIndex = 0;
+    let showingFront = true;
+
+    // Update display for current card
+    function renderCard() {
+      if (flashcards.length === 0) {
+        document.getElementById("flashcard").innerText = "No cards match the filter.";
+        document.getElementById("card-info").innerText = "";
+        document.getElementById("extra-info").innerText = "";
+        return;
+      }
+      const card = flashcards[currentIndex];
+      document.getElementById("flashcard").innerHTML = showingFront ? card.front : card.back;
+      document.getElementById("card-info").innerText = `Card ${currentIndex + 1} of ${flashcards.length}`;
+      document.getElementById("extra-info").innerText = 
+        `Importance: ${card.importance} | Current Understanding: ${card.understanding}`;
+      document.getElementById("tags-info").innerText = `Tags: ${card.tags.join(", ")}`;
+      // Set the slider to the current card's values
+      document.getElementById("importance-slider").value = card.importance;
+      document.getElementById("importance-value").innerText = card.importance;
+      document.getElementById("understanding-slider").value = card.understanding;
+      document.getElementById("understanding-value").innerText = card.understanding;
+      // Re-typeset math after updating content
+      if (window.MathJax) {
+        MathJax.typesetPromise();
+      }
+    }
+
+    // Update importance slider value display
+    document.getElementById("importance-slider").addEventListener("input", function(e) {
+      document.getElementById("importance-value").innerText = e.target.value;
+    });
+
+    // Save the slider value into the current card's importance
+    document.getElementById("save-importance").addEventListener("click", function() {
+      if (flashcards.length === 0) return;
+      flashcards[currentIndex].importance = parseInt(document.getElementById("importance-slider").value);
+      renderCard();
+    });
+
+    // Update understanding slider value display
+    document.getElementById("understanding-slider").addEventListener("input", function(e) {
+      document.getElementById("understanding-value").innerText = e.target.value;
+    });
+
+    // Save the slider value into the current card's understanding
+    document.getElementById("save-understanding").addEventListener("click", function() {
+      if (flashcards.length === 0) return;
+      flashcards[currentIndex].understanding = parseInt(document.getElementById("understanding-slider").value);
+      renderCard();
+    });
+
+    // Handle navigation via arrow keys and space for flipping
+    document.addEventListener('keydown', function(e) {
+      // Ignore key events if an input or textarea is focused.
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+        return;
+      }
+      if (flashcards.length === 0) return;
+      if (e.key === "ArrowRight") {
+        // Only increment if not at the last card.
+        if (currentIndex < flashcards.length - 1) {
+          currentIndex++;
+          showingFront = true;
+          renderCard();
+        }
+      } else if (e.key === "ArrowLeft") {
+        // Only decrement if not at the first card.
+        if (currentIndex > 0) {
+          currentIndex--;
+          showingFront = true;
+          renderCard();
+        }
+      } else if (e.key === " ") {
+        // Prevent default space scrolling and flip the card.
+        e.preventDefault();
+        showingFront = !showingFront;
+        renderCard();
+      }
+    });
+
+    // Click on card to flip
+    document.getElementById("flashcard").addEventListener("click", function() {
+      if (flashcards.length === 0) return;
+      showingFront = !showingFront;
+      renderCard();
+    });
+
+    // Filtering by tag
+    document.getElementById("apply-filter").addEventListener("click", function() {
+      const tag = document.getElementById("tag-filter").value.trim().toLowerCase();
+      if (tag === "") {
+        flashcards = allFlashcards.slice();
+      } else {
+        flashcards = allFlashcards.filter(card => card.tags.some(t => t.toLowerCase().includes(tag)));
+      }
+      currentIndex = 0;
+      showingFront = true;
+      renderCard();
+    });
+
+    document.getElementById("clear-filter").addEventListener("click", function() {
+      document.getElementById("tag-filter").value = "";
+      flashcards = allFlashcards.slice();
+      currentIndex = 0;
+      showingFront = true;
+      renderCard();
+    });
+
+    // Initial render
+    renderCard();
+  </script>
+</body>
+</html>
