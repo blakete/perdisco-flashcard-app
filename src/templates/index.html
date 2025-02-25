@@ -8,7 +8,10 @@
   <!-- MathJax configuration -->
   <script>
     window.MathJax = {
-      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }
+      tex: { 
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
     };
   </script>
   <!-- MathJax for LaTeX rendering -->
@@ -39,7 +42,7 @@
       border-radius: 10px;
       cursor: pointer;
       box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
-      font-size: 1.5em;
+      font-size: 1.35em;
     }
     .flashcard img {
       max-width: 500px;
@@ -224,7 +227,7 @@
             <label for="importance-filter-slider">Importance Filter:</label>
           </div>
           <div class="filter-cell filter-input">
-            <input type="range" id="importance-filter-slider" min="0" max="10" value="0">
+            <input type="range" id="importance-filter-slider" min="1" max="3" value="0">
           </div>
           <div class="filter-cell filter-value" id="importance-filter-value">0</div>
           <div class="filter-cell filter-operator">
@@ -240,7 +243,7 @@
             <label for="grok-filter-slider">Grok Filter:</label>
           </div>
           <div class="filter-cell filter-input">
-            <input type="range" id="grok-filter-slider" min="0" max="10" value="10">
+            <input type="range" id="grok-filter-slider" min="1" max="3" value="10">
           </div>
           <div class="filter-cell filter-value" id="grok-filter-value">10</div>
           <div class="filter-cell filter-operator">
@@ -279,7 +282,7 @@
       <div class="card-row">
         <div class="card-cell card-label">Importance :</div>
         <div class="card-cell card-input">
-          <input type="range" id="importance-slider" min="0" max="10" value="0">
+          <input type="range" id="importance-slider" min="1" max="3" value="0">
         </div>
         <div class="card-cell card-value" id="importance-value">0</div>
       </div>
@@ -287,7 +290,7 @@
       <div class="card-row">
         <div class="card-cell card-label">Grok Level :</div>
         <div class="card-cell card-input">
-          <input type="range" id="understanding-slider" min="0" max="10" value="0">
+          <input type="range" id="understanding-slider" min="1" max="3" value="0">
         </div>
         <div class="card-cell card-value" id="understanding-value">0</div>
       </div>
@@ -498,11 +501,11 @@
       const newCard = {
         "front": "TODO: New front content",
         "back": "TODO: New back content",
-        "importance": 0,
         "tags": [
           "18.0651"  // default tag
         ],
-        "understanding": 0
+        "importance": 2,
+        "understanding": 1
       };
       flashcards.splice(currentIndex + 1, 0, newCard);
       currentIndex++;
@@ -533,7 +536,7 @@
         return;
       }
       
-      if (e.key === "e" || e.key === "Escape") {
+      if (e.key === "e" || (editMode && e.key === "Escape")) {
         editMode = !editMode;
         document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit" : "Edit Card";
         document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
