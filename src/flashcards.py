@@ -6,7 +6,8 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 
 # Load flashcards from disk
-with open("flashcards.json", "r", encoding="utf-8") as f:
+FLASHCARDS_FILE = os.path.join(os.getcwd(), "flashcards.json")
+with open(FLASHCARDS_FILE, "r", encoding="utf-8") as f:
     flashcards = json.load(f)
 
 # Configure the assets folder (create it if it doesn't exist)
@@ -36,8 +37,19 @@ def upload():
     filepath = os.path.join(app.config["ASSETS_FOLDER"], filename)
     file.save(filepath)
     # Return the URL relative to your assets folder.
-    # You may need to configure static serving of the assets folder.
-    return jsonify({"url": f"assets/{filename}"})
+    return jsonify({"url": f"/assets/{filename}"})
+
+@app.route("/save", methods=["POST"])
+def save():
+    global flashcards
+    try:
+        flashcards = request.get_json()
+        with open(FLASHCARDS_FILE, "w", encoding="utf-8") as f:
+            json.dump(flashcards, f, indent=2)
+        return jsonify({"success": True})
+    except Exception as e:
+        print("Error saving flashcards:", e)
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
