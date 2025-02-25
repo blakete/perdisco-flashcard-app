@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Flashcards Quiz</title>
+  <title>Perdisco Flashcards Tool</title>
   <!-- Polyfill -->
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <!-- MathJax configuration -->
@@ -74,6 +74,8 @@
     <input type="text" id="tag-filter" placeholder="Enter tag (e.g., linear algebra)">
     <button id="apply-filter">Apply Filter</button>
     <button id="clear-filter">Clear Filter</button>
+    <!-- Edit Mode Toggle Button -->
+    <button id="toggle-edit">Edit Card</button>
   </div>
 
   <!-- Flashcard Display -->
@@ -108,6 +110,47 @@
     let flashcards = allFlashcards.slice(); // current filtered list
     let currentIndex = 0;
     let showingFront = true;
+    let editMode = false; // New variable for edit mode
+
+    // Function to set up drag and drop for a textarea
+    function setupDragDrop(textareaId) {
+      const textarea = document.getElementById(textareaId);
+      if (!textarea) return;
+      textarea.addEventListener("dragover", function(e) {
+        e.preventDefault();
+      });
+      textarea.addEventListener("drop", function(e) {
+        e.preventDefault();
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          const file = files[0];
+          if (!file.type.startsWith("image/")) {
+            alert("Only image files are allowed.");
+            return;
+          }
+          const formData = new FormData();
+          formData.append("image", file);
+          // Use fetch to POST the file to the upload endpoint
+          fetch("/upload", {
+            method: "POST",
+            body: formData
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.url) {
+              // Insert the image tag at the end of the textarea content
+              textarea.value += `<img src="${data.url}" style="max-width: 500px; max-height: 150px">`;
+            } else {
+              alert("Image upload failed.");
+            }
+          })
+          .catch(error => {
+            console.error("Upload error:", error);
+            alert("Image upload error.");
+          });
+        }
+      });
+    }
 
     // Update display for current card
     function renderCard() {
@@ -118,12 +161,36 @@
         return;
       }
       const card = flashcards[currentIndex];
-      document.getElementById("flashcard").innerHTML = showingFront ? card.front : card.back;
+      
+      if (editMode) {
+        // In edit mode, display textareas for front and back with a Save button.
+        document.getElementById("flashcard").innerHTML = `
+          <label style="font-size: 1.2em;">Front:</label>
+          <textarea id="edit-front" rows="5" style="width:100%;">${card.front}</textarea><br>
+          <label style="font-size: 1.2em;">Back:</label>
+          <textarea id="edit-back" rows="5" style="width:100%;">${card.back}</textarea><br>
+          <button id="save-card-edits">Save Card Edits</button>
+        `;
+        // Set up drag and drop for the new textareas
+        setupDragDrop("edit-front");
+        setupDragDrop("edit-back");
+        // Attach event listener for the Save Card Edits button.
+        document.getElementById("save-card-edits").addEventListener("click", function() {
+          flashcards[currentIndex].front = document.getElementById("edit-front").value;
+          flashcards[currentIndex].back = document.getElementById("edit-back").value;
+          editMode = false; // Exit edit mode after saving
+          renderCard();
+        });
+      } else {
+        // In view mode, display normally.
+        document.getElementById("flashcard").innerHTML = showingFront ? card.front : card.back;
+      }
+      
       document.getElementById("card-info").innerText = `Card ${currentIndex + 1} of ${flashcards.length}`;
       document.getElementById("extra-info").innerText = 
         `Importance: ${card.importance} | Current Understanding: ${card.understanding}`;
       document.getElementById("tags-info").innerText = `Tags: ${card.tags.join(", ")}`;
-      // Set the slider to the current card's values
+      // Set the sliders to the current card's values (even in edit mode, these remain visible)
       document.getElementById("importance-slider").value = card.importance;
       document.getElementById("importance-value").innerText = card.importance;
       document.getElementById("understanding-slider").value = card.understanding;
@@ -158,6 +225,13 @@
       renderCard();
     });
 
+    // Toggle edit mode when the Edit Card button is clicked
+    document.getElementById("toggle-edit").addEventListener("click", function() {
+      // Toggling edit mode; unsaved changes will be lost if toggled off without pressing Save Card Edits.
+      editMode = !editMode;
+      renderCard();
+    });
+
     // Handle navigation via arrow keys and space for flipping
     document.addEventListener('keydown', function(e) {
       // Ignore key events if an input or textarea is focused.
@@ -180,18 +254,22 @@
           renderCard();
         }
       } else if (e.key === " ") {
-        // Prevent default space scrolling and flip the card.
-        e.preventDefault();
-        showingFront = !showingFront;
-        renderCard();
+        // Prevent default space scrolling and flip the card (only in view mode).
+        if (!editMode) {
+          e.preventDefault();
+          showingFront = !showingFront;
+          renderCard();
+        }
       }
     });
 
-    // Click on card to flip
+    // Click on card to flip (only in view mode)
     document.getElementById("flashcard").addEventListener("click", function() {
       if (flashcards.length === 0) return;
-      showingFront = !showingFront;
-      renderCard();
+      if (!editMode) {
+        showingFront = !showingFront;
+        renderCard();
+      }
     });
 
     // Filtering by tag
