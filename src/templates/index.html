@@ -8,31 +8,32 @@
   <!-- MathJax configuration -->
   <script>
     window.MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']]
-      }
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }
     };
   </script>
   <!-- MathJax for LaTeX rendering -->
   <script id="MathJax-script" async
     src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
   </script>
-  <!-- Simple CSS styling -->
   <style>
-    body {
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
       font-family: sans-serif;
       text-align: center;
       margin: 0;
       padding: 0;
       background: #eef;
+      overflow: hidden; /* Optional: Prevents unwanted scrolling */
     }
     .flashcard {
       margin: 20px auto;
       padding: 20px;
       border: 2px solid #ccc;
       width: 60%;
-      min-height: 150px;
-      max-width: 500px;
+      min-height: 300px;
+      max-width: 750px;
       text-align: left;
       background: #fff;
       border-radius: 10px;
@@ -53,12 +54,17 @@
       font-size: 1.2em;
       color: #555;
     }
-    #controls {
+    #filter-controls {
       margin: 20px auto;
-      width: 60%;
+      width: 100%;
+      max-width: 400px;
     }
-    /* New rows for controls */
-    #filter-actions, #edit-actions {
+    #card-controls {
+      margin: 20px auto;
+      width: 100%;
+      max-width: 300px;
+    }
+    #filter-actions, #edit-actions, #card-info-and-actions {
       margin-bottom: 10px;
     }
     #edit-actions {
@@ -69,9 +75,122 @@
       padding: 5px 10px;
       margin: 0 5px;
     }
-    .slider-container {
+
+    /* ===== Top Filtering Controls ===== */
+    .filter-table {
+      display: table;
+      margin: 10px auto;
+      width: 100%;
+    }
+
+    .filter-row {
+      display: table-row;
+    }
+    
+    .filter-cell {
+      display: table-cell;
+      padding: 5px;
+      vertical-align: middle;
+      font-size: 1.2em;
+      color: #555;
+    }
+
+    .filter-buttons-wrapper {
+      display: table-cell; /* Ensure it behaves like a full-width table cell */
+      width: 100%;
+      text-align: center; /* Centers content inside */
+    }
+
+    .filter-buttons-inner {
+      display: inline-flex; /* Ensures buttons remain centered */
+      gap: 10px; /* Adds spacing between buttons */
+    }
+    .filter-buttons-inner button {
+      width: 90px;
+      height: 30px
+    }
+    .edit-buttons-inner {
+      display: inline-flex; /* Ensures buttons remain centered */
+      gap: 10px; /* Adds spacing between buttons */
+    }
+    .edit-buttons-inner button {
+      width: 90px;
+      height: 30px
+    }
+    
+    .card-buttons-outter {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
       margin-top: 10px;
     }
+
+    .card-buttons-inner {
+      display: inline-flex; /* Ensures buttons remain centered */
+      gap: 10px; /* Adds spacing between buttons */
+    }
+    .card-buttons-inner button {
+      width: 90px;
+      height: 30px
+    }
+
+    .filter-label {
+      text-align: right;
+      white-space: nowrap;
+    }
+    .filter-input {
+      width: 100px;
+    }
+    .filter-value,
+    .filter-operator {
+      text-align: left;
+      padding-left: 10px;
+    }
+
+    .filter-value {
+      text-align: center;
+      padding-left: 10px;
+      width: 40px;
+    }
+
+    .filter-buttons {
+      display: flex !important;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      margin: 10px auto;
+    }
+    
+    /* ===== Bottom Card Controls ===== */
+    .card-table {
+      display: table;
+      margin: 10px auto;
+      width: 100%;
+    }
+    .card-row {
+      display: table-row;
+    }
+    .card-cell {
+      display: table-cell;
+      padding: 5px;
+      vertical-align: middle;
+      font-size: 1.2em;
+      color: #555;
+    }
+    .card-label {
+      text-align: right;
+      white-space: nowrap;
+    }
+    .card-input {
+      width: 100px;
+    }
+    .card-value {
+      text-align: center;
+      padding-left: 10px;
+      width: 40px;
+    }
+    
     /* Ensure MathJax inline math renders inline with the text */
     mjx-container[jax="CHTML"] {
       display: inline !important;
@@ -83,43 +202,97 @@
   </style>
 </head>
 <body>
-  <!-- Controls Section -->
-  <div id="controls">
+  <!-- Top Filtering Controls -->
+  <div id="filter-controls">
     <div id="filter-actions">
-      <label for="tag-filter">Filter by Tag:</label>
-      <input type="text" id="tag-filter" placeholder="Enter tag (e.g., 16.32)">
-      <button id="apply-filter">Apply Filter</button>
-      <button id="clear-filter">Clear Filter</button>
+      <div class="filter-table">
+        <!-- Row 1: Tag Filter -->
+        <div class="filter-row">
+          <div class="filter-cell filter-label">
+            <label for="tag-filter">Filter by Tag:</label>
+          </div>
+          <div class="filter-cell filter-input">
+            <input type="text" id="tag-filter" placeholder="Enter tag (e.g., 16.32)">
+          </div>
+          <!-- Empty cells to keep columns consistent -->
+          <div class="filter-cell filter-value"></div>
+          <div class="filter-cell filter-operator"></div>
+        </div>
+        <!-- Row 2: Importance Filter -->
+        <div class="filter-row">
+          <div class="filter-cell filter-label">
+            <label for="importance-filter-slider">Importance Filter:</label>
+          </div>
+          <div class="filter-cell filter-input">
+            <input type="range" id="importance-filter-slider" min="0" max="10" value="0">
+          </div>
+          <div class="filter-cell filter-value" id="importance-filter-value">0</div>
+          <div class="filter-cell filter-operator">
+            <select id="importance-filter-operator">
+              <option value="ge">≥</option>
+              <option value="le">≤</option>
+            </select>
+          </div>
+        </div>
+        <!-- Row 3: Grok Filter -->
+        <div class="filter-row">
+          <div class="filter-cell filter-label">
+            <label for="grok-filter-slider">Grok Filter:</label>
+          </div>
+          <div class="filter-cell filter-input">
+            <input type="range" id="grok-filter-slider" min="0" max="10" value="10">
+          </div>
+          <div class="filter-cell filter-value" id="grok-filter-value">10</div>
+          <div class="filter-cell filter-operator">
+            <select id="grok-filter-operator">
+              <option value="le">≤</option>
+              <option value="ge">≥</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="filter-buttons-inner">
+        <button id="apply-filter" style="margin-right: 10px;">Apply Filter</button>
+        <button id="clear-filter" style="margin-left: 10px;">Clear Filter</button>
+      </div>
     </div>
     <div id="edit-actions">
-      <!-- Edit Mode Toggle Button -->
-      <button id="toggle-edit">Edit Card</button>
-      <!-- Add Card Button (visible only in edit mode) -->
-      <button id="add-card" style="display: none;">Add +</button>
-      <!-- Delete Card Button (visible only in edit mode) -->
-      <button id="delete-card" style="display: none;">Delete -</button>
+      <div class="edit-buttons-inner">
+        <button id="toggle-edit">Edit Card</button>
+        <button id="add-card" style="display: none;">Add +</button>
+        <button id="delete-card" style="display: none;">Delete -</button>
+      </div>
     </div>
   </div>
 
   <!-- Flashcard Display -->
   <div class="flashcard" id="flashcard"></div>
+
   <div id="card-info"></div>
-  <!-- Extra Info about the card -->
   <div id="extra-info"></div>
-  <!-- Importance Slider -->
-  <div class="slider-container">
-    <label for="importance-slider" style="font-size: 1.2em; color: #555;">Importance  : </label>
-    <input type="range" id="importance-slider" min="0" max="10" value="0">
-    <span id="importance-value" style="font-size: 1.2em; color: #555;">0</span>
+  <!-- <div id="tags-info"></div> -->
+
+  <!-- Bottom Card Controls -->
+  <div id="card-controls">
+    <div class="card-table">
+      <!-- Row 1: Importance Slider -->
+      <div class="card-row">
+        <div class="card-cell card-label">Importance :</div>
+        <div class="card-cell card-input">
+          <input type="range" id="importance-slider" min="0" max="10" value="0">
+        </div>
+        <div class="card-cell card-value" id="importance-value">0</div>
+      </div>
+      <!-- Row 2: Grok Slider -->
+      <div class="card-row">
+        <div class="card-cell card-label">Grok Level :</div>
+        <div class="card-cell card-input">
+          <input type="range" id="understanding-slider" min="0" max="10" value="0">
+        </div>
+        <div class="card-cell card-value" id="understanding-value">0</div>
+      </div>
+    </div>
   </div>
-  <!-- Understanding Slider -->
-  <div class="slider-container">
-    <label for="understanding-slider" style="font-size: 1.2em; color: #555;">Grok Level  : </label>
-    <input type="range" id="understanding-slider" min="0" max="10" value="0">
-    <span id="understanding-value" style="font-size: 1.2em; color: #555;">0</span>
-  </div>
-  <!-- Tag info about the card -->
-  <div id="tags-info"></div>
 
   <script>
     // Flashcards data passed from Flask
@@ -188,9 +361,13 @@
       });
     }
 
+    function autoResizeTextarea(textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+
     // Update display for current card
     function renderCard() {
-      // Remove forced toggle here so we can allow flipping.
       if (flashcards.length === 0) {
         document.getElementById("flashcard").innerText = "No cards match the filter.";
         document.getElementById("card-info").innerText = "";
@@ -203,15 +380,42 @@
         // In edit mode, display textareas for front, back, and tags with a Save button.
         document.getElementById("flashcard").innerHTML = `
           <label style="font-size: 1.2em;">Front:</label>
-          <textarea id="edit-front" rows="5" style="width:100%;">${card.front}</textarea><br>
+          <textarea id="edit-front" rows="5" style="width:100%; resize: vertical; overflow: hidden;">${card.front}</textarea><br>
           <label style="font-size: 1.2em;">Back:</label>
-          <textarea id="edit-back" rows="5" style="width:100%;">${card.back}</textarea><br>
+          <textarea id="edit-back" rows="5" style="width:100%; resize: vertical; overflow: hidden;">${card.back}</textarea><br>
           <label style="font-size: 1.2em;">Tags:</label>
           <input type="text" id="edit-tags" style="width:100%;" value="${card.tags.join(', ')}"><br>
-          <button id="save-card-edits">Save Card Edits</button>
+          <div class="card-buttons-outter">
+            <div class="card-buttons-inner">
+              <button id="save-card-edits">Save Edits</button>
+            </div>
+          </div>
         `;
         setupDragDrop("edit-front");
         setupDragDrop("edit-back");
+        
+        // Set up auto-resize for the textareas in edit mode.
+        const frontTextarea = document.getElementById("edit-front");
+        const backTextarea = document.getElementById("edit-back");
+
+        // Define a function that resets the textarea height to 'auto' then sets it to its scrollHeight.
+        function autoResizeTextarea(textarea) {
+          textarea.style.height = 'auto';
+          textarea.style.height = textarea.scrollHeight + 'px';
+        }
+
+        // Attach the auto-resize function to the input events so the height adjusts as the user types.
+        frontTextarea.addEventListener("input", function() {
+          autoResizeTextarea(frontTextarea);
+        });
+        backTextarea.addEventListener("input", function() {
+          autoResizeTextarea(backTextarea);
+        });
+
+        // Immediately adjust the height to fit the initial content.
+        autoResizeTextarea(frontTextarea);
+        autoResizeTextarea(backTextarea);
+        
         document.getElementById("save-card-edits").addEventListener("click", function() {
           flashcards[currentIndex].front = document.getElementById("edit-front").value;
           flashcards[currentIndex].back = document.getElementById("edit-back").value;
@@ -227,13 +431,14 @@
           persistFlashcards();
           renderCard();
         });
+        
       } else {
         // In view mode, display based on showingFront.
         document.getElementById("flashcard").innerHTML = showingFront ? card.front : card.back;
       }
       
       document.getElementById("card-info").innerText = `Card ${currentIndex + 1} of ${flashcards.length}`;
-      document.getElementById("tags-info").innerText = `Tags: ${card.tags.join(", ")}`;
+      // document.getElementById("tags-info").innerText = `Tags: ${card.tags.join(", ")}`;
       document.getElementById("importance-slider").value = card.importance;
       document.getElementById("importance-value").innerText = card.importance;
       document.getElementById("understanding-slider").value = card.understanding;
@@ -246,6 +451,14 @@
         }
       }
     }
+
+    // NEW: Update displayed values for filtering sliders.
+    document.getElementById("importance-filter-slider").addEventListener("input", function(e) {
+      document.getElementById("importance-filter-value").innerText = e.target.value;
+    });
+    document.getElementById("grok-filter-slider").addEventListener("input", function(e) {
+      document.getElementById("grok-filter-value").innerText = e.target.value;
+    });
 
     // Importance slider: update display on input, save on change.
     document.getElementById("importance-slider").addEventListener("input", function(e) {
@@ -275,7 +488,7 @@
         // When exiting edit mode, ensure we show the front.
         showingFront = true;
       }
-      document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit Mode" : "Edit Card";
+      document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit" : "Edit Card";
       document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
       document.getElementById("delete-card").style.display = editMode ? "inline-block" : "none";
       renderCard();
@@ -307,7 +520,7 @@
         document.getElementById("flashcard").innerText = "No cards available.";
         document.getElementById("card-info").innerText = "";
         document.getElementById("extra-info").innerText = "";
-        document.getElementById("tags-info").innerText = "";
+        // document.getElementById("tags-info").innerText = "";
         persistFlashcards();
         return;
       }
@@ -320,9 +533,9 @@
         return;
       }
       
-      if (e.key === "e") {
+      if (e.key === "e" || e.key === "Escape") {
         editMode = !editMode;
-        document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit Mode" : "Edit Card";
+        document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit" : "Edit Card";
         document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
         document.getElementById("delete-card").style.display = editMode ? "inline-block" : "none";
         renderCard();
@@ -341,14 +554,16 @@
       if (e.key === "ArrowRight" || e.key === "d") {
         if (currentIndex < flashcards.length - 1) {
           currentIndex++;
+          showingFront = true;
           renderCard();
         }
       } else if (e.key === "ArrowLeft" || e.key === "a") {
         if (currentIndex > 0) {
           currentIndex--;
+          showingFront = true;
           renderCard();
         }
-      } else if (e.key === " " || e.key === "w" || e.key === "s") {
+      } else if (e.key === " " || e.key === "w" || e.key === "ArrowUp" || e.key === "ArrowDown") {
         if (!editMode) {
           e.preventDefault();
           showingFront = !showingFront;
@@ -366,12 +581,39 @@
     });
 
     document.getElementById("apply-filter").addEventListener("click", function() {
-      const tag = document.getElementById("tag-filter").value.trim().toLowerCase();
-      if (tag === "") {
-        flashcards = allFlashcards.slice();
-      } else {
-        flashcards = allFlashcards.filter(card => card.tags.some(t => t.toLowerCase().includes(tag)));
+      let filteredCards = allFlashcards.slice();
+
+      // Tag filtering: split the input into an array of filter tags.
+      const tagInput = document.getElementById("tag-filter").value.trim().toLowerCase();
+      if (tagInput !== "") {
+        const filterTags = tagInput.split(",").map(tag => tag.trim()).filter(tag => tag !== "");
+        filteredCards = filteredCards.filter(card => {
+          // Map card tags to lowercase for case-insensitive matching.
+          const cardTags = card.tags.map(tag => tag.toLowerCase());
+          // Check that every filter tag is included in the card's tags.
+          return filterTags.every(filterTag => cardTags.includes(filterTag));
+        });
       }
+
+      // Additional filtering: Importance level.
+      const impValue = parseInt(document.getElementById("importance-filter-slider").value);
+      const impOperator = document.getElementById("importance-filter-operator").value; // "ge" or "le"
+      if (impOperator === "ge") {
+        filteredCards = filteredCards.filter(card => card.importance >= impValue);
+      } else {
+        filteredCards = filteredCards.filter(card => card.importance <= impValue);
+      }
+
+      // Additional filtering: Grok (understanding) level.
+      const grokValue = parseInt(document.getElementById("grok-filter-slider").value);
+      const grokOperator = document.getElementById("grok-filter-operator").value; // "le" or "ge"
+      if (grokOperator === "le") {
+        filteredCards = filteredCards.filter(card => card.understanding <= grokValue);
+      } else {
+        filteredCards = filteredCards.filter(card => card.understanding >= grokValue);
+      }
+
+      flashcards = filteredCards;
       currentIndex = 0;
       renderCard();
     });
