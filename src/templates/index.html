@@ -41,6 +41,11 @@
       box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
       font-size: 1.5em;
     }
+    .flashcard img {
+      max-width: 500px;
+      max-height: 150px;
+      /* Optionally, add margin or display properties if desired */
+    }
     #card-info, #extra-info, #tags-info {
       margin-top: 10px;
       font-size: 1.2em;
@@ -71,7 +76,7 @@
   <!-- Tag Filter Section -->
   <div id="controls">
     <label for="tag-filter">Filter by Tag:</label>
-    <input type="text" id="tag-filter" placeholder="Enter tag (e.g., linear algebra)">
+    <input type="text" id="tag-filter" placeholder="Enter tag (e.g., 16.32)">
     <button id="apply-filter">Apply Filter</button>
     <button id="clear-filter">Clear Filter</button>
     <!-- Edit Mode Toggle Button -->
@@ -139,7 +144,7 @@
           .then(data => {
             if (data.url) {
               // Insert the image tag at the end of the textarea content
-              textarea.value += `<img src="${data.url}" style="max-width: 500px; max-height: 150px">`;
+              textarea.value += `<img src="${data.url}">`;
             } else {
               alert("Image upload failed.");
             }
