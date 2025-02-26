@@ -54,6 +54,10 @@
       resize: vertical;
       font-size: 16px;
     }
+    #edit-tags { 
+      font-family: monospace;
+      font-size: 16px;
+    }
     #card-info, #extra-info, #tags-info {
       margin-top: 10px;
       font-size: 1.2em;
@@ -229,9 +233,9 @@
             <label for="importance-filter-slider">Importance Filter:</label>
           </div>
           <div class="filter-cell filter-input">
-            <input type="range" id="importance-filter-slider" min="1" max="3" value="0">
+            <input type="range" id="importance-filter-slider" min="1" max="3" value="1">
           </div>
-          <div class="filter-cell filter-value" id="importance-filter-value">0</div>
+          <div class="filter-cell filter-value" id="importance-filter-value">1</div>
           <div class="filter-cell filter-operator">
             <select id="importance-filter-operator">
               <option value="ge">≥</option>
@@ -245,9 +249,9 @@
             <label for="grok-filter-slider">Grok Filter:</label>
           </div>
           <div class="filter-cell filter-input">
-            <input type="range" id="grok-filter-slider" min="1" max="3" value="10">
+            <input type="range" id="grok-filter-slider" min="1" max="3" value="3">
           </div>
-          <div class="filter-cell filter-value" id="grok-filter-value">10</div>
+          <div class="filter-cell filter-value" id="grok-filter-value">3</div>
           <div class="filter-cell filter-operator">
             <select id="grok-filter-operator">
               <option value="le">≤</option>
@@ -275,7 +279,7 @@
 
   <div id="card-info"></div>
   <div id="extra-info"></div>
-  <!-- <div id="tags-info"></div> -->
+  <div id="tags-info"></div>
 
   <!-- Bottom Card Controls -->
   <div id="card-controls">
@@ -284,17 +288,17 @@
       <div class="card-row">
         <div class="card-cell card-label">Importance :</div>
         <div class="card-cell card-input">
-          <input type="range" id="importance-slider" min="1" max="3" value="0">
+          <input type="range" id="importance-slider" min="1" max="3" value="2">
         </div>
-        <div class="card-cell card-value" id="importance-value">0</div>
+        <div class="card-cell card-value" id="importance-value">1</div>
       </div>
       <!-- Row 2: Grok Slider -->
       <div class="card-row">
         <div class="card-cell card-label">Grok Level :</div>
         <div class="card-cell card-input">
-          <input type="range" id="understanding-slider" min="1" max="3" value="0">
+          <input type="range" id="understanding-slider" min="1" max="3" value="1">
         </div>
-        <div class="card-cell card-value" id="understanding-value">0</div>
+        <div class="card-cell card-value" id="understanding-value">1</div>
       </div>
     </div>
   </div>
@@ -443,7 +447,7 @@
       }
       
       document.getElementById("card-info").innerText = `Card ${currentIndex + 1} of ${flashcards.length}`;
-      // document.getElementById("tags-info").innerText = `Tags: ${card.tags.join(", ")}`;
+      document.getElementById("tags-info").innerText = `Tags: ${card.tags.join(", ")}`;
       document.getElementById("importance-slider").value = card.importance;
       document.getElementById("importance-value").innerText = card.importance;
       document.getElementById("understanding-slider").value = card.understanding;
