@@ -26,7 +26,8 @@
       font-family: sans-serif;
       text-align: center;
       background: #eef;
-      font-size: 16px;
+      font-size: 18px;
+      font-family: sans-serif;
     }
     .flashcard {
       margin: 20px auto;
@@ -40,7 +41,7 @@
       border-radius: 10px;
       cursor: pointer;
       box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
-      font-size: 1.35em;
+      font-size: 20px;
     }
     .flashcard img {
       max-width: 500px;
@@ -49,24 +50,25 @@
     .flashcard textarea {
       width: 100%;
       resize: vertical;
-      font-size: 16px;
+      font-size: 18px;
     }
     #edit-tags { 
-      font-family: monospace;
-      font-size: 16px;
+      /* font-family: monospace; */
+      font-family: sans-serif;
+      font-size: 18px;
     }
     #card-info, #extra-info, #tags-info {
       margin-top: 10px;
-      font-size: 1.2em;
+      font-size: 18px;
       color: #555;
     }
     #filter-controls {
-      margin: 20px auto;
+      margin: 18px auto;
       width: 100%;
       max-width: 400px;
     }
     #card-controls {
-      margin: 20px auto;
+      margin: 18px auto;
       width: 100%;
       max-width: 300px;
     }
@@ -77,7 +79,7 @@
       margin-top: 10px;
     }
     #controls input, #controls button {
-      font-size: 16px;
+      font-size: 18px;
       padding: 5px 10px;
       margin: 0 5px;
     }
@@ -94,7 +96,7 @@
       display: table-cell;
       padding: 5px;
       vertical-align: middle;
-      font-size: 1.2em;
+      font-size: 18px;
       color: #555;
     }
     .filter-buttons-wrapper {
@@ -105,9 +107,10 @@
     .filter-buttons-inner {
       display: inline-flex;
       gap: 10px;
+      margin-bottom: 10px;
     }
     .filter-buttons-inner button {
-      font-size: 16px;
+      font-size: 18px;
       padding: 5px 10px;
       box-sizing: border-box;
     }
@@ -116,7 +119,7 @@
       gap: 10px;
     }
     .edit-buttons-inner button {
-      font-size: 16px;
+      font-size: 18px;
       padding: 5px 10px;
       box-sizing: border-box;
     }
@@ -125,7 +128,7 @@
       justify-content: center;
       align-items: center;
       width: 100%;
-      margin-top: 10px;
+      margin-top: 20px;
     }
     .card-buttons-inner {
       display: inline-flex;
@@ -172,12 +175,13 @@
       display: table-cell;
       padding: 5px;
       vertical-align: middle;
-      font-size: 1.2em;
+      font-size: 20px;
       color: #555;
     }
     .card-label {
       text-align: right;
       white-space: nowrap;
+      font-size: 18px;
     }
     .card-input {
       width: 100px;
@@ -188,21 +192,36 @@
       width: 40px;
     }
     #tag-filter { 
-      font-size: 16px;
+      font-family: sans-serif;
+      font-size: 18px;
     }
     #apply-filter {
-      font-size: 16px;
+      font-family: sans-serif;
+      font-size: 18px;
     }
     #clear-filter {
-      font-size: 16px;
+      font-family: sans-serif;
+      font-size: 18px;
     }
-    #toggle-edit {
-      font-size: 16px;
-    }
+    /* #toggle-edit {
+      font-family: sans-serif;
+      font-size: 18px;
+    } */
     #save-card-edits {
-      font-size: 16px;
+      font-size: 18px;
       padding: 5px 10px;
       height: 32px;
+    }
+    #grok-filter-operator {
+      font-size: 18px;
+    }
+    textarea {
+      font-family: sans-serif;
+      font-size: 18px;
+    }
+    button {
+      font-family: sans-serif;
+      font-size: 18px;
     }
     /* Ensure MathJax inline math renders inline with the text */
     mjx-container[jax="CHTML"] {
@@ -278,7 +297,7 @@
         <div class="card-cell card-input">
           <input type="range" id="understanding-slider" min="1" max="3" value="1">
         </div>
-        <div class="card-cell card-value" id="understanding-value">1</div>
+        <div class="filter-cell filter-value" id="understanding-value">1</div>
       </div>
     </div>
   </div>
@@ -389,11 +408,11 @@
       if (editMode) {
         // In edit mode, display textareas for front, back, and tags with a Save button.
         document.getElementById("flashcard").innerHTML = `
-          <label style="font-size: 26px;">Front:</label>
+          <div style="margin: 10px 0px;"><label style="font-size: 24px;">Front</label></div>
           <textarea id="edit-front" rows="5" style="width:100%; resize: vertical; overflow: hidden;">${card.front}</textarea><br>
-          <label style="font-size: 26px;">Back:</label>
+          <div style="margin: 10px 0px;"><label style="font-size: 24px;">Back</label></div>
           <textarea id="edit-back" rows="5" style="width:100%; resize: vertical; overflow: hidden;">${card.back}</textarea><br>
-          <label style="font-size: 26px;">Tags:</label>
+          <div style="margin: 10px 0px;"><label style="font-size: 24px;">Tags</label></div>
           <input type="text" id="edit-tags" style="width:100%;" value="${card.tags.join(', ')}"><br>
           <div class="card-buttons-outter">
             <div class="card-buttons-inner">
