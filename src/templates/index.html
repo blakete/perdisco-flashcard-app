@@ -475,14 +475,17 @@
         autoResizeTextarea(frontTextarea);
         autoResizeTextarea(backTextarea);
         
-        document.getElementById("save-card-edits").addEventListener("click", function() {
+        document.getElementById("save-card-edits").addEventListener("click", function(e) {
+          // Prevent the click from bubbling up to the flashcard container and flipping the card to the back
+          e.stopPropagation();
+
           flashcards[currentIndex].front = document.getElementById("edit-front").value;
           flashcards[currentIndex].back = document.getElementById("edit-back").value;
           flashcards[currentIndex].tags = document.getElementById("edit-tags").value.split(',')
             .map(tag => tag.trim())
             .filter(tag => tag.length > 0);
           editMode = false;
-          showingFront = true;
+          // showingFront = true;
           document.getElementById("add-card").style.display = "none";
           document.getElementById("delete-card").style.display = "none";
           document.getElementById("toggle-edit").innerText = "Edit Card";
@@ -591,21 +594,53 @@
     });
 
     document.addEventListener('keydown', function(e) {
+      // If Escape is pressed and an element (other than the body) is focused, blur it.
+      if (e.key === "Escape") {
+        if (document.activeElement && document.activeElement !== document.body) {
+          document.activeElement.blur();
+          e.preventDefault(); // Prevent any default Escape behavior
+          return; // Stop further processing of this key event
+        }
+      }
+
+      // Ignore key events if the focus is on an input or textarea.
       if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
         return;
       }
-      
+
       if (e.key === "f") {
         toggleFocusMode();
         return;
       }
       
-      if (e.key === "e" || (editMode && e.key === "Escape")) {
+      if (e.key === "e") {
         editMode = !editMode;
         document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit" : "Edit Card";
         document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
         document.getElementById("delete-card").style.display = editMode ? "inline-block" : "none";
         renderCard();
+        return;
+      }
+
+      // Add key commands for understanding slider (keys "1", "2", "3")
+      if (["1", "2", "3"].includes(e.key)) {
+        const newValue = parseInt(e.key, 10);
+        // Make sure there is at least one flashcard
+        if (flashcards.length === 0) return;
+        
+        // Update the slider value and the displayed value
+        const slider = document.getElementById("understanding-slider");
+        slider.value = newValue;
+        document.getElementById("understanding-value").innerText = newValue;
+        
+        // Update the current flashcard's understanding property
+        flashcards[currentIndex].understanding = newValue;
+        
+        // Persist changes and re-render the card
+        persistFlashcards();
+        renderCard();
+        
+        // Prevent further processing of this key event if desired.
         return;
       }
       
