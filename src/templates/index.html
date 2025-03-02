@@ -310,7 +310,7 @@
 
   <script>
     // Flashcards data passed from Flask
-    const allFlashcards = {{ flashcards | tojson }};
+    let allFlashcards = {{ flashcards | tojson }};
     let flashcards = allFlashcards.slice(); // current filtered list
     let currentIndex = 0;
     let showingFront = true;
@@ -579,7 +579,9 @@
       allFlashcards = allFlashcards.filter(card => card.id !== cardId);
 
       // Reapply the filter to update the display.
+      savedCurrentIdx = currentIndex;
       applyCurrentFilter();
+      currentIndex = savedCurrentIdx;
 
       if (currentIndex >= flashcards.length) {
         currentIndex = flashcards.length - 1;
