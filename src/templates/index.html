@@ -344,7 +344,8 @@
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(flashcards)
+        // Send the complete master list with all cards.
+        body: JSON.stringify(allFlashcards)
       })
       .then(response => response.json())
       .then(data => {
@@ -356,6 +357,33 @@
         console.error("Persist error:", error);
         alert("Error saving changes.");
       });
+    }
+
+    // Helper: Reapply the current filter criteria to update flashcards from allFlashcards.
+    function applyCurrentFilter() {
+      // Tag filtering
+      let filteredCards = allFlashcards.slice();
+      const tagInput = document.getElementById("tag-filter").value.trim().toLowerCase();
+      if (tagInput !== "") {
+        const filterTags = tagInput.split(",").map(tag => tag.trim()).filter(tag => tag !== "");
+        filteredCards = filteredCards.filter(card => {
+          const cardTags = card.tags.map(tag => tag.toLowerCase());
+          return filterTags.every(filterTag => cardTags.includes(filterTag));
+        });
+      }
+
+      // Grok level filtering
+      const grokValue = parseInt(document.getElementById("grok-filter-slider").value);
+      const grokOperator = document.getElementById("grok-filter-operator").value; // "le" or "ge"
+      if (grokOperator === "le") {
+        filteredCards = filteredCards.filter(card => card.understanding <= grokValue);
+      } else {
+        filteredCards = filteredCards.filter(card => card.understanding >= grokValue);
+      }
+
+      flashcards = filteredCards;
+      currentIndex = 0; // or try to preserve current index if desired
+      return flashcards;
     }
 
     // Function to set up drag and drop for a textarea
@@ -519,32 +547,42 @@
 
     document.getElementById("add-card").addEventListener("click", function() {
       const newCard = {
+        "id": Date.now(), // simple unique id based on timestamp; consider a more robust generator if needed
         "front": "TODO: New front content",
         "back": "TODO: New back content",
-        "tags": [
-          // "16.32",
-          "18.065"
-        ],
+        "tags": ["18.065"],
         "understanding": 1
       };
-      flashcards.splice(currentIndex + 1, 0, newCard);
-      currentIndex++;
+
+      // Determine where in the master list to insert.
+      // Assume the current flashcard is in both arrays (by reference) if not newly added.
+      const currentCardId = flashcards[currentIndex].id;
+      const masterIndex = allFlashcards.findIndex(card => card.id === currentCardId);
+      
+      // Insert into the master list.
+      allFlashcards.splice(masterIndex + 1, 0, newCard);
+
+      // Reapply the current filter to update the displayed list.
+      applyCurrentFilter();
+      
+      // Set the current index to the new card.
+      currentIndex = flashcards.findIndex(card => card.id === newCard.id);
       persistFlashcards();
       renderCard();
     });
 
     document.getElementById("delete-card").addEventListener("click", function() {
       if (flashcards.length === 0) return;
-      flashcards.splice(currentIndex, 1);
+      const cardId = flashcards[currentIndex].id;
+
+      // Remove the card from the master list.
+      allFlashcards = allFlashcards.filter(card => card.id !== cardId);
+
+      // Reapply the filter to update the display.
+      applyCurrentFilter();
+
       if (currentIndex >= flashcards.length) {
         currentIndex = flashcards.length - 1;
-      }
-      if (flashcards.length === 0) {
-        document.getElementById("flashcard").innerText = "No cards available.";
-        document.getElementById("card-info").innerText = "";
-        document.getElementById("extra-info").innerText = "";
-        persistFlashcards();
-        return;
       }
       persistFlashcards();
       renderCard();
@@ -608,29 +646,7 @@
     });
 
     document.getElementById("apply-filter").addEventListener("click", function() {
-      let filteredCards = allFlashcards.slice();
-
-      // Tag filtering
-      const tagInput = document.getElementById("tag-filter").value.trim().toLowerCase();
-      if (tagInput !== "") {
-        const filterTags = tagInput.split(",").map(tag => tag.trim()).filter(tag => tag !== "");
-        filteredCards = filteredCards.filter(card => {
-          const cardTags = card.tags.map(tag => tag.toLowerCase());
-          return filterTags.every(filterTag => cardTags.includes(filterTag));
-        });
-      }
-
-      // Additional filtering: Grok (understanding) level.
-      const grokValue = parseInt(document.getElementById("grok-filter-slider").value);
-      const grokOperator = document.getElementById("grok-filter-operator").value; // "le" or "ge"
-      if (grokOperator === "le") {
-        filteredCards = filteredCards.filter(card => card.understanding <= grokValue);
-      } else {
-        filteredCards = filteredCards.filter(card => card.understanding >= grokValue);
-      }
-
-      flashcards = filteredCards;
-      currentIndex = 0;
+      applyCurrentFilter();
       renderCard();
     });
 
