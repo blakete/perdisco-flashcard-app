@@ -29,13 +29,19 @@
       font-size: 18px;
       font-family: sans-serif;
     }
+    .embedded-card-image {
+      width: 100%;
+      /* height: 100%; */
+      object-fit: contain;
+      /* object-fit: cover; */
+    }
     .flashcard {
       margin: 20px auto;
       padding: 20px;
       border: 2px solid #ccc;
       width: 60%;
       min-height: 300px;
-      max-width: 700px;
+      max-width: 600px !important;
       text-align: left;
       background: #fff;
       border-radius: 10px;
@@ -43,10 +49,10 @@
       box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
       font-size: 20px;
     }
-    .flashcard img {
+    /* .flashcard img {
       max-width: 500px;
       max-height: 150px;
-    }
+    } */
     .flashcard textarea {
       width: 100%;
       resize: vertical;
@@ -377,7 +383,7 @@
           .then(response => response.json())
           .then(data => {
             if (data.url) {
-              textarea.value += `<img src="${data.url}">`;
+              textarea.value += `<div style="width: 100%; height: 100%;"><img class="embedded-card-image" src="${data.url}"></div>`;
             } else {
               alert("Image upload failed.");
             }
@@ -408,7 +414,7 @@
       if (editMode) {
         // In edit mode, display textareas for front, back, and tags with a Save button.
         document.getElementById("flashcard").innerHTML = `
-          <div style="margin: 10px 0px;"><label style="font-size: 24px;">Front</label></div>
+          <div style="margin-bottom: 10px;"><label style="font-size: 24px;">Front</label></div>
           <textarea id="edit-front" rows="5" style="width:100%; resize: vertical; overflow: hidden;">${card.front}</textarea><br>
           <div style="margin: 10px 0px;"><label style="font-size: 24px;">Back</label></div>
           <textarea id="edit-back" rows="5" style="width:100%; resize: vertical; overflow: hidden;">${card.back}</textarea><br>
@@ -517,7 +523,7 @@
         "back": "TODO: New back content",
         "tags": [
           // "16.32",
-          "18.651"
+          "18.065"
         ],
         "understanding": 1
       };
