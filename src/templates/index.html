@@ -25,11 +25,8 @@
       padding: 0;
       font-family: sans-serif;
       text-align: center;
-      margin: 0;
-      padding: 0;
       background: #eef;
-      /* Optional: Prevents unwanted scrolling */
-      /* overflow: hidden; */
+      font-size: 16px;
     }
     .flashcard {
       margin: 20px auto;
@@ -80,22 +77,19 @@
       margin-top: 10px;
     }
     #controls input, #controls button {
-      font-size: 1em;
+      font-size: 16px;
       padding: 5px 10px;
       margin: 0 5px;
     }
-
     /* ===== Top Filtering Controls ===== */
     .filter-table {
       display: table;
       margin: 10px auto;
       width: 100%;
     }
-
     .filter-row {
       display: table-row;
     }
-    
     .filter-cell {
       display: table-cell;
       padding: 5px;
@@ -103,30 +97,29 @@
       font-size: 1.2em;
       color: #555;
     }
-
     .filter-buttons-wrapper {
-      display: table-cell; /* Ensure it behaves like a full-width table cell */
+      display: table-cell;
       width: 100%;
-      text-align: center; /* Centers content inside */
+      text-align: center;
     }
-
     .filter-buttons-inner {
-      display: inline-flex; /* Ensures buttons remain centered */
-      gap: 10px; /* Adds spacing between buttons */
+      display: inline-flex;
+      gap: 10px;
     }
     .filter-buttons-inner button {
-      width: 90px;
-      height: 30px
+      font-size: 16px;
+      padding: 5px 10px;
+      box-sizing: border-box;
     }
     .edit-buttons-inner {
-      display: inline-flex; /* Ensures buttons remain centered */
-      gap: 10px; /* Adds spacing between buttons */
+      display: inline-flex;
+      gap: 10px;
     }
     .edit-buttons-inner button {
-      width: 90px;
-      height: 30px
+      font-size: 16px;
+      padding: 5px 10px;
+      box-sizing: border-box;
     }
-    
     .card-buttons-outter {
       display: flex;
       justify-content: center;
@@ -134,35 +127,31 @@
       width: 100%;
       margin-top: 10px;
     }
-
     .card-buttons-inner {
-      display: inline-flex; /* Ensures buttons remain centered */
-      gap: 10px; /* Adds spacing between buttons */
+      display: inline-flex;
+      gap: 10px;
     }
     .card-buttons-inner button {
       width: 90px;
       height: 30px
     }
-
     .filter-label {
       text-align: right;
       white-space: nowrap;
     }
     .filter-input {
-      width: 100px;
+      width: 80px !important;
     }
     .filter-value,
     .filter-operator {
       text-align: left;
       padding-left: 10px;
     }
-
     .filter-value {
       text-align: center;
       padding-left: 10px;
       width: 40px;
     }
-
     .filter-buttons {
       display: flex !important;
       justify-content: center;
@@ -170,7 +159,6 @@
       width: 100%;
       margin: 10px auto;
     }
-    
     /* ===== Bottom Card Controls ===== */
     .card-table {
       display: table;
@@ -199,7 +187,23 @@
       padding-left: 10px;
       width: 40px;
     }
-    
+    #tag-filter { 
+      font-size: 16px;
+    }
+    #apply-filter {
+      font-size: 16px;
+    }
+    #clear-filter {
+      font-size: 16px;
+    }
+    #toggle-edit {
+      font-size: 16px;
+    }
+    #save-card-edits {
+      font-size: 16px;
+      padding: 5px 10px;
+      height: 32px;
+    }
     /* Ensure MathJax inline math renders inline with the text */
     mjx-container[jax="CHTML"] {
       display: inline !important;
@@ -227,23 +231,7 @@
           <div class="filter-cell filter-value"></div>
           <div class="filter-cell filter-operator"></div>
         </div>
-        <!-- Row 2: Importance Filter -->
-        <div class="filter-row">
-          <div class="filter-cell filter-label">
-            <label for="importance-filter-slider">Importance Filter:</label>
-          </div>
-          <div class="filter-cell filter-input">
-            <input type="range" id="importance-filter-slider" min="1" max="3" value="1">
-          </div>
-          <div class="filter-cell filter-value" id="importance-filter-value">1</div>
-          <div class="filter-cell filter-operator">
-            <select id="importance-filter-operator">
-              <option value="ge">≥</option>
-              <option value="le">≤</option>
-            </select>
-          </div>
-        </div>
-        <!-- Row 3: Grok Filter -->
+        <!-- Row 2: Grok Filter -->
         <div class="filter-row">
           <div class="filter-cell filter-label">
             <label for="grok-filter-slider">Grok Filter:</label>
@@ -284,15 +272,7 @@
   <!-- Bottom Card Controls -->
   <div id="card-controls">
     <div class="card-table">
-      <!-- Row 1: Importance Slider -->
-      <div class="card-row">
-        <div class="card-cell card-label">Importance :</div>
-        <div class="card-cell card-input">
-          <input type="range" id="importance-slider" min="1" max="3" value="2">
-        </div>
-        <div class="card-cell card-value" id="importance-value">1</div>
-      </div>
-      <!-- Row 2: Grok Slider -->
+      <!-- Row 1: Grok Slider -->
       <div class="card-row">
         <div class="card-cell card-label">Grok Level :</div>
         <div class="card-cell card-input">
@@ -310,6 +290,27 @@
     let currentIndex = 0;
     let showingFront = true;
     let editMode = false; // Variable for edit mode
+    let focusMode = false; // Variable for focus mode
+
+    // Toggle focus mode: hide filter actions and tags info when active.
+    function toggleFocusMode() {
+      focusMode = !focusMode;
+      if (focusMode) {
+        document.getElementById("filter-actions").style.display = "none";
+        document.getElementById("tags-info").style.display = "none";
+        // Only hide the initial edit button if not in edit mode.
+        if (!editMode) {
+          document.getElementById("toggle-edit").style.display = "none";
+        }
+      } else {
+        document.getElementById("filter-actions").style.display = "block";
+        document.getElementById("tags-info").style.display = "block";
+        // Only show the initial edit button if not in edit mode.
+        if (!editMode) {
+          document.getElementById("toggle-edit").style.display = "block";
+        }
+      }
+    }
 
     // Function to persist flashcards to the server
     function persistFlashcards() {
@@ -388,32 +389,29 @@
       if (editMode) {
         // In edit mode, display textareas for front, back, and tags with a Save button.
         document.getElementById("flashcard").innerHTML = `
-          <label style="font-size: 1.2em;">Front:</label>
+          <label style="font-size: 26px;">Front:</label>
           <textarea id="edit-front" rows="5" style="width:100%; resize: vertical; overflow: hidden;">${card.front}</textarea><br>
-          <label style="font-size: 1.2em;">Back:</label>
+          <label style="font-size: 26px;">Back:</label>
           <textarea id="edit-back" rows="5" style="width:100%; resize: vertical; overflow: hidden;">${card.back}</textarea><br>
-          <label style="font-size: 1.2em;">Tags:</label>
+          <label style="font-size: 26px;">Tags:</label>
           <input type="text" id="edit-tags" style="width:100%;" value="${card.tags.join(', ')}"><br>
           <div class="card-buttons-outter">
             <div class="card-buttons-inner">
-              <button id="save-card-edits">Save Edits</button>
+              <button id="save-card-edits">Save</button>
             </div>
           </div>
         `;
         setupDragDrop("edit-front");
         setupDragDrop("edit-back");
         
-        // Set up auto-resize for the textareas in edit mode.
         const frontTextarea = document.getElementById("edit-front");
         const backTextarea = document.getElementById("edit-back");
 
-        // Define a function that resets the textarea height to 'auto' then sets it to its scrollHeight.
         function autoResizeTextarea(textarea) {
           textarea.style.height = 'auto';
           textarea.style.height = textarea.scrollHeight + 'px';
         }
 
-        // Attach the auto-resize function to the input events so the height adjusts as the user types.
         frontTextarea.addEventListener("input", function() {
           autoResizeTextarea(frontTextarea);
         });
@@ -421,7 +419,6 @@
           autoResizeTextarea(backTextarea);
         });
 
-        // Immediately adjust the height to fit the initial content.
         autoResizeTextarea(frontTextarea);
         autoResizeTextarea(backTextarea);
         
@@ -432,7 +429,6 @@
             .map(tag => tag.trim())
             .filter(tag => tag.length > 0);
           editMode = false;
-          // When exiting edit mode, force front view.
           showingFront = true;
           document.getElementById("add-card").style.display = "none";
           document.getElementById("delete-card").style.display = "none";
@@ -447,9 +443,10 @@
       }
       
       document.getElementById("card-info").innerText = `Card ${currentIndex + 1} of ${flashcards.length}`;
-      document.getElementById("tags-info").innerText = `Tags: ${card.tags.join(", ")}`;
-      document.getElementById("importance-slider").value = card.importance;
-      document.getElementById("importance-value").innerText = card.importance;
+      // In focus mode, we hide tags-info so only show it when not in focus mode.
+      if (!focusMode) {
+        document.getElementById("tags-info").innerText = `Tags: ${card.tags.join(", ")}`;
+      }
       document.getElementById("understanding-slider").value = card.understanding;
       document.getElementById("understanding-value").innerText = card.understanding;
       if (window.MathJax) {
@@ -461,23 +458,9 @@
       }
     }
 
-    // NEW: Update displayed values for filtering sliders.
-    document.getElementById("importance-filter-slider").addEventListener("input", function(e) {
-      document.getElementById("importance-filter-value").innerText = e.target.value;
-    });
+    // Update displayed value for grok filtering.
     document.getElementById("grok-filter-slider").addEventListener("input", function(e) {
       document.getElementById("grok-filter-value").innerText = e.target.value;
-    });
-
-    // Importance slider: update display on input, save on change.
-    document.getElementById("importance-slider").addEventListener("input", function(e) {
-      document.getElementById("importance-value").innerText = e.target.value;
-    });
-    document.getElementById("importance-slider").addEventListener("change", function(e) {
-      const value = parseInt(e.target.value);
-      flashcards[currentIndex].importance = value;
-      persistFlashcards();
-      renderCard();
     });
 
     // Understanding slider: update display on input, save on change.
@@ -494,8 +477,14 @@
     document.getElementById("toggle-edit").addEventListener("click", function() {
       editMode = !editMode;
       if (!editMode) {
-        // When exiting edit mode, ensure we show the front.
         showingFront = true;
+        // If exiting edit mode while in focus mode, hide the edit button again.
+        if (focusMode) {
+          document.getElementById("toggle-edit").style.display = "none";
+        }
+      } else {
+        // When entering edit mode, always show the edit-related buttons.
+        document.getElementById("toggle-edit").style.display = "inline-block";
       }
       document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit" : "Edit Card";
       document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
@@ -508,10 +497,9 @@
         "front": "TODO: New front content",
         "back": "TODO: New back content",
         "tags": [
-          // "18.0651",
-          "16.32"
+          // "16.32",
+          "18.651"
         ],
-        "importance": 2,
         "understanding": 1
       };
       flashcards.splice(currentIndex + 1, 0, newCard);
@@ -530,7 +518,6 @@
         document.getElementById("flashcard").innerText = "No cards available.";
         document.getElementById("card-info").innerText = "";
         document.getElementById("extra-info").innerText = "";
-        // document.getElementById("tags-info").innerText = "";
         persistFlashcards();
         return;
       }
@@ -540,6 +527,11 @@
 
     document.addEventListener('keydown', function(e) {
       if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+        return;
+      }
+      
+      if (e.key === "f") {
+        toggleFocusMode();
         return;
       }
       
@@ -593,25 +585,14 @@
     document.getElementById("apply-filter").addEventListener("click", function() {
       let filteredCards = allFlashcards.slice();
 
-      // Tag filtering: split the input into an array of filter tags.
+      // Tag filtering
       const tagInput = document.getElementById("tag-filter").value.trim().toLowerCase();
       if (tagInput !== "") {
         const filterTags = tagInput.split(",").map(tag => tag.trim()).filter(tag => tag !== "");
         filteredCards = filteredCards.filter(card => {
-          // Map card tags to lowercase for case-insensitive matching.
           const cardTags = card.tags.map(tag => tag.toLowerCase());
-          // Check that every filter tag is included in the card's tags.
           return filterTags.every(filterTag => cardTags.includes(filterTag));
         });
-      }
-
-      // Additional filtering: Importance level.
-      const impValue = parseInt(document.getElementById("importance-filter-slider").value);
-      const impOperator = document.getElementById("importance-filter-operator").value; // "ge" or "le"
-      if (impOperator === "ge") {
-        filteredCards = filteredCards.filter(card => card.importance >= impValue);
-      } else {
-        filteredCards = filteredCards.filter(card => card.importance <= impValue);
       }
 
       // Additional filtering: Grok (understanding) level.
