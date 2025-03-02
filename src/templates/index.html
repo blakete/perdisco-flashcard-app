@@ -359,6 +359,22 @@
       });
     }
 
+    document.getElementById("grok-filter-slider").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        e.preventDefault(); // Prevent any default behavior
+        document.getElementById("apply-filter").click();
+        document.activeElement.blur();
+      }
+    });
+
+    document.getElementById("tag-filter").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        e.preventDefault(); // Prevent form submission or any default behavior
+        document.getElementById("apply-filter").click();
+        document.activeElement.blur();
+      }
+    });
+
     // Helper: Reapply the current filter criteria to update flashcards from allFlashcards.
     function applyCurrentFilter() {
       // Tag filtering
