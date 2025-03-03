@@ -609,26 +609,36 @@
 
     document.getElementById("add-card").addEventListener("click", function() {
       const newCard = {
-        "id": Date.now(), // simple unique id based on timestamp; consider a more robust generator if needed
+        "id": Date.now(), // Unique id
         "front": "TODO: New front content",
         "back": "TODO: New back content",
         "tags": ["18.065"],
         "understanding": 1
       };
 
-      // Determine where in the master list to insert.
-      // Assume the current flashcard is in both arrays (by reference) if not newly added.
-      const currentCardId = flashcards[currentIndex].id;
-      const masterIndex = allFlashcards.findIndex(card => card.id === currentCardId);
-      
-      // Insert into the master list.
-      allFlashcards.splice(masterIndex + 1, 0, newCard);
+      console.log("currentIndex =", currentIndex)
+      console.log("flashcards.length =", flashcards.length)
 
-      // Reapply the current filter to update the displayed list.
+      // If there are cards, insert the new card after the current one.
+      if (flashcards.length > 0) {
+        const currentCardId = flashcards[currentIndex].id;
+        const masterIndex = allFlashcards.findIndex(card => card.id === currentCardId);
+        allFlashcards.splice(masterIndex + 1, 0, newCard);
+      } else {
+        // No cards are present, so simply add the new card.
+        allFlashcards.push(newCard);
+      }
+
+      // Reapply filters to update the displayed flashcards.
       applyCurrentFilter();
-      
-      // Set the current index to the new card.
+
+      // Set currentIndex to the new card if it is in the filtered list.
       currentIndex = flashcards.findIndex(card => card.id === newCard.id);
+      if (currentIndex < 0) {
+        // If the new card does not pass the current filter criteria, reset currentIndex.
+        currentIndex = 0;
+      }
+      
       persistFlashcards();
       renderCard();
     });
@@ -703,6 +713,22 @@
         return;
       }
       
+      if (e.key === "a" && editMode) {
+        const addButton = document.getElementById("add-card");
+        if (addButton) {
+          addButton.click();
+        }
+        return;
+      }
+
+      if (e.key === "d" && editMode) {
+        const deleteButton = document.getElementById("delete-card");
+        if (deleteButton) {
+          deleteButton.click();
+        }
+        return;
+      }
+
       if (e.key === "s" && editMode) {
         const saveButton = document.getElementById("save-card-edits");
         if (saveButton) {
@@ -712,19 +738,19 @@
       }
       
       if (flashcards.length === 0) return;
-      if (e.key === "ArrowRight" || e.key === "d") {
+      if (e.key === "ArrowRight") {
         if (currentIndex < flashcards.length - 1) {
           currentIndex++;
           showingFront = true;
           renderCard();
         }
-      } else if (e.key === "ArrowLeft" || e.key === "a") {
+      } else if (e.key === "ArrowLeft") {
         if (currentIndex > 0) {
           currentIndex--;
           showingFront = true;
           renderCard();
         }
-      } else if (e.key === " " || e.key === "w" || e.key === "ArrowUp" || e.key === "ArrowDown") {
+      } else if (e.key === " " || e.key === "ArrowUp" || e.key === "ArrowDown") {
         if (!editMode) {
           e.preventDefault();
           showingFront = !showingFront;
