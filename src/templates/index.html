@@ -197,10 +197,6 @@
       padding-left: 10px;
       width: 40px;
     }
-    #tag-filter { 
-      font-family: sans-serif;
-      font-size: 18px;
-    }
     #apply-filter {
       font-family: sans-serif;
       font-size: 18px;
@@ -229,6 +225,16 @@
       font-family: sans-serif;
       font-size: 18px;
     }
+    #search-input {
+      width: 200px !important;
+      font-family: sans-serif;
+      font-size: 18px;
+    }
+    #tag-filter {
+      width: 200px !important;
+      font-family: sans-serif;
+      font-size: 18px;
+    }
     /* Ensure MathJax inline math renders inline with the text */
     mjx-container[jax="CHTML"] {
       display: inline !important;
@@ -244,7 +250,19 @@
   <div id="filter-controls">
     <div id="filter-actions">
       <div class="filter-table">
-        <!-- Row 1: Tag Filter -->
+        <!-- Search Row -->
+        <div class="filter-row">
+          <div class="filter-cell filter-label">
+            <label for="search-input">Search:</label>
+          </div>
+          <div class="filter-cell filter-input">
+            <input type="text" id="search-input" placeholder="Search card content">
+          </div>
+          <!-- Empty cells for alignment -->
+          <div class="filter-cell filter-value"></div>
+          <div class="filter-cell filter-operator"></div>
+        </div>
+        <!-- Tag Filter Row -->
         <div class="filter-row">
           <div class="filter-cell filter-label">
             <label for="tag-filter">Filter by Tag:</label>
@@ -256,7 +274,7 @@
           <div class="filter-cell filter-value"></div>
           <div class="filter-cell filter-operator"></div>
         </div>
-        <!-- Row 2: Grok Filter -->
+        <!-- Grok Filter Row -->
         <div class="filter-row">
           <div class="filter-cell filter-label">
             <label for="grok-filter-slider">Grok Filter:</label>
@@ -375,6 +393,14 @@
       }
     });
 
+    document.getElementById("search-input").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        e.preventDefault(); // Prevent form submission or any default behavior
+        document.getElementById("apply-filter").click();
+        document.activeElement.blur();
+      }
+    });
+
     // Helper: Reapply the current filter criteria to update flashcards from allFlashcards.
     function applyCurrentFilter() {
       // Tag filtering
@@ -397,8 +423,17 @@
         filteredCards = filteredCards.filter(card => card.understanding >= grokValue);
       }
 
+      // Search filtering (new)
+      const searchText = document.getElementById("search-input").value.trim().toLowerCase();
+      if (searchText !== "") {
+        filteredCards = filteredCards.filter(card =>
+          card.front.toLowerCase().includes(searchText) ||
+          card.back.toLowerCase().includes(searchText)
+        );
+      }
+
       flashcards = filteredCards;
-      currentIndex = 0; // or try to preserve current index if desired
+      currentIndex = 0; // reset to first card (or preserve if desired)
       return flashcards;
     }
 
@@ -706,7 +741,7 @@
     document.getElementById("clear-filter").addEventListener("click", function() {
       document.getElementById("tag-filter").value = "";
       flashcards = allFlashcards.slice();
-      currentIndex = 0;
+      // currentIndex = 0;
       renderCard();
     });
 
