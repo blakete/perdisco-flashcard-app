@@ -608,16 +608,17 @@
     });
 
     document.getElementById("add-card").addEventListener("click", function() {
+      // Get the current tag filter value and parse it into an array.
+      const tagInput = document.getElementById("tag-filter").value.trim();
+      const defaultTags = tagInput ? tagInput.split(",").map(tag => tag.trim()).filter(tag => tag !== "") : [];
+
       const newCard = {
         "id": Date.now(), // Unique id
         "front": "TODO: New front content",
         "back": "TODO: New back content",
-        "tags": ["18.065"],
+        "tags": defaultTags,
         "understanding": 1
       };
-
-      console.log("currentIndex =", currentIndex)
-      console.log("flashcards.length =", flashcards.length)
 
       // If there are cards, insert the new card after the current one.
       if (flashcards.length > 0) {
