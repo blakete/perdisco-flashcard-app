@@ -374,6 +374,62 @@
     let editMode = false; // Variable for edit mode
     let focusMode = false; // Variable for focus mode
 
+    // Call this when the page loads to ensure all cards have the attempts array
+    window.onload = function() {
+      ensureAttemptsExist();
+      loadStateFromLocalStorage(); // Load saved state
+      renderCard();
+    };
+
+    // Function to save state to localStorage
+    function saveStateToLocalStorage() {
+      const state = {
+        tagFilter: document.getElementById("tag-filter").value,
+        searchInput: document.getElementById("search-input").value,
+        grokFilterValue: document.getElementById("grok-filter-slider").value,
+        grokFilterOperator: document.getElementById("grok-filter-operator").value,
+        focusMode: focusMode,
+        currentIndex: currentIndex
+      };
+      localStorage.setItem('flashcardState', JSON.stringify(state));
+    }
+
+    // Function to load state from localStorage
+    function loadStateFromLocalStorage() {
+      const stateJson = localStorage.getItem('flashcardState');
+      if (!stateJson) return;
+      
+      try {
+        const state = JSON.parse(stateJson);
+        
+        // Restore filter inputs
+        document.getElementById("tag-filter").value = state.tagFilter || '';
+        document.getElementById("search-input").value = state.searchInput || '';
+        document.getElementById("grok-filter-slider").value = state.grokFilterValue || '3';
+        document.getElementById("grok-filter-value").innerText = state.grokFilterValue || '3';
+        document.getElementById("grok-filter-operator").value = state.grokFilterOperator || 'le';
+        
+        // Apply the filters to restore the filtered card set
+        applyCurrentFilter();
+
+        // Restore current index, ensuring it's valid
+        if (state.currentIndex !== undefined && flashcards.length > 0) {
+          currentIndex = Math.min(state.currentIndex, flashcards.length - 1);
+          if (currentIndex < 0) currentIndex = 0;
+        }
+        
+        // Restore focus mode (if it was active)
+        if (state.focusMode) {
+          focusMode = false; // Set opposite so toggle works correctly
+          toggleFocusMode();
+        }
+        
+        renderCard();
+      } catch (error) {
+        console.error("Error loading state from localStorage:", error);
+      }
+    }
+
     // Toggle focus mode: hide filter actions and tags info when active.
     function toggleFocusMode() {
       focusMode = !focusMode;
@@ -392,6 +448,7 @@
           document.getElementById("toggle-edit").style.display = "block";
         }
       }
+      saveStateToLocalStorage(); // Save state when filters change
     }
 
     // Function to persist flashcards to the server
@@ -495,7 +552,8 @@
       }
 
       flashcards = filteredCards;
-      currentIndex = 0; // reset to first card (or preserve if desired)
+      // currentIndex = 0; // reset to first card (or preserve if desired)
+      saveStateToLocalStorage(); // Save state when filters change
       return flashcards;
     }
 
@@ -697,6 +755,7 @@
         }
       }
       
+      saveStateToLocalStorage(); // Save state when filters change
     }
 
     // Update displayed value for grok filtering.
@@ -713,6 +772,7 @@
       flashcards[currentIndex].understanding = value;
       persistFlashcards();
       renderCard();
+      saveStateToLocalStorage(); // Save state when understanding level changes
     });
 
     document.getElementById("toggle-edit").addEventListener("click", function() {
@@ -769,6 +829,7 @@
       
       persistFlashcards();
       renderCard();
+      saveStateToLocalStorage(); // Save state when adding a card
     });
 
     document.getElementById("delete-card").addEventListener("click", function() {
@@ -788,6 +849,7 @@
       }
       persistFlashcards();
       renderCard();
+      saveStateToLocalStorage(); // Save state when deleting a card
     });
 
     document.addEventListener('keydown', function(e) {
@@ -863,6 +925,7 @@
         // Persist changes and re-render the card
         persistFlashcards();
         renderCard();
+        saveStateToLocalStorage(); // Save state when understanding level changes via keyboard
         
         // Prevent further processing of this key event if desired.
         return;
@@ -898,12 +961,14 @@
           currentIndex++;
           showingFront = true;
           renderCard();
+          saveStateToLocalStorage(); // Save state when navigating
         }
       } else if (e.key === "ArrowLeft") {
         if (currentIndex > 0) {
           currentIndex--;
           showingFront = true;
           renderCard();
+          saveStateToLocalStorage(); // Save state when navigating
         }
       } else if (e.key === " " || e.key === "ArrowUp" || e.key === "ArrowDown") {
         if (!editMode) {
@@ -913,12 +978,6 @@
         }
       }
     });
-
-    // Call this when the page loads to ensure all cards have the attempts array
-    window.onload = function() {
-      ensureAttemptsExist();
-      renderCard();
-    };
 
     document.getElementById("flashcard").addEventListener("click", function() {
       if (flashcards.length === 0) return;
@@ -931,16 +990,40 @@
     document.getElementById("apply-filter").addEventListener("click", function() {
       applyCurrentFilter();
       renderCard();
+      saveStateToLocalStorage(); // Save state when navigating
     });
 
     document.getElementById("clear-filter").addEventListener("click", function() {
       document.getElementById("tag-filter").value = "";
+      document.getElementById("search-input").value = "";
+      document.getElementById("grok-filter-slider").value = "3";
+      document.getElementById("grok-filter-value").innerText = "3";
+      document.getElementById("grok-filter-operator").value = "le";
+      
       flashcards = allFlashcards.slice();
       // currentIndex = 0;
       renderCard();
+      saveStateToLocalStorage(); // Save state when clearing filters
     });
 
-    renderCard();
+    // Add event listeners to save state when filter inputs change
+    document.getElementById("tag-filter").addEventListener("change", function() {
+      saveStateToLocalStorage();
+    });
+    
+    document.getElementById("search-input").addEventListener("change", function() {
+      saveStateToLocalStorage();
+    });
+    
+    document.getElementById("grok-filter-slider").addEventListener("change", function() {
+      saveStateToLocalStorage();
+    });
+    
+    document.getElementById("grok-filter-operator").addEventListener("change", function() {
+      saveStateToLocalStorage();
+    });
+
+    // renderCard();
   </script>
 </body>
 </html>
