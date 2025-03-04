@@ -48,22 +48,11 @@
       cursor: pointer;
       box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
       font-size: 20px;
-    }
-    .flashcard ol {
-      margin-top: 10px;
-      margin-bottom: 10px;
-    }
-    .flashcard ul {
-      margin-top: 10px;
-      margin-bottom: 10px;
+      line-height: 1.5; /* Adds proper spacing between lines */
     }
     .flashcard li {
       margin-top: 5px;
       margin-bottom: 5px;
-    }
-    .flashcard p {
-      margin-top: 10px;
-      margin-bottom: 10px;
     }
     /* .flashcard img {
       max-width: 500px;
@@ -73,6 +62,22 @@
       width: 100%;
       resize: vertical;
       font-size: 18px;
+    }
+    /* Add these rules to your existing style section */
+    .flashcard p, .flashcard div, .flashcard ol, .flashcard ul {
+      margin-top: 5px;
+      margin-bottom: 5px;
+    }
+
+    /* Specific styling for lines with MathJax content */
+    .flashcard .MJX-TEX {
+      margin: 5px 0;
+      display: inline-block;
+    }
+
+    /* For each line of text, whether it has MathJax or not */
+    .flashcard > * {
+      margin-bottom: 8px;
     }
     #edit-tags { 
       /* font-family: monospace; */
@@ -670,6 +675,12 @@
         document.getElementById("performance-stats").innerText = "";
         return;
       }
+      
+      // Ensure currentIndex is within valid bounds.
+      if (currentIndex < 0 || currentIndex >= flashcards.length) {
+        currentIndex = 0;
+      }
+      
       const card = flashcards[currentIndex];
       
       if (editMode) {
@@ -979,13 +990,13 @@
       }
     });
 
-    document.getElementById("flashcard").addEventListener("click", function() {
-      if (flashcards.length === 0) return;
-      if (!editMode) {
-        showingFront = !showingFront;
-        renderCard();
-      }
-    });
+    // document.getElementById("flashcard").addEventListener("click", function() {
+    //   if (flashcards.length === 0) return;
+    //   if (!editMode) {
+    //     showingFront = !showingFront;
+    //     renderCard();
+    //   }
+    // });
 
     document.getElementById("apply-filter").addEventListener("click", function() {
       applyCurrentFilter();
