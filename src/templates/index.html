@@ -50,12 +50,20 @@
       font-size: 20px;
     }
     .flashcard ol {
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    .flashcard ul {
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    .flashcard li {
       margin-top: 5px;
       margin-bottom: 5px;
     }
     .flashcard p {
-      margin-top: 5px;
-      margin-bottom: 5px;
+      margin-top: 10px;
+      margin-bottom: 10px;
     }
     /* .flashcard img {
       max-width: 500px;
@@ -71,7 +79,7 @@
       font-family: sans-serif;
       font-size: 18px;
     }
-    #card-info, #extra-info, #tags-info {
+    #card-info, #tags-info {
       margin-top: 10px;
       font-size: 18px;
       color: #555;
@@ -251,6 +259,27 @@
       padding: 0 !important;
       font-size: 1em !important;
     }
+
+    #performance-stats {
+      margin-top: 10px;
+      font-size: 18px;
+      color: #555;
+      /* font-weight: bold; */
+    }
+
+    /* Optional: add color coding based on performance */
+    .high-performance {
+      color: #28a745 !important;  /* Green for good performance */
+    }
+
+    .medium-performance {
+      color: #ffc107 !important;  /* Yellow for moderate performance */
+    }
+
+    .low-performance {
+      color: #dc3545 !important;  /* Red for poor performance */
+    }
+
   </style>
 </head>
 <body>
@@ -309,15 +338,17 @@
         <button id="toggle-edit">Edit Card</button>
         <button id="add-card" style="display: none;">Add +</button>
         <button id="delete-card" style="display: none;">Delete -</button>
+        <button id="clear-attempts" style="display: none;">Clear Attempts</button>
       </div>
     </div>
   </div>
+
+  <div id="performance-stats"></div>
 
   <!-- Flashcard Display -->
   <div class="flashcard" id="flashcard"></div>
 
   <div id="card-info"></div>
-  <div id="extra-info"></div>
   <div id="tags-info"></div>
 
   <!-- Bottom Card Controls -->
@@ -384,6 +415,29 @@
         alert("Error saving changes.");
       });
     }
+
+    // Function to clear all attempts for the current card
+    function clearCardAttempts() {
+      if (flashcards.length === 0) return;
+      
+      const card = flashcards[currentIndex];
+      
+      // Reset the attempts array
+      card.attempts = [];
+      
+      // Persist changes to server
+      persistFlashcards();
+      
+      // Update the display
+      renderCard();
+    }
+    
+    // Add event listener for the Clear Attempts button
+    document.getElementById("clear-attempts").addEventListener("click", function() {
+      if (confirm("Are you sure you want to clear all attempt history for this card?")) {
+        clearCardAttempts();
+      }
+    });
 
     document.getElementById("grok-filter-slider").addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
@@ -483,6 +537,68 @@
       });
     }
 
+    // Ensure each card has an attempts array if it doesn't exist
+    function ensureAttemptsExist() {
+      allFlashcards.forEach(card => {
+        if (!card.attempts) {
+          card.attempts = [];
+        }
+      });
+    }
+
+    // Calculate the percentage of correct answers and total attempts
+    function getPerformanceStats(card) {
+      if (!card.attempts || card.attempts.length === 0) {
+        return { percentage: 0, total: 0 };
+      }
+      
+      const totalAttempts = card.attempts.length;
+      const correctAttempts = card.attempts.filter(attempt => attempt.correct).length;
+      const percentage = (correctAttempts / totalAttempts) * 100;
+      
+      return {
+        percentage: percentage.toFixed(2),
+        total: totalAttempts
+      };
+    }
+
+    // Record an attempt (correct or incorrect)
+    function recordAttempt(correct) {
+      if (flashcards.length === 0) return;
+      
+      const card = flashcards[currentIndex];
+      if (!card.attempts) {
+        card.attempts = [];
+      }
+      
+      card.attempts.push({
+        timestamp: Date.now(),
+        correct: correct
+      });
+      
+      persistFlashcards();
+      renderCard();
+    }
+
+    // Apply color coding to performance stats based on percentage
+    function applyPerformanceColor(percentage) {
+      const performanceStats = document.getElementById("performance-stats");
+      
+      // Remove existing classes
+      performanceStats.classList.remove("high-performance", "medium-performance", "low-performance");
+      
+      // Only apply color coding if there are attempts
+      if (percentage > 0) {
+        if (percentage >= 80) {
+          performanceStats.classList.add("high-performance");
+        } else if (percentage >= 50) {
+          performanceStats.classList.add("medium-performance");
+        } else {
+          performanceStats.classList.add("low-performance");
+        }
+      }
+    }
+
     function autoResizeTextarea(textarea) {
       textarea.style.height = 'auto';
       textarea.style.height = textarea.scrollHeight + 'px';
@@ -493,7 +609,7 @@
       if (flashcards.length === 0) {
         document.getElementById("flashcard").innerText = "No cards match the filter.";
         document.getElementById("card-info").innerText = "";
-        document.getElementById("extra-info").innerText = "";
+        document.getElementById("performance-stats").innerText = "";
         return;
       }
       const card = flashcards[currentIndex];
@@ -557,13 +673,22 @@
         document.getElementById("flashcard").innerHTML = showingFront ? card.front : card.back;
       }
       
+      // Display card info
       document.getElementById("card-info").innerText = `Card ${currentIndex + 1} of ${flashcards.length}`;
-      // In focus mode, we hide tags-info so only show it when not in focus mode.
+      
+      // Display performance stats
+      const stats = getPerformanceStats(card);
+      document.getElementById("performance-stats").innerText = `${stats.percentage}% correct (${stats.total} attempts)`;
+      applyPerformanceColor(parseFloat(stats.percentage));
+      
+      // Tags info (only when not in focus mode)
       if (!focusMode) {
         document.getElementById("tags-info").innerText = `Tags: ${card.tags.join(", ")}`;
       }
+
       document.getElementById("understanding-slider").value = card.understanding;
       document.getElementById("understanding-value").innerText = card.understanding;
+
       if (window.MathJax) {
         if (typeof MathJax.typesetPromise === "function") {
           MathJax.typesetPromise();
@@ -571,6 +696,7 @@
           MathJax.typeset();
         }
       }
+      
     }
 
     // Update displayed value for grok filtering.
@@ -604,6 +730,7 @@
       document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit" : "Edit Card";
       document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
       document.getElementById("delete-card").style.display = editMode ? "inline-block" : "none";
+      document.getElementById("clear-attempts").style.display = editMode ? "inline-block" : "none";
       renderCard();
     });
 
@@ -678,17 +805,44 @@
         return;
       }
 
+      // Key command to toggle focus / study mode
       if (e.key === "f") {
         toggleFocusMode();
         return;
       }
+
+      // Key command handlers for correct and incorrect answer marking in focus / study mode
+      if (focusMode && !editMode) {
+        if (e.key === "c") {
+          recordAttempt(true);  // Correct answer
+          return;
+        } else if (e.key === "x") {
+          recordAttempt(false);  // Incorrect answer
+          return;
+        }
+      }
       
+      // Key command to toggle edit mode
       if (e.key === "e") {
         editMode = !editMode;
         document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit" : "Edit Card";
         document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
         document.getElementById("delete-card").style.display = editMode ? "inline-block" : "none";
         renderCard();
+        return;
+      }
+
+      // Key command 'r' to clear attempts with confirmation
+      // DO NOT process this key command if control or cmd is pressed
+      if (e.key === "r" && !e.metaKey && !e.ctrlKey) {
+        if (flashcards.length === 0) return;
+        
+        // Check if in edit mode
+        if (editMode) {
+          if (confirm("Are you sure you want to clear all attempt history for this card?")) {
+            clearCardAttempts();
+          }
+        }
         return;
       }
 
@@ -759,6 +913,12 @@
         }
       }
     });
+
+    // Call this when the page loads to ensure all cards have the attempts array
+    window.onload = function() {
+      ensureAttemptsExist();
+      renderCard();
+    };
 
     document.getElementById("flashcard").addEventListener("click", function() {
       if (flashcards.length === 0) return;
