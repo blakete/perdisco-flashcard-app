@@ -285,6 +285,24 @@
       color: #dc3545 !important;  /* Red for poor performance */
     }
 
+    .save-notification {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+
+    .save-notification.show {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -720,20 +738,19 @@
         autoResizeTextarea(backTextarea);
         
         document.getElementById("save-card-edits").addEventListener("click", function(e) {
-          // Prevent the click from bubbling up to the flashcard container and flipping the card to the back
+          // Prevent the click from bubbling up to the flashcard container
           e.stopPropagation();
-
+          // Save the card data
           flashcards[currentIndex].front = document.getElementById("edit-front").value;
           flashcards[currentIndex].back = document.getElementById("edit-back").value;
           flashcards[currentIndex].tags = document.getElementById("edit-tags").value.split(',')
             .map(tag => tag.trim())
             .filter(tag => tag.length > 0);
-          editMode = false;
-          // showingFront = true;
-          document.getElementById("add-card").style.display = "none";
-          document.getElementById("delete-card").style.display = "none";
-          document.getElementById("toggle-edit").innerText = "Edit Card";
+          // Persist changes
           persistFlashcards();
+          // Show the save notification
+          showSaveNotification();
+          // Re-render the card while staying in edit mode
           renderCard();
         });
         
@@ -1034,7 +1051,24 @@
       saveStateToLocalStorage();
     });
 
-    // renderCard();
+    // Create notification element
+    const saveNotification = document.createElement('div');
+    saveNotification.className = 'save-notification';
+    saveNotification.textContent = 'Changes saved successfully!';
+    saveNotification.style.display = 'none'; // Initially hidden
+    document.body.appendChild(saveNotification);
+
+    // Function to show notification
+    function showSaveNotification() {
+      saveNotification.style.display = 'block'; // Show the element
+      saveNotification.classList.add('show');
+      setTimeout(() => {
+        saveNotification.classList.remove('show');
+        setTimeout(() => {
+          saveNotification.style.display = 'none'; // Hide after fade out
+        }, 300);
+      }, 2000); // Hide after 2 seconds
+    }
   </script>
 </body>
 </html>
