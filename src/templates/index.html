@@ -107,7 +107,7 @@
     }
     #controls input, #controls button {
       font-size: 18px;
-      padding: 5px 10px;
+      padding: 5px 5px;
       margin: 0 5px;
     }
     /* ===== Top Filtering Controls ===== */
@@ -138,7 +138,7 @@
     }
     .filter-buttons-inner button {
       font-size: 18px;
-      padding: 5px 10px;
+      padding: 5px 5px;
       box-sizing: border-box;
     }
     .edit-buttons-inner {
@@ -147,7 +147,7 @@
     }
     .edit-buttons-inner button {
       font-size: 18px;
-      padding: 5px 10px;
+      padding: 5px 5px;
       box-sizing: border-box;
     }
     .card-buttons-outter {
@@ -335,7 +335,7 @@
           <div class="filter-cell filter-operator"></div>
         </div>
         <!-- Grok Filter Row -->
-        <div class="filter-row">
+        <!-- <div class="filter-row">
           <div class="filter-cell filter-label">
             <label for="grok-filter-slider">Grok Filter:</label>
           </div>
@@ -349,7 +349,7 @@
               <option value="ge">≥</option>
             </select>
           </div>
-        </div>
+        </div> -->
       </div>
       <div class="filter-buttons-inner">
         <button id="apply-filter" style="margin-right: 10px;">Apply Filter</button>
@@ -378,13 +378,13 @@
   <div id="card-controls">
     <div class="card-table">
       <!-- Row 1: Grok Slider -->
-      <div class="card-row">
+      <!-- <div class="card-row">
         <div class="card-cell card-label">Grok Level :</div>
         <div class="card-cell card-input">
           <input type="range" id="understanding-slider" min="1" max="3" value="1">
         </div>
         <div class="filter-cell filter-value" id="understanding-value">1</div>
-      </div>
+      </div> -->
     </div>
   </div>
 
@@ -409,8 +409,8 @@
       const state = {
         tagFilter: document.getElementById("tag-filter").value,
         searchInput: document.getElementById("search-input").value,
-        grokFilterValue: document.getElementById("grok-filter-slider").value,
-        grokFilterOperator: document.getElementById("grok-filter-operator").value,
+        // grokFilterValue: document.getElementById("grok-filter-slider").value,
+        // grokFilterOperator: document.getElementById("grok-filter-operator").value,
         focusMode: focusMode,
         currentIndex: currentIndex
       };
@@ -428,9 +428,9 @@
         // Restore filter inputs
         document.getElementById("tag-filter").value = state.tagFilter || '';
         document.getElementById("search-input").value = state.searchInput || '';
-        document.getElementById("grok-filter-slider").value = state.grokFilterValue || '3';
-        document.getElementById("grok-filter-value").innerText = state.grokFilterValue || '3';
-        document.getElementById("grok-filter-operator").value = state.grokFilterOperator || 'le';
+        // document.getElementById("grok-filter-slider").value = state.grokFilterValue || '3';
+        // document.getElementById("grok-filter-value").innerText = state.grokFilterValue || '3';
+        // document.getElementById("grok-filter-operator").value = state.grokFilterOperator || 'le';
         
         // Apply the filters to restore the filtered card set
         applyCurrentFilter();
@@ -519,13 +519,13 @@
       }
     });
 
-    document.getElementById("grok-filter-slider").addEventListener("keydown", function(e) {
-      if (e.key === "Enter") {
-        e.preventDefault(); // Prevent any default behavior
-        document.getElementById("apply-filter").click();
-        document.activeElement.blur();
-      }
-    });
+    // document.getElementById("grok-filter-slider").addEventListener("keydown", function(e) {
+    //   if (e.key === "Enter") {
+    //     e.preventDefault(); // Prevent any default behavior
+    //     document.getElementById("apply-filter").click();
+    //     document.activeElement.blur();
+    //   }
+    // });
 
     document.getElementById("tag-filter").addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
@@ -556,14 +556,14 @@
         });
       }
 
-      // Grok level filtering
-      const grokValue = parseInt(document.getElementById("grok-filter-slider").value);
-      const grokOperator = document.getElementById("grok-filter-operator").value; // "le" or "ge"
-      if (grokOperator === "le") {
-        filteredCards = filteredCards.filter(card => card.understanding <= grokValue);
-      } else {
-        filteredCards = filteredCards.filter(card => card.understanding >= grokValue);
-      }
+      // // Grok level filtering
+      // const grokValue = parseInt(document.getElementById("grok-filter-slider").value);
+      // const grokOperator = document.getElementById("grok-filter-operator").value; // "le" or "ge"
+      // if (grokOperator === "le") {
+      //   filteredCards = filteredCards.filter(card => card.understanding <= grokValue);
+      // } else {
+      //   filteredCards = filteredCards.filter(card => card.understanding >= grokValue);
+      // }
 
       // Search filtering (new)
       const searchText = document.getElementById("search-input").value.trim().toLowerCase();
@@ -772,8 +772,8 @@
         document.getElementById("tags-info").innerText = `Tags: ${card.tags.join(", ")}`;
       }
 
-      document.getElementById("understanding-slider").value = card.understanding;
-      document.getElementById("understanding-value").innerText = card.understanding;
+      // document.getElementById("understanding-slider").value = card.understanding;
+      // document.getElementById("understanding-value").innerText = card.understanding;
 
       if (window.MathJax) {
         if (typeof MathJax.typesetPromise === "function") {
@@ -786,22 +786,22 @@
       saveStateToLocalStorage(); // Save state when filters change
     }
 
-    // Update displayed value for grok filtering.
-    document.getElementById("grok-filter-slider").addEventListener("input", function(e) {
-      document.getElementById("grok-filter-value").innerText = e.target.value;
-    });
+    // // Update displayed value for grok filtering.
+    // document.getElementById("grok-filter-slider").addEventListener("input", function(e) {
+    //   document.getElementById("grok-filter-value").innerText = e.target.value;
+    // });
 
-    // Understanding slider: update display on input, save on change.
-    document.getElementById("understanding-slider").addEventListener("input", function(e) {
-      document.getElementById("understanding-value").innerText = e.target.value;
-    });
-    document.getElementById("understanding-slider").addEventListener("change", function(e) {
-      const value = parseInt(e.target.value);
-      flashcards[currentIndex].understanding = value;
-      persistFlashcards();
-      renderCard();
-      saveStateToLocalStorage(); // Save state when understanding level changes
-    });
+    // // Understanding slider: update display on input, save on change.
+    // document.getElementById("understanding-slider").addEventListener("input", function(e) {
+    //   document.getElementById("understanding-value").innerText = e.target.value;
+    // });
+    // document.getElementById("understanding-slider").addEventListener("change", function(e) {
+    //   const value = parseInt(e.target.value);
+    //   flashcards[currentIndex].understanding = value;
+    //   persistFlashcards();
+    //   renderCard();
+    //   saveStateToLocalStorage(); // Save state when understanding level changes
+    // });
 
     document.getElementById("toggle-edit").addEventListener("click", function() {
       editMode = !editMode;
@@ -942,13 +942,13 @@
         // Make sure there is at least one flashcard
         if (flashcards.length === 0) return;
         
-        // Update the slider value and the displayed value
-        const slider = document.getElementById("understanding-slider");
-        slider.value = newValue;
-        document.getElementById("understanding-value").innerText = newValue;
+        // // Update the slider value and the displayed value
+        // const slider = document.getElementById("understanding-slider");
+        // slider.value = newValue;
+        // document.getElementById("understanding-value").innerText = newValue;
         
         // Update the current flashcard's understanding property
-        flashcards[currentIndex].understanding = newValue;
+        // flashcards[currentIndex].understanding = newValue;
         
         // Persist changes and re-render the card
         persistFlashcards();
@@ -1024,9 +1024,9 @@
     document.getElementById("clear-filter").addEventListener("click", function() {
       document.getElementById("tag-filter").value = "";
       document.getElementById("search-input").value = "";
-      document.getElementById("grok-filter-slider").value = "3";
-      document.getElementById("grok-filter-value").innerText = "3";
-      document.getElementById("grok-filter-operator").value = "le";
+      // document.getElementById("grok-filter-slider").value = "3";
+      // document.getElementById("grok-filter-value").innerText = "3";
+      // document.getElementById("grok-filter-operator").value = "le";
       
       flashcards = allFlashcards.slice();
       // currentIndex = 0;
@@ -1043,13 +1043,13 @@
       saveStateToLocalStorage();
     });
     
-    document.getElementById("grok-filter-slider").addEventListener("change", function() {
-      saveStateToLocalStorage();
-    });
+    // document.getElementById("grok-filter-slider").addEventListener("change", function() {
+    //   saveStateToLocalStorage();
+    // });
     
-    document.getElementById("grok-filter-operator").addEventListener("change", function() {
-      saveStateToLocalStorage();
-    });
+    // document.getElementById("grok-filter-operator").addEventListener("change", function() {
+    //   saveStateToLocalStorage();
+    // });
 
     // Create notification element
     const saveNotification = document.createElement('div');

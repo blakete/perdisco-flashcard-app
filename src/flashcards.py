@@ -1,3 +1,6 @@
+from functools import partial
+import threading
+import webbrowser
 from flask import Flask, render_template, request, jsonify, send_from_directory
 import json
 import os
@@ -14,7 +17,7 @@ with open(FLASHCARDS_FILE, "r", encoding="utf-8") as f:
 ASSETS_FOLDER = os.path.join(os.getcwd(), "assets")
 if not os.path.exists(ASSETS_FOLDER):
     os.makedirs(ASSETS_FOLDER)
-print(f"Assets Folder: {ASSETS_FOLDER}")
+# print(f"Assets Folder: {ASSETS_FOLDER}")
 app.config["ASSETS_FOLDER"] = ASSETS_FOLDER
 
 @app.route("/")
@@ -51,5 +54,11 @@ def save():
         print("Error saving flashcards:", e)
         return jsonify({"success": False, "error": str(e)}), 500
 
+def open_perdisco(url):
+    webbrowser.open(url)
+
 if __name__ == "__main__":
+    # if os.environ.get("WERKZEUG_RUN_MAIN") is None:
+    #     browswer_callback = partial(open_perdisco, url="http://127.0.0.1:8001")
+    #     threading.Timer(1, browswer_callback).start()
     app.run(host="0.0.0.0", port=8001, debug=True)
