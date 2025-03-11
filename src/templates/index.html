@@ -471,6 +471,7 @@
     let showingFront = true;
     let editMode = false;
     let focusMode = false;
+    let mistakesHistoryVisible = true; // Track visibility of mistakes history
 
     // Variables for jump search
     let jumpSearchTerm = "";
@@ -482,7 +483,21 @@
       loadStateFromLocalStorage();
       renderCard();
       setupIncorrectModal();
+      updateMistakesHistoryVisibility(); // Apply history visibility
     };
+    
+    // Function to toggle mistakes history visibility
+    function toggleMistakesHistoryVisibility() {
+      mistakesHistoryVisible = !mistakesHistoryVisible;
+      updateMistakesHistoryVisibility();
+      saveStateToLocalStorage();
+    }
+    
+    // Function to update visibility based on state
+    function updateMistakesHistoryVisibility() {
+      const historyDiv = document.getElementById("incorrect-attempts-history");
+      historyDiv.style.display = mistakesHistoryVisible ? "block" : "none";
+    }
 
     function setupIncorrectModal() {
       const modal = document.getElementById("incorrect-modal");
@@ -536,7 +551,8 @@
         tagFilter: document.getElementById("tag-filter").value,
         searchInput: document.getElementById("search-input").value,
         focusMode: focusMode,
-        currentIndex: currentIndex
+        currentIndex: currentIndex,
+        mistakesHistoryVisible: mistakesHistoryVisible
       };
       localStorage.setItem('flashcardState', JSON.stringify(state));
     }
@@ -557,6 +573,10 @@
         if (state.focusMode) {
           focusMode = false;
           toggleFocusMode();
+        }
+        if (state.mistakesHistoryVisible !== undefined) {
+          mistakesHistoryVisible = state.mistakesHistoryVisible;
+          updateMistakesHistoryVisibility();
         }
         renderCard();
       } catch (error) {
@@ -985,6 +1005,10 @@
         toggleFocusMode();
         return;
       }
+      if (e.key === "h") {
+        toggleMistakesHistoryVisibility();
+        return;
+      }
       if (focusMode && !editMode) {
         if (e.key === "c") {
           recordAttempt(true);
@@ -1005,10 +1029,8 @@
       }
       if (e.key === "r" && !e.metaKey && !e.ctrlKey) {
         if (flashcards.length === 0) return;
-        if (editMode) {
-          if (confirm("Are you sure you want to clear all attempt history for this card?")) {
-            clearCardAttempts();
-          }
+        if (confirm("Are you sure you want to clear all attempt history for this card?")) {
+          clearCardAttempts();
         }
         return;
       }
