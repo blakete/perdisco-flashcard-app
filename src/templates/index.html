@@ -769,15 +769,18 @@
       renderCard();
     }
 
-    function applyPerformanceColor(percentage) {
+    function applyPerformanceColor(percentage, totalAttempts) {
       const performanceStats = document.getElementById("performance-stats");
       performanceStats.classList.remove("high-performance", "medium-performance", "low-performance");
-      if (percentage > 0) {
+      
+      // Only apply colors if there are attempts
+      if (totalAttempts > 0) {
         if (percentage >= 80) {
           performanceStats.classList.add("high-performance");
         } else if (percentage >= 50) {
           performanceStats.classList.add("medium-performance");
         } else {
+          // This will now apply to 0% with attempts as well
           performanceStats.classList.add("low-performance");
         }
       }
@@ -894,7 +897,7 @@
       document.getElementById("card-info").innerText = `Card ${currentIndex + 1} of ${flashcards.length}`;
       const stats = getPerformanceStats(card);
       document.getElementById("performance-stats").innerText = `${stats.percentage}% correct (${stats.total} attempts)`;
-      applyPerformanceColor(parseFloat(stats.percentage));
+      applyPerformanceColor(parseFloat(stats.percentage), stats.total);
       if (!focusMode) {
         document.getElementById("tags-info").innerText = `Tags: ${card.tags.join(", ")}`;
       }
