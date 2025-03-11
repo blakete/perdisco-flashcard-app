@@ -286,6 +286,57 @@
     .save-notification.show {
       opacity: 1;
     }
+    /* New styling for the incorrect answer modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 500px;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .modal-title {
+      font-size: 1.2em;
+      margin-bottom: 15px;
+    }
+    .modal-input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      box-sizing: border-box;
+      font-size: 16px;
+      font-family: sans-serif;
+    }
+    .modal-buttons {
+      text-align: right;
+    }
+    .modal-button {
+      padding: 8px 16px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .modal-submit {
+      background-color: #4CAF50;
+      color: white;
+    }
+    .modal-cancel {
+      background-color: #f1f1f1;
+    }
   </style>
 </head>
 <body>
@@ -350,6 +401,18 @@
     </div>
   </div>
 
+  <!-- Modal for incorrect answer feedback -->
+  <div id="incorrect-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-title">What did you get wrong?</div>
+      <input type="text" id="incorrect-reason" class="modal-input" placeholder="Describe what you got wrong (optional)">
+      <div class="modal-buttons">
+        <button class="modal-button modal-submit" id="incorrect-submit">Submit</button>
+        <button class="modal-button modal-cancel" id="incorrect-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let allFlashcards = {{ flashcards | tojson }};
     let flashcards = allFlashcards.slice();
@@ -367,7 +430,55 @@
       ensureAttemptsExist();
       loadStateFromLocalStorage();
       renderCard();
+      setupIncorrectModal();
     };
+
+    function setupIncorrectModal() {
+      const modal = document.getElementById("incorrect-modal");
+      const submitBtn = document.getElementById("incorrect-submit");
+      const cancelBtn = document.getElementById("incorrect-cancel");
+      const input = document.getElementById("incorrect-reason");
+
+      submitBtn.addEventListener("click", function() {
+        const reason = input.value.trim();
+        recordAttempt(false, reason);
+        closeIncorrectModal();
+      });
+
+      cancelBtn.addEventListener("click", function() {
+        closeIncorrectModal();
+        recordAttempt(false);
+      });
+
+      // Allow pressing Enter to submit
+      input.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          submitBtn.click();
+        }
+      });
+
+      // Close modal if clicking outside
+      window.addEventListener("click", function(e) {
+        if (e.target === modal) {
+          closeIncorrectModal();
+          recordAttempt(false);
+        }
+      });
+    }
+
+    function showIncorrectModal() {
+      const modal = document.getElementById("incorrect-modal");
+      const input = document.getElementById("incorrect-reason");
+      input.value = "";
+      modal.style.display = "block";
+      setTimeout(() => input.focus(), 100);
+    }
+
+    function closeIncorrectModal() {
+      const modal = document.getElementById("incorrect-modal");
+      modal.style.display = "none";
+    }
 
     function saveStateToLocalStorage() {
       const state = {
@@ -585,16 +696,24 @@
       };
     }
 
-    function recordAttempt(correct) {
+    function recordAttempt(correct, reason = null) {
       if (flashcards.length === 0) return;
       const card = flashcards[currentIndex];
       if (!card.attempts) {
         card.attempts = [];
       }
-      card.attempts.push({
+      
+      const attemptData = {
         timestamp: Date.now(),
         correct: correct
-      });
+      };
+      
+      // Only add reason if it's provided and not empty
+      if (reason) {
+        attemptData.reason = reason;
+      }
+      
+      card.attempts.push(attemptData);
       persistFlashcards();
       renderCard();
     }
@@ -765,7 +884,8 @@
           recordAttempt(true);
           return;
         } else if (e.key === "x") {
-          recordAttempt(false);
+          // Show the incorrect answer modal instead of immediately marking incorrect
+          showIncorrectModal();
           return;
         }
       }
