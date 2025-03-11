@@ -25,6 +25,49 @@
       background: #eef;
       font-size: 18px;
     }
+    
+    /* Styles for incorrect attempts history */
+    #incorrect-attempts-history {
+      margin: 20px auto;
+      width: 60%;
+      max-width: 600px;
+      text-align: left;
+    }
+    
+    #incorrect-attempts-history h3 {
+      color: #555;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    
+    #incorrect-attempts-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .incorrect-attempt-item {
+      padding: 10px;
+      margin-bottom: 8px;
+      border-left: 3px solid #dc3545;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+    }
+    
+    .incorrect-attempt-date {
+      font-size: 14px;
+      color: #6c757d;
+      margin-bottom: 5px;
+    }
+    
+    .incorrect-attempt-reason {
+      font-size: 16px;
+    }
+    
+    .no-attempts-message {
+      color: #6c757d;
+      font-style: italic;
+    }
     .embedded-card-image {
       width: 100%;
       object-fit: contain;
@@ -401,6 +444,14 @@
     </div>
   </div>
 
+  <!-- Incorrect attempts history section -->
+  <div id="incorrect-attempts-history">
+    <h3>Previous Mistakes</h3>
+    <ul id="incorrect-attempts-list">
+      <!-- Will be populated dynamically -->
+    </ul>
+  </div>
+
   <!-- Modal for incorrect answer feedback -->
   <div id="incorrect-modal" class="modal">
     <div class="modal-content">
@@ -737,11 +788,59 @@
       textarea.style.height = textarea.scrollHeight + 'px';
     }
 
+    function renderIncorrectAttempts() {
+      const attemptsList = document.getElementById("incorrect-attempts-list");
+      attemptsList.innerHTML = "";
+      
+      if (flashcards.length === 0) {
+        attemptsList.innerHTML = "<p class='no-attempts-message'>No cards matched the filter.</p>";
+        return;
+      }
+      
+      const card = flashcards[currentIndex];
+      
+      if (!card.attempts || card.attempts.length === 0) {
+        attemptsList.innerHTML = "<p class='no-attempts-message'>No recorded mistakes for this card.</p>";
+        return;
+      }
+      
+      // Filter for incorrect attempts that have a reason
+      const incorrectAttempts = card.attempts
+        .filter(attempt => !attempt.correct && attempt.reason)
+        .sort((a, b) => b.timestamp - a.timestamp); // Sort by timestamp, newest first
+      
+      if (incorrectAttempts.length === 0) {
+        attemptsList.innerHTML = "<p class='no-attempts-message'>No detailed mistake records for this card.</p>";
+        return;
+      }
+      
+      incorrectAttempts.forEach(attempt => {
+        const attemptDate = new Date(attempt.timestamp);
+        const dateString = attemptDate.toLocaleString(); // Format date/time
+        
+        const listItem = document.createElement("li");
+        listItem.className = "incorrect-attempt-item";
+        
+        const dateElement = document.createElement("div");
+        dateElement.className = "incorrect-attempt-date";
+        dateElement.textContent = dateString;
+        
+        const reasonElement = document.createElement("div");
+        reasonElement.className = "incorrect-attempt-reason";
+        reasonElement.textContent = attempt.reason;
+        
+        listItem.appendChild(dateElement);
+        listItem.appendChild(reasonElement);
+        attemptsList.appendChild(listItem);
+      });
+    }
+    
     function renderCard() {
       if (flashcards.length === 0) {
         document.getElementById("flashcard").innerText = "No cards match the filter.";
         document.getElementById("card-info").innerText = "";
         document.getElementById("performance-stats").innerText = "";
+        document.getElementById("incorrect-attempts-list").innerHTML = "<p class='no-attempts-message'>No cards matched the filter.</p>";
         return;
       }
       if (currentIndex < 0 || currentIndex >= flashcards.length) {
@@ -788,6 +887,10 @@
       } else {
         document.getElementById("flashcard").innerHTML = showingFront ? card.front : card.back;
       }
+      
+      // Render the incorrect attempts history
+      renderIncorrectAttempts();
+      
       document.getElementById("card-info").innerText = `Card ${currentIndex + 1} of ${flashcards.length}`;
       const stats = getPerformanceStats(card);
       document.getElementById("performance-stats").innerText = `${stats.percentage}% correct (${stats.total} attempts)`;
