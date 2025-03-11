@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Perdisco Flashcards Tool</title>
-  <!-- Polyfill -->
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <!-- MathJax configuration -->
   <script>
     window.MathJax = {
       tex: { 
@@ -14,7 +12,6 @@
       }
     };
   </script>
-  <!-- MathJax for LaTeX rendering -->
   <script id="MathJax-script" async
     src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
   </script>
@@ -27,13 +24,10 @@
       text-align: center;
       background: #eef;
       font-size: 18px;
-      font-family: sans-serif;
     }
     .embedded-card-image {
       width: 100%;
-      /* height: 100%; */
       object-fit: contain;
-      /* object-fit: cover; */
     }
     .flashcard {
       margin: 20px auto;
@@ -48,39 +42,29 @@
       cursor: pointer;
       box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
       font-size: 20px;
-      line-height: 1.5; /* Adds proper spacing between lines */
+      line-height: 1.5;
     }
     .flashcard li {
       margin-top: 5px;
       margin-bottom: 5px;
     }
-    /* .flashcard img {
-      max-width: 500px;
-      max-height: 150px;
-    } */
     .flashcard textarea {
       width: 100%;
       resize: vertical;
       font-size: 18px;
     }
-    /* Add these rules to your existing style section */
     .flashcard p, .flashcard div, .flashcard ol, .flashcard ul {
       margin-top: 5px;
       margin-bottom: 5px;
     }
-
-    /* Specific styling for lines with MathJax content */
     .flashcard .MJX-TEX {
       margin: 5px 0;
       display: inline-block;
     }
-
-    /* For each line of text, whether it has MathJax or not */
     .flashcard > * {
       margin-bottom: 8px;
     }
     #edit-tags { 
-      /* font-family: monospace; */
       font-family: sans-serif;
       font-size: 18px;
     }
@@ -110,7 +94,6 @@
       padding: 5px 5px;
       margin: 0 5px;
     }
-    /* ===== Top Filtering Controls ===== */
     .filter-table {
       display: table;
       margin: 10px auto;
@@ -163,7 +146,7 @@
     }
     .card-buttons-inner button {
       width: 90px;
-      height: 30px
+      height: 30px;
     }
     .filter-label {
       text-align: right;
@@ -189,7 +172,6 @@
       width: 100%;
       margin: 10px auto;
     }
-    /* ===== Bottom Card Controls ===== */
     .card-table {
       display: table;
       margin: 10px auto;
@@ -226,10 +208,6 @@
       font-family: sans-serif;
       font-size: 18px;
     }
-    /* #toggle-edit {
-      font-family: sans-serif;
-      font-size: 18px;
-    } */
     #save-card-edits {
       font-size: 18px;
       padding: 5px 10px;
@@ -256,7 +234,6 @@
       font-family: sans-serif;
       font-size: 18px;
     }
-    /* Ensure MathJax inline math renders inline with the text */
     mjx-container[jax="CHTML"] {
       display: inline !important;
       vertical-align: baseline !important;
@@ -264,27 +241,20 @@
       padding: 0 !important;
       font-size: 1em !important;
     }
-
     #performance-stats {
       margin-top: 10px;
       font-size: 18px;
       color: #555;
-      /* font-weight: bold; */
     }
-
-    /* Optional: add color coding based on performance */
     .high-performance {
-      color: #28a745 !important;  /* Green for good performance */
+      color: #28a745 !important;
     }
-
     .medium-performance {
-      color: #ffc107 !important;  /* Yellow for moderate performance */
+      color: #ffc107 !important;
     }
-
     .low-performance {
-      color: #dc3545 !important;  /* Red for poor performance */
+      color: #dc3545 !important;
     }
-
     .save-notification {
       position: fixed;
       bottom: 20px;
@@ -299,26 +269,23 @@
       opacity: 0;
       transition: opacity 0.3s ease-in-out;
     }
-
     .save-notification.show {
       opacity: 1;
     }
   </style>
 </head>
 <body>
-  <!-- Top Filtering Controls -->
   <div id="filter-controls">
     <div id="filter-actions">
       <div class="filter-table">
-        <!-- Search Row -->
+        <!-- Filter by content Row -->
         <div class="filter-row">
           <div class="filter-cell filter-label">
-            <label for="search-input">Search:</label>
+            <label for="search-input">Filter by content:</label>
           </div>
           <div class="filter-cell filter-input">
-            <input type="text" id="search-input" placeholder="Search card content">
+            <input type="text" id="search-input" placeholder="(e.g., eigen)">
           </div>
-          <!-- Empty cells for alignment -->
           <div class="filter-cell filter-value"></div>
           <div class="filter-cell filter-operator"></div>
         </div>
@@ -328,28 +295,11 @@
             <label for="tag-filter">Filter by Tag:</label>
           </div>
           <div class="filter-cell filter-input">
-            <input type="text" id="tag-filter" placeholder="Enter tag (e.g., 16.32)">
+            <input type="text" id="tag-filter" placeholder="(e.g., 16.32)">
           </div>
-          <!-- Empty cells to keep columns consistent -->
           <div class="filter-cell filter-value"></div>
           <div class="filter-cell filter-operator"></div>
         </div>
-        <!-- Grok Filter Row -->
-        <!-- <div class="filter-row">
-          <div class="filter-cell filter-label">
-            <label for="grok-filter-slider">Grok Filter:</label>
-          </div>
-          <div class="filter-cell filter-input">
-            <input type="range" id="grok-filter-slider" min="1" max="3" value="3">
-          </div>
-          <div class="filter-cell filter-value" id="grok-filter-value">3</div>
-          <div class="filter-cell filter-operator">
-            <select id="grok-filter-operator">
-              <option value="le">≤</option>
-              <option value="ge">≥</option>
-            </select>
-          </div>
-        </div> -->
       </div>
       <div class="filter-buttons-inner">
         <button id="apply-filter" style="margin-right: 10px;">Apply Filter</button>
@@ -367,121 +317,85 @@
   </div>
 
   <div id="performance-stats"></div>
-
-  <!-- Flashcard Display -->
   <div class="flashcard" id="flashcard"></div>
-
   <div id="card-info"></div>
   <div id="tags-info"></div>
-
-  <!-- Bottom Card Controls -->
   <div id="card-controls">
     <div class="card-table">
-      <!-- Row 1: Grok Slider -->
-      <!-- <div class="card-row">
-        <div class="card-cell card-label">Grok Level :</div>
-        <div class="card-cell card-input">
-          <input type="range" id="understanding-slider" min="1" max="3" value="1">
-        </div>
-        <div class="filter-cell filter-value" id="understanding-value">1</div>
-      </div> -->
     </div>
   </div>
 
   <script>
-    // Flashcards data passed from Flask
     let allFlashcards = {{ flashcards | tojson }};
-    let flashcards = allFlashcards.slice(); // current filtered list
+    let flashcards = allFlashcards.slice();
     let currentIndex = 0;
     let showingFront = true;
-    let editMode = false; // Variable for edit mode
-    let focusMode = false; // Variable for focus mode
+    let editMode = false;
+    let focusMode = false;
 
-    // Call this when the page loads to ensure all cards have the attempts array
     window.onload = function() {
       ensureAttemptsExist();
-      loadStateFromLocalStorage(); // Load saved state
+      loadStateFromLocalStorage();
       renderCard();
     };
 
-    // Function to save state to localStorage
     function saveStateToLocalStorage() {
       const state = {
         tagFilter: document.getElementById("tag-filter").value,
         searchInput: document.getElementById("search-input").value,
-        // grokFilterValue: document.getElementById("grok-filter-slider").value,
-        // grokFilterOperator: document.getElementById("grok-filter-operator").value,
         focusMode: focusMode,
         currentIndex: currentIndex
       };
       localStorage.setItem('flashcardState', JSON.stringify(state));
     }
 
-    // Function to load state from localStorage
     function loadStateFromLocalStorage() {
       const stateJson = localStorage.getItem('flashcardState');
       if (!stateJson) return;
       
       try {
         const state = JSON.parse(stateJson);
-        
-        // Restore filter inputs
         document.getElementById("tag-filter").value = state.tagFilter || '';
         document.getElementById("search-input").value = state.searchInput || '';
-        // document.getElementById("grok-filter-slider").value = state.grokFilterValue || '3';
-        // document.getElementById("grok-filter-value").innerText = state.grokFilterValue || '3';
-        // document.getElementById("grok-filter-operator").value = state.grokFilterOperator || 'le';
-        
-        // Apply the filters to restore the filtered card set
         applyCurrentFilter();
-
-        // Restore current index, ensuring it's valid
         if (state.currentIndex !== undefined && flashcards.length > 0) {
           currentIndex = Math.min(state.currentIndex, flashcards.length - 1);
           if (currentIndex < 0) currentIndex = 0;
         }
-        
-        // Restore focus mode (if it was active)
         if (state.focusMode) {
-          focusMode = false; // Set opposite so toggle works correctly
+          focusMode = false;
           toggleFocusMode();
         }
-        
         renderCard();
       } catch (error) {
         console.error("Error loading state from localStorage:", error);
       }
     }
 
-    // Toggle focus mode: hide filter actions and tags info when active.
     function toggleFocusMode() {
       focusMode = !focusMode;
       if (focusMode) {
         document.getElementById("filter-actions").style.display = "none";
         document.getElementById("tags-info").style.display = "none";
-        // Only hide the initial edit button if not in edit mode.
         if (!editMode) {
           document.getElementById("toggle-edit").style.display = "none";
         }
       } else {
         document.getElementById("filter-actions").style.display = "block";
         document.getElementById("tags-info").style.display = "block";
-        // Only show the initial edit button if not in edit mode.
         if (!editMode) {
           document.getElementById("toggle-edit").style.display = "block";
         }
       }
-      saveStateToLocalStorage(); // Save state when filters change
+      saveStateToLocalStorage();
     }
 
-    // Function to persist flashcards to the server
     function persistFlashcards() {
       fetch("/save", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        // Send the complete master list with all cards.
         body: JSON.stringify(allFlashcards)
       })
       .then(response => response.json())
@@ -496,40 +410,23 @@
       });
     }
 
-    // Function to clear all attempts for the current card
     function clearCardAttempts() {
       if (flashcards.length === 0) return;
-      
       const card = flashcards[currentIndex];
-      
-      // Reset the attempts array
       card.attempts = [];
-      
-      // Persist changes to server
       persistFlashcards();
-      
-      // Update the display
       renderCard();
     }
     
-    // Add event listener for the Clear Attempts button
     document.getElementById("clear-attempts").addEventListener("click", function() {
       if (confirm("Are you sure you want to clear all attempt history for this card?")) {
         clearCardAttempts();
       }
     });
 
-    // document.getElementById("grok-filter-slider").addEventListener("keydown", function(e) {
-    //   if (e.key === "Enter") {
-    //     e.preventDefault(); // Prevent any default behavior
-    //     document.getElementById("apply-filter").click();
-    //     document.activeElement.blur();
-    //   }
-    // });
-
     document.getElementById("tag-filter").addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
-        e.preventDefault(); // Prevent form submission or any default behavior
+        e.preventDefault();
         document.getElementById("apply-filter").click();
         document.activeElement.blur();
       }
@@ -537,15 +434,13 @@
 
     document.getElementById("search-input").addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
-        e.preventDefault(); // Prevent form submission or any default behavior
+        e.preventDefault();
         document.getElementById("apply-filter").click();
         document.activeElement.blur();
       }
     });
 
-    // Helper: Reapply the current filter criteria to update flashcards from allFlashcards.
     function applyCurrentFilter() {
-      // Tag filtering
       let filteredCards = allFlashcards.slice();
       const tagInput = document.getElementById("tag-filter").value.trim().toLowerCase();
       if (tagInput !== "") {
@@ -555,17 +450,6 @@
           return filterTags.every(filterTag => cardTags.includes(filterTag));
         });
       }
-
-      // // Grok level filtering
-      // const grokValue = parseInt(document.getElementById("grok-filter-slider").value);
-      // const grokOperator = document.getElementById("grok-filter-operator").value; // "le" or "ge"
-      // if (grokOperator === "le") {
-      //   filteredCards = filteredCards.filter(card => card.understanding <= grokValue);
-      // } else {
-      //   filteredCards = filteredCards.filter(card => card.understanding >= grokValue);
-      // }
-
-      // Search filtering (new)
       const searchText = document.getElementById("search-input").value.trim().toLowerCase();
       if (searchText !== "") {
         filteredCards = filteredCards.filter(card =>
@@ -573,14 +457,11 @@
           card.back.toLowerCase().includes(searchText)
         );
       }
-
       flashcards = filteredCards;
-      // currentIndex = 0; // reset to first card (or preserve if desired)
-      saveStateToLocalStorage(); // Save state when filters change
+      saveStateToLocalStorage();
       return flashcards;
     }
 
-    // Function to set up drag and drop for a textarea
     function setupDragDrop(textareaId) {
       const textarea = document.getElementById(textareaId);
       if (!textarea) return;
@@ -618,7 +499,6 @@
       });
     }
 
-    // Ensure each card has an attempts array if it doesn't exist
     function ensureAttemptsExist() {
       allFlashcards.forEach(card => {
         if (!card.attempts) {
@@ -627,48 +507,36 @@
       });
     }
 
-    // Calculate the percentage of correct answers and total attempts
     function getPerformanceStats(card) {
       if (!card.attempts || card.attempts.length === 0) {
         return { percentage: 0, total: 0 };
       }
-      
       const totalAttempts = card.attempts.length;
       const correctAttempts = card.attempts.filter(attempt => attempt.correct).length;
       const percentage = (correctAttempts / totalAttempts) * 100;
-      
       return {
         percentage: percentage.toFixed(2),
         total: totalAttempts
       };
     }
 
-    // Record an attempt (correct or incorrect)
     function recordAttempt(correct) {
       if (flashcards.length === 0) return;
-      
       const card = flashcards[currentIndex];
       if (!card.attempts) {
         card.attempts = [];
       }
-      
       card.attempts.push({
         timestamp: Date.now(),
         correct: correct
       });
-      
       persistFlashcards();
       renderCard();
     }
 
-    // Apply color coding to performance stats based on percentage
     function applyPerformanceColor(percentage) {
       const performanceStats = document.getElementById("performance-stats");
-      
-      // Remove existing classes
       performanceStats.classList.remove("high-performance", "medium-performance", "low-performance");
-      
-      // Only apply color coding if there are attempts
       if (percentage > 0) {
         if (percentage >= 80) {
           performanceStats.classList.add("high-performance");
@@ -685,7 +553,6 @@
       textarea.style.height = textarea.scrollHeight + 'px';
     }
 
-    // Update display for current card
     function renderCard() {
       if (flashcards.length === 0) {
         document.getElementById("flashcard").innerText = "No cards match the filter.";
@@ -693,16 +560,11 @@
         document.getElementById("performance-stats").innerText = "";
         return;
       }
-      
-      // Ensure currentIndex is within valid bounds.
       if (currentIndex < 0 || currentIndex >= flashcards.length) {
         currentIndex = 0;
       }
-      
       const card = flashcards[currentIndex];
-      
       if (editMode) {
-        // In edit mode, display textareas for front, back, and tags with a Save button.
         document.getElementById("flashcard").innerHTML = `
           <div style="margin-bottom: 10px;"><label style="font-size: 24px;">Front</label></div>
           <textarea id="edit-front" rows="5" style="width:100%; resize: vertical; overflow: hidden;">${card.front}</textarea><br>
@@ -718,63 +580,37 @@
         `;
         setupDragDrop("edit-front");
         setupDragDrop("edit-back");
-        
         const frontTextarea = document.getElementById("edit-front");
         const backTextarea = document.getElementById("edit-back");
-
-        function autoResizeTextarea(textarea) {
-          textarea.style.height = 'auto';
-          textarea.style.height = textarea.scrollHeight + 'px';
-        }
-
         frontTextarea.addEventListener("input", function() {
           autoResizeTextarea(frontTextarea);
         });
         backTextarea.addEventListener("input", function() {
           autoResizeTextarea(backTextarea);
         });
-
         autoResizeTextarea(frontTextarea);
         autoResizeTextarea(backTextarea);
-        
         document.getElementById("save-card-edits").addEventListener("click", function(e) {
-          // Prevent the click from bubbling up to the flashcard container
           e.stopPropagation();
-          // Save the card data
           flashcards[currentIndex].front = document.getElementById("edit-front").value;
           flashcards[currentIndex].back = document.getElementById("edit-back").value;
           flashcards[currentIndex].tags = document.getElementById("edit-tags").value.split(',')
             .map(tag => tag.trim())
             .filter(tag => tag.length > 0);
-          // Persist changes
           persistFlashcards();
-          // Show the save notification
           showSaveNotification();
-          // Re-render the card while staying in edit mode
           renderCard();
         });
-        
       } else {
-        // In view mode, display based on showingFront.
         document.getElementById("flashcard").innerHTML = showingFront ? card.front : card.back;
       }
-      
-      // Display card info
       document.getElementById("card-info").innerText = `Card ${currentIndex + 1} of ${flashcards.length}`;
-      
-      // Display performance stats
       const stats = getPerformanceStats(card);
       document.getElementById("performance-stats").innerText = `${stats.percentage}% correct (${stats.total} attempts)`;
       applyPerformanceColor(parseFloat(stats.percentage));
-      
-      // Tags info (only when not in focus mode)
       if (!focusMode) {
         document.getElementById("tags-info").innerText = `Tags: ${card.tags.join(", ")}`;
       }
-
-      // document.getElementById("understanding-slider").value = card.understanding;
-      // document.getElementById("understanding-value").innerText = card.understanding;
-
       if (window.MathJax) {
         if (typeof MathJax.typesetPromise === "function") {
           MathJax.typesetPromise();
@@ -782,37 +618,17 @@
           MathJax.typeset();
         }
       }
-      
-      saveStateToLocalStorage(); // Save state when filters change
+      saveStateToLocalStorage();
     }
-
-    // // Update displayed value for grok filtering.
-    // document.getElementById("grok-filter-slider").addEventListener("input", function(e) {
-    //   document.getElementById("grok-filter-value").innerText = e.target.value;
-    // });
-
-    // // Understanding slider: update display on input, save on change.
-    // document.getElementById("understanding-slider").addEventListener("input", function(e) {
-    //   document.getElementById("understanding-value").innerText = e.target.value;
-    // });
-    // document.getElementById("understanding-slider").addEventListener("change", function(e) {
-    //   const value = parseInt(e.target.value);
-    //   flashcards[currentIndex].understanding = value;
-    //   persistFlashcards();
-    //   renderCard();
-    //   saveStateToLocalStorage(); // Save state when understanding level changes
-    // });
 
     document.getElementById("toggle-edit").addEventListener("click", function() {
       editMode = !editMode;
       if (!editMode) {
         showingFront = true;
-        // If exiting edit mode while in focus mode, hide the edit button again.
         if (focusMode) {
           document.getElementById("toggle-edit").style.display = "none";
         }
       } else {
-        // When entering edit mode, always show the edit-related buttons.
         document.getElementById("toggle-edit").style.display = "inline-block";
       }
       document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit" : "Edit Card";
@@ -823,96 +639,71 @@
     });
 
     document.getElementById("add-card").addEventListener("click", function() {
-      // Get the current tag filter value and parse it into an array.
       const tagInput = document.getElementById("tag-filter").value.trim();
       const defaultTags = tagInput ? tagInput.split(",").map(tag => tag.trim()).filter(tag => tag !== "") : [];
-
       const newCard = {
-        "id": Date.now(), // Unique id
+        "id": Date.now(),
         "front": "TODO: New front content",
         "back": "TODO: New back content",
         "tags": defaultTags,
         "understanding": 1
       };
-
-      // If there are cards, insert the new card after the current one.
       if (flashcards.length > 0) {
         const currentCardId = flashcards[currentIndex].id;
         const masterIndex = allFlashcards.findIndex(card => card.id === currentCardId);
         allFlashcards.splice(masterIndex + 1, 0, newCard);
       } else {
-        // No cards are present, so simply add the new card.
         allFlashcards.push(newCard);
       }
-
-      // Reapply filters to update the displayed flashcards.
       applyCurrentFilter();
-
-      // Set currentIndex to the new card if it is in the filtered list.
       currentIndex = flashcards.findIndex(card => card.id === newCard.id);
       if (currentIndex < 0) {
-        // If the new card does not pass the current filter criteria, reset currentIndex.
         currentIndex = 0;
       }
-      
       persistFlashcards();
       renderCard();
-      saveStateToLocalStorage(); // Save state when adding a card
+      saveStateToLocalStorage();
     });
 
     document.getElementById("delete-card").addEventListener("click", function() {
       if (flashcards.length === 0) return;
       const cardId = flashcards[currentIndex].id;
-
-      // Remove the card from the master list.
       allFlashcards = allFlashcards.filter(card => card.id !== cardId);
-
-      // Reapply the filter to update the display.
       savedCurrentIdx = currentIndex;
       applyCurrentFilter();
       currentIndex = savedCurrentIdx;
-
       if (currentIndex >= flashcards.length) {
         currentIndex = flashcards.length - 1;
       }
       persistFlashcards();
       renderCard();
-      saveStateToLocalStorage(); // Save state when deleting a card
+      saveStateToLocalStorage();
     });
 
     document.addEventListener('keydown', function(e) {
-      // If Escape is pressed and an element (other than the body) is focused, blur it.
       if (e.key === "Escape") {
         if (document.activeElement && document.activeElement !== document.body) {
           document.activeElement.blur();
-          e.preventDefault(); // Prevent any default Escape behavior
-          return; // Stop further processing of this key event
+          e.preventDefault();
+          return;
         }
       }
-
-      // Ignore key events if the focus is on an input or textarea.
       if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
         return;
       }
-
-      // Key command to toggle focus / study mode
       if (e.key === "f") {
         toggleFocusMode();
         return;
       }
-
-      // Key command handlers for correct and incorrect answer marking in focus / study mode
       if (focusMode && !editMode) {
         if (e.key === "c") {
-          recordAttempt(true);  // Correct answer
+          recordAttempt(true);
           return;
         } else if (e.key === "x") {
-          recordAttempt(false);  // Incorrect answer
+          recordAttempt(false);
           return;
         }
       }
-      
-      // Key command to toggle edit mode
       if (e.key === "e") {
         editMode = !editMode;
         document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit" : "Edit Card";
@@ -921,13 +712,8 @@
         renderCard();
         return;
       }
-
-      // Key command 'r' to clear attempts with confirmation
-      // DO NOT process this key command if control or cmd is pressed
       if (e.key === "r" && !e.metaKey && !e.ctrlKey) {
         if (flashcards.length === 0) return;
-        
-        // Check if in edit mode
         if (editMode) {
           if (confirm("Are you sure you want to clear all attempt history for this card?")) {
             clearCardAttempts();
@@ -935,30 +721,14 @@
         }
         return;
       }
-
-      // Add key commands for understanding slider (keys "1", "2", "3")
       if (["1", "2", "3"].includes(e.key)) {
         const newValue = parseInt(e.key, 10);
-        // Make sure there is at least one flashcard
         if (flashcards.length === 0) return;
-        
-        // // Update the slider value and the displayed value
-        // const slider = document.getElementById("understanding-slider");
-        // slider.value = newValue;
-        // document.getElementById("understanding-value").innerText = newValue;
-        
-        // Update the current flashcard's understanding property
-        // flashcards[currentIndex].understanding = newValue;
-        
-        // Persist changes and re-render the card
         persistFlashcards();
         renderCard();
-        saveStateToLocalStorage(); // Save state when understanding level changes via keyboard
-        
-        // Prevent further processing of this key event if desired.
+        saveStateToLocalStorage();
         return;
       }
-      
       if (e.key === "a" && editMode) {
         const addButton = document.getElementById("add-card");
         if (addButton) {
@@ -966,7 +736,6 @@
         }
         return;
       }
-
       if (e.key === "d" && editMode) {
         const deleteButton = document.getElementById("delete-card");
         if (deleteButton) {
@@ -974,7 +743,6 @@
         }
         return;
       }
-
       if (e.key === "s" && editMode) {
         const saveButton = document.getElementById("save-card-edits");
         if (saveButton) {
@@ -982,21 +750,20 @@
         }
         return;
       }
-      
       if (flashcards.length === 0) return;
       if (e.key === "ArrowRight") {
         if (currentIndex < flashcards.length - 1) {
           currentIndex++;
           showingFront = true;
           renderCard();
-          saveStateToLocalStorage(); // Save state when navigating
+          saveStateToLocalStorage();
         }
       } else if (e.key === "ArrowLeft") {
         if (currentIndex > 0) {
           currentIndex--;
           showingFront = true;
           renderCard();
-          saveStateToLocalStorage(); // Save state when navigating
+          saveStateToLocalStorage();
         }
       } else if (e.key === " " || e.key === "ArrowUp" || e.key === "ArrowDown") {
         if (!editMode) {
@@ -1007,34 +774,20 @@
       }
     });
 
-    // document.getElementById("flashcard").addEventListener("click", function() {
-    //   if (flashcards.length === 0) return;
-    //   if (!editMode) {
-    //     showingFront = !showingFront;
-    //     renderCard();
-    //   }
-    // });
-
     document.getElementById("apply-filter").addEventListener("click", function() {
       applyCurrentFilter();
       renderCard();
-      saveStateToLocalStorage(); // Save state when navigating
+      saveStateToLocalStorage();
     });
 
     document.getElementById("clear-filter").addEventListener("click", function() {
       document.getElementById("tag-filter").value = "";
       document.getElementById("search-input").value = "";
-      // document.getElementById("grok-filter-slider").value = "3";
-      // document.getElementById("grok-filter-value").innerText = "3";
-      // document.getElementById("grok-filter-operator").value = "le";
-      
       flashcards = allFlashcards.slice();
-      // currentIndex = 0;
       renderCard();
-      saveStateToLocalStorage(); // Save state when clearing filters
+      saveStateToLocalStorage();
     });
 
-    // Add event listeners to save state when filter inputs change
     document.getElementById("tag-filter").addEventListener("change", function() {
       saveStateToLocalStorage();
     });
@@ -1042,32 +795,22 @@
     document.getElementById("search-input").addEventListener("change", function() {
       saveStateToLocalStorage();
     });
-    
-    // document.getElementById("grok-filter-slider").addEventListener("change", function() {
-    //   saveStateToLocalStorage();
-    // });
-    
-    // document.getElementById("grok-filter-operator").addEventListener("change", function() {
-    //   saveStateToLocalStorage();
-    // });
 
-    // Create notification element
     const saveNotification = document.createElement('div');
     saveNotification.className = 'save-notification';
     saveNotification.textContent = 'Changes saved successfully!';
-    saveNotification.style.display = 'none'; // Initially hidden
+    saveNotification.style.display = 'none';
     document.body.appendChild(saveNotification);
 
-    // Function to show notification
     function showSaveNotification() {
-      saveNotification.style.display = 'block'; // Show the element
+      saveNotification.style.display = 'block';
       saveNotification.classList.add('show');
       setTimeout(() => {
         saveNotification.classList.remove('show');
         setTimeout(() => {
-          saveNotification.style.display = 'none'; // Hide after fade out
+          saveNotification.style.display = 'none';
         }, 300);
-      }, 2000); // Hide after 2 seconds
+      }, 2000);
     }
   </script>
 </body>
