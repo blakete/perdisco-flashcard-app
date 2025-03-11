@@ -73,23 +73,63 @@
       font-size: 18px;
       color: #555;
     }
-    /* New jump search controls above filter-controls */
+    /* New Jump Search Row with same formatting as filter rows */
     #jump-search-controls {
       margin: 18px auto;
+      width: 100%;
       max-width: 400px;
     }
-    #jump-search-controls label {
+    #jump-search-controls input {
+      font-family: sans-serif;
       font-size: 18px;
     }
+    #jump-search-controls .filter-input {
+      width: 200px !important;
+    }
     #jump-search-input {
+      width: 200px !important;
+    }
+    /* The jump search row will reuse the filter table styling */
+    .filter-table {
+      display: table;
+      margin: 10px auto;
+      width: 100%;
+    }
+    .filter-row {
+      display: table-row;
+    }
+    .filter-cell {
+      display: table-cell;
+      padding: 5px;
+      vertical-align: middle;
       font-size: 18px;
-      width: 200px;
-      margin-left: 10px;
+      color: #555;
+    }
+    .filter-label {
+      text-align: right;
+      white-space: nowrap;
+    }
+    .filter-input {
+      width: 80px !important;
+    }
+    .filter-value,
+    .filter-operator {
+      text-align: left;
+      padding-left: 10px;
+    }
+    .filter-value {
+      text-align: center;
+      padding-left: 10px;
+      width: 40px;
     }
     #filter-controls {
       margin: 18px auto;
       width: 100%;
       max-width: 400px;
+    }
+    #filter-controls input {
+      font-family: sans-serif;
+      font-size: 18px;
     }
     #card-controls {
       margin: 18px auto;
@@ -106,21 +146,6 @@
       font-size: 18px;
       padding: 5px 5px;
       margin: 0 5px;
-    }
-    .filter-table {
-      display: table;
-      margin: 10px auto;
-      width: 100%;
-    }
-    .filter-row {
-      display: table-row;
-    }
-    .filter-cell {
-      display: table-cell;
-      padding: 5px;
-      vertical-align: middle;
-      font-size: 18px;
-      color: #555;
     }
     .filter-buttons-wrapper {
       display: table-cell;
@@ -160,30 +185,6 @@
     .card-buttons-inner button {
       width: 90px;
       height: 30px;
-    }
-    .filter-label {
-      text-align: right;
-      white-space: nowrap;
-    }
-    .filter-input {
-      width: 80px !important;
-    }
-    .filter-value,
-    .filter-operator {
-      text-align: left;
-      padding-left: 10px;
-    }
-    .filter-value {
-      text-align: center;
-      padding-left: 10px;
-      width: 40px;
-    }
-    .filter-buttons {
-      display: flex !important;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      margin: 10px auto;
     }
     .card-table {
       display: table;
@@ -288,22 +289,27 @@
   </style>
 </head>
 <body>
-  <!-- New Jump Search Element -->
-  <div id="jump-search-controls">
-    <label for="jump-search-input">Jump Search:</label>
-    <input type="text" id="jump-search-input" placeholder="Enter text (e.g., eigen)">
-  </div>
-
   <div id="filter-controls">
     <div id="filter-actions">
       <div class="filter-table">
+        <!-- Jump search -->
+        <div class="filter-row">
+          <div class="filter-cell filter-label">
+            <label for="jump-search-input">Jump Search:</label>
+          </div>
+          <div class="filter-cell filter-input">
+            <input type="text" id="jump-search-input" placeholder="(e.g., eigen value)">
+          </div>
+          <div class="filter-cell filter-value"></div>
+          <div class="filter-cell filter-operator"></div>
+        </div>
         <!-- Filter by content Row -->
         <div class="filter-row">
           <div class="filter-cell filter-label">
             <label for="search-input">Filter by content:</label>
           </div>
           <div class="filter-cell filter-input">
-            <input type="text" id="search-input" placeholder="(e.g., eigen)">
+            <input type="text" id="search-input" placeholder="(e.g., decomposition)">
           </div>
           <div class="filter-cell filter-value"></div>
           <div class="filter-cell filter-operator"></div>
