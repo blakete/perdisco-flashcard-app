@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Perdisco Flashcards Tool</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
@@ -101,6 +102,186 @@
       line-height: 1;
       color: black;
     }
+    
+    /* Focus mode toggle button in top right */
+    #focus-mode-toggle {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 100;
+      background-color: #4682B4;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      cursor: pointer;
+    }
+    
+    /* Mobile control bar */
+    .mobile-control-bar {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 100;
+      display: none; /* Hide on desktop by default */
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .mobile-control-button {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background-color: #6c757d;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      cursor: pointer;
+    }
+    
+    #mobile-edit {
+      background-color: #6610f2;
+    }
+    
+    #mobile-filter {
+      background-color: #fd7e14;
+    }
+    
+    #mobile-history {
+      background-color: #20c997;
+    }
+    
+    #mobile-clear-attempts {
+      background-color: #dc3545;
+    }
+    
+    /* Mobile action buttons container */
+    .mobile-actions {
+      display: flex;
+      justify-content: center;
+      margin: 15px auto;
+      gap: 20px;
+      max-width: 600px;
+      padding: 0 10px;
+    }
+    
+    .mobile-button {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.2s;
+    }
+    
+    .mobile-button:active {
+      transform: scale(0.95);
+    }
+    
+    .mobile-button .material-icons {
+      font-size: 30px;
+    }
+    
+    .correct-button {
+      background-color: #28a745;
+      color: white;
+    }
+    
+    .incorrect-button {
+      background-color: #dc3545;
+      color: white;
+    }
+    
+    .flip-button {
+      background-color: #17a2b8;
+      color: white;
+    }
+    
+    /* Hide mobile controls on desktop, show on mobile */
+    @media (min-width: 769px) {
+      .mobile-actions {
+        display: none;
+      }
+      
+      #focus-mode-toggle {
+        display: none;
+      }
+      
+      .mobile-control-bar {
+        display: none;
+      }
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 768px) {
+      html, body {
+        font-size: 16px;
+      }
+      
+      .flashcard {
+        width: 90% !important;
+        min-height: 200px !important;
+        margin: 10px auto !important;
+        padding: 15px !important;
+      }
+      
+      #filter-controls {
+        max-width: 90% !important;
+      }
+      
+      #incorrect-attempts-history {
+        width: 90% !important;
+      }
+      
+      .filter-label {
+        display: none; /* Hide labels on mobile to save space */
+      }
+      
+      .filter-input {
+        width: 100% !important;
+      }
+      
+      #search-input, #tag-filter, #jump-search-input {
+        width: 100% !important;
+        padding: 8px !important;
+        font-size: 16px !important;
+      }
+      
+      .mobile-control-bar {
+        display: flex; /* Show on mobile */
+      }
+      
+      /* Adjust the modal size for mobile */
+      .modal-content {
+        width: 95%;
+        padding: 15px;
+      }
+      
+      /* Show edit form fields responsively */
+      #edit-front, #edit-back, #edit-tags {
+        font-size: 16px !important;
+        padding: 8px !important;
+      }
+      
+      /* Make buttons more touchable */
+      button {
+        min-height: 44px;
+        min-width: 44px;
+      }
+    }
+    
     .embedded-card-image {
       width: 100%;
       object-fit: contain;
@@ -416,6 +597,27 @@
   </style>
 </head>
 <body>
+  <!-- Mobile control bar with action buttons -->
+  <div class="mobile-control-bar">
+    <button class="mobile-control-button" id="mobile-edit">
+      <span class="material-icons">edit</span>
+    </button>
+    <button class="mobile-control-button" id="mobile-filter">
+      <span class="material-icons">filter_list</span>
+    </button>
+    <button class="mobile-control-button" id="mobile-history">
+      <span class="material-icons">history</span>
+    </button>
+    <button class="mobile-control-button" id="mobile-clear-attempts">
+      <span class="material-icons">delete_sweep</span>
+    </button>
+  </div>
+
+  <!-- Focus mode toggle button (visible on mobile) -->
+  <button id="focus-mode-toggle">
+    <span class="material-icons">center_focus_strong</span>
+  </button>
+
   <div id="filter-controls">
     <div id="filter-actions">
       <div class="filter-table">
@@ -470,6 +672,20 @@
 
   <div id="performance-stats"></div>
   <div class="flashcard" id="flashcard"></div>
+  
+  <!-- Mobile action buttons -->
+  <div class="mobile-actions">
+    <button class="mobile-button flip-button" id="mobile-flip">
+      <span class="material-icons">flip</span>
+    </button>
+    <button class="mobile-button correct-button" id="mobile-correct">
+      <span class="material-icons">check_circle</span>
+    </button>
+    <button class="mobile-button incorrect-button" id="mobile-incorrect">
+      <span class="material-icons">highlight_off</span>
+    </button>
+  </div>
+  
   <div id="card-info"></div>
   <div id="tags-info"></div>
   <div id="card-controls">
@@ -517,6 +733,7 @@
       renderCard();
       setupIncorrectModal();
       updateMistakesHistoryVisibility(); // Apply history visibility
+      initMobileHandlers(); // Initialize mobile touch and UI handlers
     };
     
     // Function to toggle mistakes history visibility
@@ -619,19 +836,69 @@
 
     function toggleFocusMode() {
       focusMode = !focusMode;
+      
+      // Elements to hide in focus mode
+      const nonEssentialElements = [
+        document.getElementById("filter-actions"),
+        document.getElementById("tags-info"),
+        document.getElementById("edit-actions")
+      ];
+      
+      // Mobile-specific elements to toggle in focus mode
+      const mobileControlBar = document.querySelector(".mobile-control-bar");
+      const filterControls = document.getElementById("filter-controls");
+      
       if (focusMode) {
-        document.getElementById("filter-actions").style.display = "none";
-        document.getElementById("tags-info").style.display = "none";
+        // Hide non-essential elements
+        nonEssentialElements.forEach(el => {
+          if (el) el.style.display = "none";
+        });
+        
+        // Hide filter controls container in focus mode
+        if (filterControls) filterControls.style.display = "none";
+        
+        // Hide edit button if not in edit mode
         if (!editMode) {
           document.getElementById("toggle-edit").style.display = "none";
         }
+        
+        // Hide mobile control bar in focus mode
+        if (mobileControlBar) mobileControlBar.style.display = "none";
+        
+        // Keep mobile action buttons visible even in focus mode
+        // They're essential for card interaction on mobile
       } else {
-        document.getElementById("filter-actions").style.display = "block";
-        document.getElementById("tags-info").style.display = "block";
-        if (!editMode) {
-          document.getElementById("toggle-edit").style.display = "block";
+        // For desktop view, show non-essential elements
+        if (window.innerWidth > 768) {
+          nonEssentialElements.forEach(el => {
+            if (el) el.style.display = "block";
+          });
+          
+          // Show filter controls container
+          if (filterControls) filterControls.style.display = "block";
+          
+          if (!editMode) {
+            document.getElementById("toggle-edit").style.display = "block";
+          }
+        } else {
+          // For mobile view, keep filter controls hidden until explicitly shown
+          // but make sure they're ready to be shown
+          if (filterControls) filterControls.style.display = "none";
+          document.getElementById("filter-actions").style.display = "block";
         }
+        
+        // Show mobile control bar when exiting focus mode
+        if (mobileControlBar) mobileControlBar.style.display = "flex";
       }
+      
+      // Update button appearance
+      const focusButton = document.getElementById("focus-mode-toggle");
+      if (focusMode) {
+        focusButton.style.backgroundColor = "#28a745"; // Green when active
+      } else {
+        focusButton.style.backgroundColor = "#4682B4"; // Default blue when inactive
+      }
+      
       saveStateToLocalStorage();
     }
 
@@ -886,7 +1153,7 @@
         // Add Material Icons icon
         const iconSpan = document.createElement("span");
         iconSpan.className = "material-icons";
-        iconSpan.textContent = "delete"; // Using the "close" icon which is a clean X
+        iconSpan.textContent = "delete"; // Using the "delete" icon
         deleteButton.appendChild(iconSpan);
         
         deleteButton.addEventListener("click", function(e) {
@@ -1004,6 +1271,171 @@
       saveStateToLocalStorage();
     }
 
+    // Mobile touch and UI handlers
+    function initMobileHandlers() {
+      // Touch variables for swipe detection
+      let touchStartX = 0;
+      let touchEndX = 0;
+      let touchStartY = 0;
+      let touchEndY = 0;
+      
+      // Minimum distance for a swipe
+      const minSwipeDistance = 50;
+      
+      // Add touch event handlers to the flashcard
+      const flashcard = document.getElementById("flashcard");
+      
+      // Track if it's a tap or a swipe
+      let isTap = false;
+      let touchStartTime = 0;
+      
+      flashcard.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+        touchStartTime = new Date().getTime();
+        isTap = true;
+      });
+      
+      flashcard.addEventListener('touchmove', e => {
+        // If moved more than a small threshold, it's not a tap
+        const moveX = Math.abs(e.changedTouches[0].screenX - touchStartX);
+        const moveY = Math.abs(e.changedTouches[0].screenY - touchStartY);
+        if (moveX > 10 || moveY > 10) {
+          isTap = false;
+        }
+      });
+      
+      flashcard.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        touchEndY = e.changedTouches[0].screenY;
+        const touchEndTime = new Date().getTime();
+        
+        // Calculate horizontal distance
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+        
+        // Check if it's a tap (short duration, minimal movement)
+        if (isTap && touchEndTime - touchStartTime < 300) {
+          // It's a tap - flip the card
+          if (!editMode) {
+            showingFront = !showingFront;
+            renderCard();
+          }
+          return;
+        }
+        
+        // Check if horizontal swipe is more significant than vertical
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          // Check if it's a left or right swipe (with minimum distance)
+          if (Math.abs(deltaX) > minSwipeDistance) {
+            if (deltaX > 0) {
+              // Right swipe - previous card
+              if (currentIndex > 0) {
+                currentIndex--;
+                showingFront = true;
+                renderCard();
+                saveStateToLocalStorage();
+              }
+            } else {
+              // Left swipe - next card
+              if (currentIndex < flashcards.length - 1) {
+                currentIndex++;
+                showingFront = true;
+                renderCard();
+                saveStateToLocalStorage();
+              }
+            }
+          }
+        }
+      });
+      
+      // Mobile action buttons
+      document.getElementById("mobile-flip").addEventListener("click", function() {
+        if (!editMode) {
+          showingFront = !showingFront;
+          renderCard();
+        }
+      });
+      
+      document.getElementById("mobile-correct").addEventListener("click", function() {
+        if (!editMode && flashcards.length > 0) {
+          recordAttempt(true);
+        }
+      });
+      
+      document.getElementById("mobile-incorrect").addEventListener("click", function() {
+        if (!editMode && flashcards.length > 0) {
+          showIncorrectModal();
+        }
+      });
+      
+      // Control buttons
+      document.getElementById("mobile-edit").addEventListener("click", function() {
+        // Toggle edit mode directly instead of relying on the desktop button
+        editMode = !editMode;
+        if (!editMode) {
+          showingFront = true;
+        }
+        
+        // Update UI to reflect edit mode change
+        document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit" : "Edit Card";
+        document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
+        document.getElementById("delete-card").style.display = editMode ? "inline-block" : "none";
+        document.getElementById("clear-attempts").style.display = editMode ? "inline-block" : "none";
+        renderCard();
+      });
+      
+      document.getElementById("mobile-filter").addEventListener("click", function() {
+        const filterControls = document.getElementById("filter-controls");
+        const filterActions = document.getElementById("filter-actions");
+        
+        // Toggle visibility of the filter controls
+        if (filterControls.style.display === "none") {
+          filterControls.style.display = "block";
+          filterActions.style.display = "block"; // Make sure the inner content is also visible
+        } else {
+          filterControls.style.display = "none";
+        }
+      });
+      
+      document.getElementById("mobile-history").addEventListener("click", function() {
+        toggleMistakesHistoryVisibility();
+      });
+      
+      document.getElementById("mobile-clear-attempts").addEventListener("click", function() {
+        if (flashcards.length === 0) return;
+        
+        if (confirm("Are you sure you want to clear all attempt history for this card?")) {
+          clearCardAttempts();
+        }
+      });
+      
+      // Focus mode toggle button
+      document.getElementById("focus-mode-toggle").addEventListener("click", function() {
+        toggleFocusMode();
+      });
+      
+      // Adjust UI for mobile
+      setupMobileUI();
+    }
+    
+    function setupMobileUI() {
+      // Check if we're on a mobile device
+      if (window.innerWidth <= 768) {
+        // Initially hide filter controls until explicitly shown by the user
+        const filterControls = document.getElementById("filter-controls");
+        // Only set display none if it's not already set by focus mode
+        if (!focusMode) {
+          filterControls.style.display = "none";
+        }
+      }
+    }
+    
+    // Add window resize event to adjust UI for orientation changes
+    window.addEventListener('resize', function() {
+      setupMobileUI();
+    });
+
     document.getElementById("toggle-edit").addEventListener("click", function() {
       editMode = !editMode;
       if (!editMode) {
@@ -1078,7 +1510,7 @@
         toggleFocusMode();
         return;
       }
-      if (e.key === "h") {
+      if (e.key === "p") {
         toggleMistakesHistoryVisibility();
         return;
       }
