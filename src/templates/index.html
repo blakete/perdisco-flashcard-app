@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Perdisco Flashcards Tool</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script>
     window.MathJax = {
@@ -52,12 +53,14 @@
       border-left: 3px solid #dc3545;
       background-color: #f8f9fa;
       border-radius: 4px;
+      position: relative; /* For positioning the delete button */
     }
     
     .incorrect-attempt-date {
       font-size: 14px;
       color: #6c757d;
       margin-bottom: 5px;
+      padding-right: 25px; /* Make room for delete button */
     }
     
     .incorrect-attempt-reason {
@@ -67,6 +70,36 @@
     .no-attempts-message {
       color: #6c757d;
       font-style: italic;
+    }
+    
+    /* Delete button styling */
+    .delete-attempt-button {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: #ffffff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    
+    .delete-attempt-button:hover {
+      opacity: 1;
+    }
+    
+    .delete-attempt-button .material-icons {
+      font-size: 16px;
+      line-height: 1;
+      color: black;
     }
     .embedded-card-image {
       width: 100%;
@@ -837,12 +870,29 @@
         return;
       }
       
-      incorrectAttempts.forEach(attempt => {
+      incorrectAttempts.forEach((attempt) => {
         const attemptDate = new Date(attempt.timestamp);
         const dateString = attemptDate.toLocaleString(); // Format date/time
         
         const listItem = document.createElement("li");
         listItem.className = "incorrect-attempt-item";
+        
+        // Create delete button
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "delete-attempt-button";
+        deleteButton.setAttribute("title", "Delete this mistake record");
+        deleteButton.setAttribute("data-timestamp", attempt.timestamp); // Store timestamp for identification
+        
+        // Add Material Icons icon
+        const iconSpan = document.createElement("span");
+        iconSpan.className = "material-icons";
+        iconSpan.textContent = "delete"; // Using the "close" icon which is a clean X
+        deleteButton.appendChild(iconSpan);
+        
+        deleteButton.addEventListener("click", function(e) {
+          e.stopPropagation(); // Prevent event bubbling
+          deleteIncorrectAttempt(attempt.timestamp);
+        });
         
         const dateElement = document.createElement("div");
         dateElement.className = "incorrect-attempt-date";
@@ -852,10 +902,33 @@
         reasonElement.className = "incorrect-attempt-reason";
         reasonElement.textContent = attempt.reason;
         
+        listItem.appendChild(deleteButton);
         listItem.appendChild(dateElement);
         listItem.appendChild(reasonElement);
         attemptsList.appendChild(listItem);
       });
+    }
+    
+    // Function to delete an incorrect attempt
+    function deleteIncorrectAttempt(timestamp) {
+      if (flashcards.length === 0) return;
+      
+      const card = flashcards[currentIndex];
+      if (!card.attempts) return;
+      
+      // Find the attempt with the matching timestamp
+      const attemptIndex = card.attempts.findIndex(attempt => attempt.timestamp === parseInt(timestamp, 10));
+      
+      if (attemptIndex !== -1) {
+        // Remove the attempt
+        card.attempts.splice(attemptIndex, 1);
+        
+        // Persist the change
+        persistFlashcards();
+        
+        // Re-render the list
+        renderIncorrectAttempts();
+      }
     }
     
     function renderCard() {
@@ -1029,8 +1102,10 @@
       }
       if (e.key === "r" && !e.metaKey && !e.ctrlKey) {
         if (flashcards.length === 0) return;
-        if (confirm("Are you sure you want to clear all attempt history for this card?")) {
-          clearCardAttempts();
+        if (editMode) {
+          if (confirm("Are you sure you want to clear all attempt history for this card?")) {
+            clearCardAttempts();
+          }
         }
         return;
       }
