@@ -73,6 +73,19 @@
       font-size: 18px;
       color: #555;
     }
+    /* New jump search controls above filter-controls */
+    #jump-search-controls {
+      margin: 18px auto;
+      max-width: 400px;
+    }
+    #jump-search-controls label {
+      font-size: 18px;
+    }
+    #jump-search-input {
+      font-size: 18px;
+      width: 200px;
+      margin-left: 10px;
+    }
     #filter-controls {
       margin: 18px auto;
       width: 100%;
@@ -275,6 +288,12 @@
   </style>
 </head>
 <body>
+  <!-- New Jump Search Element -->
+  <div id="jump-search-controls">
+    <label for="jump-search-input">Jump Search:</label>
+    <input type="text" id="jump-search-input" placeholder="Enter text (e.g., eigen)">
+  </div>
+
   <div id="filter-controls">
     <div id="filter-actions">
       <div class="filter-table">
@@ -332,6 +351,11 @@
     let showingFront = true;
     let editMode = false;
     let focusMode = false;
+
+    // Variables for jump search
+    let jumpSearchTerm = "";
+    let jumpSearchResults = [];
+    let jumpSearchCurrentIndex = 0;
 
     window.onload = function() {
       ensureAttemptsExist();
@@ -437,6 +461,41 @@
         e.preventDefault();
         document.getElementById("apply-filter").click();
         document.activeElement.blur();
+      }
+    });
+
+    // Jump search functionality:
+    document.getElementById("jump-search-input").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        let term = this.value.trim().toLowerCase();
+        if (term === "") return;
+        // If the term is different from the last jump search, recalc the results.
+        if (term !== jumpSearchTerm) {
+          jumpSearchTerm = term;
+          jumpSearchResults = [];
+          jumpSearchCurrentIndex = 0;
+          flashcards.forEach((card, index) => {
+            if (
+              card.front.toLowerCase().includes(term) ||
+              card.back.toLowerCase().includes(term)
+            ) {
+              jumpSearchResults.push(index);
+            }
+          });
+          if (jumpSearchResults.length === 0) {
+            alert("No card with that content is found.");
+            return;
+          }
+        }
+        // Jump to the next matching card.
+        if (jumpSearchResults.length > 0) {
+          currentIndex = jumpSearchResults[jumpSearchCurrentIndex];
+          jumpSearchCurrentIndex = (jumpSearchCurrentIndex + 1) % jumpSearchResults.length;
+          renderCard();
+        } else {
+          alert("No card with that content is found.");
+        }
       }
     });
 
