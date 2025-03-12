@@ -640,6 +640,36 @@
     .modal-cancel {
       background-color: #f1f1f1;
     }
+
+    /* Add specific style for required checkbox */
+    #required-info {
+      margin-top: 10px;
+      font-size: 18px;
+      color: #555;
+      display: flex;
+      align-items: center;
+    }
+    
+    #absolutely-required-checkbox {
+      margin-right: 8px;
+      cursor: pointer;
+      width: 18px;
+      height: 18px;
+    }
+    
+    /* Make the checkbox label clickable */
+    .required-label {
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    /* Style for the required filter dropdown */
+    #required-filter {
+      width: 100%;
+      padding: 8px;
+      font-size: 18px;
+      font-family: sans-serif;
+    }
   </style>
 </head>
 <body>
@@ -705,6 +735,21 @@
           <div class="filter-cell filter-value"></div>
           <div class="filter-cell filter-operator"></div>
         </div>
+        <!-- Absolutely Required Filter Row (NEW) -->
+        <div class="filter-row">
+          <div class="filter-cell filter-label">
+            <label for="required-filter">Absolutely Required:</label>
+          </div>
+          <div class="filter-cell filter-input">
+            <select id="required-filter">
+              <option value="any">Any</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="filter-cell filter-value"></div>
+          <div class="filter-cell filter-operator"></div>
+        </div>
       </div>
       <div class="filter-buttons-inner">
         <button id="apply-filter" style="margin-right: 10px;">Apply Filter</button>
@@ -725,6 +770,11 @@
   <div class="flashcard" id="flashcard"></div>
   
   <div id="card-info"></div>
+  <!-- Absolutely Required Checkbox (NEW) -->
+  <div id="required-info">
+    <input type="checkbox" id="absolutely-required-checkbox">
+    <label for="absolutely-required-checkbox" class="required-label">Absolutely Required</label>
+  </div>
   <div id="tags-info"></div>
 
   <!-- Mobile action buttons -->
@@ -783,13 +833,34 @@
     let jumpSearchCurrentIndex = 0;
 
     window.onload = function() {
-      ensureAttemptsExist();
+      ensureCardProperties();
       loadStateFromLocalStorage();
       renderCard();
       setupIncorrectModal();
       updateMistakesHistoryVisibility(); // Apply history visibility
       initMobileHandlers(); // Initialize mobile touch and UI handlers
+      
+      // Set up event listener for the absolutelyRequired checkbox (NEW)
+      document.getElementById("absolutely-required-checkbox").addEventListener("change", function() {
+        if (flashcards.length === 0) return;
+        const card = flashcards[currentIndex];
+        card.absolutelyRequired = this.checked;
+        persistFlashcards();
+        showSaveNotification();
+      });
     };
+    
+    // Ensure all cards have the required properties (NEW)
+    function ensureCardProperties() {
+      ensureAttemptsExist();
+      
+      // Make sure all cards have the absolutelyRequired property
+      allFlashcards.forEach(card => {
+        if (card.absolutelyRequired === undefined) {
+          card.absolutelyRequired = false;
+        }
+      });
+    }
     
     // Function to toggle mistakes history visibility
     function toggleMistakesHistoryVisibility() {
@@ -855,6 +926,7 @@
       const state = {
         tagFilter: document.getElementById("tag-filter").value,
         searchInput: document.getElementById("search-input").value,
+        requiredFilter: document.getElementById("required-filter").value, // NEW
         focusMode: focusMode,
         currentIndex: currentIndex,
         mistakesHistoryVisible: mistakesHistoryVisible
@@ -870,6 +942,12 @@
         const state = JSON.parse(stateJson);
         document.getElementById("tag-filter").value = state.tagFilter || '';
         document.getElementById("search-input").value = state.searchInput || '';
+        
+        // Set the required filter dropdown value (NEW)
+        if (state.requiredFilter) {
+          document.getElementById("required-filter").value = state.requiredFilter;
+        }
+        
         applyCurrentFilter();
         if (state.currentIndex !== undefined && flashcards.length > 0) {
           currentIndex = Math.min(state.currentIndex, flashcards.length - 1);
@@ -899,7 +977,8 @@
       const nonEssentialElements = [
         document.getElementById("filter-actions"),
         document.getElementById("tags-info"),
-        document.getElementById("edit-actions")
+        document.getElementById("edit-actions"),
+        // document.getElementById("required-info") // Also hide the required info in focus mode (NEW)
       ];
       
       // Mobile-specific elements to toggle in focus mode
@@ -1068,6 +1147,16 @@
           card.back.toLowerCase().includes(searchText)
         );
       }
+      
+      // Apply the absolutely required filter (NEW)
+      const requiredFilter = document.getElementById("required-filter").value;
+      if (requiredFilter !== "any") {
+        const isRequired = requiredFilter === "true";
+        filteredCards = filteredCards.filter(card => 
+          card.absolutelyRequired === isRequired
+        );
+      }
+      
       flashcards = filteredCards;
       saveStateToLocalStorage();
       return flashcards;
@@ -1268,12 +1357,23 @@
         document.getElementById("card-info").innerText = "";
         document.getElementById("performance-stats").innerText = "";
         document.getElementById("incorrect-attempts-list").innerHTML = "<p class='no-attempts-message'>No cards matched the filter.</p>";
+        // Hide the absolutely required checkbox when no cards match (NEW)
+        document.getElementById("required-info").style.display = "none";
         return;
       }
+      
+      // Show the absolutely required checkbox (NEW)
+      // document.getElementById("required-info").style.display = focusMode ? "none" : "block";
+      document.getElementById("required-info").style.display = "block";
+      
       if (currentIndex < 0 || currentIndex >= flashcards.length) {
         currentIndex = 0;
       }
       const card = flashcards[currentIndex];
+      
+      // Update the absolutely required checkbox (NEW)
+      document.getElementById("absolutely-required-checkbox").checked = card.absolutelyRequired || false;
+      
       if (editMode) {
         document.getElementById("flashcard").innerHTML = `
           <div style="margin-bottom: 10px;"><label style="font-size: 24px;">Front</label></div>
@@ -1558,7 +1658,8 @@
         "front": "TODO: New front content",
         "back": "TODO: New back content",
         "tags": defaultTags,
-        "understanding": 1
+        "understanding": 1,
+        "absolutelyRequired": false // Initialize with false (NEW)
       };
       if (flashcards.length > 0) {
         const currentCardId = flashcards[currentIndex].id;
@@ -1667,6 +1768,13 @@
         }
         return;
       }
+      if (e.key === "i") {
+        const absolutelyRequiredCheckbox = document.getElementById("absolutely-required-checkbox");
+        if (absolutelyRequiredCheckbox) {
+          absolutelyRequiredCheckbox.click();
+        }
+        return;
+      }
       if (flashcards.length === 0) return;
       if (e.key === "ArrowRight") {
         if (currentIndex < flashcards.length - 1) {
@@ -1700,6 +1808,7 @@
     document.getElementById("clear-filter").addEventListener("click", function() {
       document.getElementById("tag-filter").value = "";
       document.getElementById("search-input").value = "";
+      document.getElementById("required-filter").value = "any"; // Reset required filter (NEW)
       flashcards = allFlashcards.slice();
       renderCard();
       saveStateToLocalStorage();
@@ -1710,6 +1819,11 @@
     });
     
     document.getElementById("search-input").addEventListener("change", function() {
+      saveStateToLocalStorage();
+    });
+    
+    // Add change event for required filter (NEW)
+    document.getElementById("required-filter").addEventListener("change", function() {
       saveStateToLocalStorage();
     });
 
