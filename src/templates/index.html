@@ -1730,12 +1730,10 @@
         renderCard();
         return;
       }
-      if (e.key === "r" && !e.metaKey && !e.ctrlKey) {
+      if (e.key === "r" && e.ctrlKey && !e.metaKey) {
         if (flashcards.length === 0) return;
-        if (editMode) {
-          if (confirm("Are you sure you want to clear all attempt history for this card?")) {
-            clearCardAttempts();
-          }
+        if (confirm("Are you sure you want to clear all attempt history for this card?")) {
+          clearCardAttempts();
         }
         return;
       }
@@ -1768,7 +1766,7 @@
         }
         return;
       }
-      if (e.key === "i") {
+      if (e.key === "r") {
         const absolutelyRequiredCheckbox = document.getElementById("absolutely-required-checkbox");
         if (absolutelyRequiredCheckbox) {
           absolutelyRequiredCheckbox.click();
