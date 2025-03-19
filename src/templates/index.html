@@ -766,15 +766,16 @@
     </div>
   </div>
 
-  <div id="performance-stats"></div>
-  <div class="flashcard" id="flashcard"></div>
-  
-  <div id="card-info"></div>
   <!-- Absolutely Required Checkbox (NEW) -->
   <div id="required-info">
     <input type="checkbox" id="absolutely-required-checkbox">
     <label for="absolutely-required-checkbox" class="required-label">Absolutely Required</label>
   </div>
+  <div id="performance-stats"></div>
+
+  <div class="flashcard" id="flashcard"></div>
+  
+  <div id="card-info"></div>
   <div id="tags-info"></div>
 
   <!-- Mobile action buttons -->
@@ -1730,7 +1731,7 @@
         renderCard();
         return;
       }
-      if (e.key === "r" && e.ctrlKey && !e.metaKey) {
+      if (e.key === "r" && e.ctrlKey) {
         if (flashcards.length === 0) return;
         if (confirm("Are you sure you want to clear all attempt history for this card?")) {
           clearCardAttempts();
@@ -1752,13 +1753,15 @@
         }
         return;
       }
-      // if (e.key === "d" && editMode) {
-      //   const deleteButton = document.getElementById("delete-card");
-      //   if (deleteButton) {
-      //     deleteButton.click();
-      //   }
-      //   return;
-      // }
+      if (e.key === "d" && editMode) {
+        if (confirm("Are you sure you want to delete this card?")) {
+          const deleteButton = document.getElementById("delete-card");
+          if (deleteButton) {
+            deleteButton.click();
+          }
+          return;
+        }
+      }
       if (e.key === "s" && editMode) {
         const saveButton = document.getElementById("save-card-edits");
         if (saveButton) {
