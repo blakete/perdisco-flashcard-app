@@ -23,7 +23,15 @@
       touch-action: manipulation;
     }
     
-    html, body {
+    html {
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #eef;
+    }
+    
+    body {
+      min-height: 100vh;
       height: 100%;
       margin: 0;
       padding: 0;
@@ -31,6 +39,8 @@
       text-align: center;
       background: #eef;
       font-size: 18px;
+      display: flex;
+      flex-direction: column;
     }
     
     /* Styles for incorrect attempts history */
@@ -648,6 +658,11 @@
       align-items: center;
     }
     
+    /* Utility class to hide elements without removing them from DOM */
+    .visually-hidden {
+      display: none !important;
+    }
+    
     #absolutely-required-checkbox {
       margin-right: 8px;
       cursor: pointer;
@@ -784,7 +799,7 @@
     </div>
     <div id="edit-actions">
       <div class="edit-buttons-inner">
-        <button id="toggle-edit">Edit Card</button>
+        <button id="toggle-edit" class="visually-hidden">Edit Card</button>
         <button id="add-card" style="display: none;">Add +</button>
         <button id="delete-card" style="display: none;">Delete -</button>
         <button id="clear-attempts" style="display: none;">Clear Attempts</button>
@@ -820,10 +835,10 @@
     </button>
   </div>
   
-  <div id="card-controls">
+  <!-- <div id="card-controls">
     <div class="card-table">
     </div>
-  </div>
+  </div> -->
 
   <!-- Incorrect attempts history section -->
   <div id="incorrect-attempts-history">
@@ -844,6 +859,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Bottom spacer to allow scrolling content to the top of viewport -->
+  <div id="bottom-spacer" style="min-height: 33vh; height: auto; width: 100%;"></div>
 
   <script>
     let allFlashcards = {{ flashcards | tojson }};
@@ -899,7 +917,20 @@
     // Function to update visibility based on state
     function updateMistakesHistoryVisibility() {
       const historyDiv = document.getElementById("incorrect-attempts-history");
-      historyDiv.style.display = mistakesHistoryVisible ? "block" : "none";
+      
+      // Base visibility on mistakesHistoryVisible setting
+      if (!mistakesHistoryVisible) {
+        historyDiv.style.display = "none";
+        return;
+      }
+      
+      // In focus mode, only show history when viewing the back of the card
+      if (focusMode) {
+        historyDiv.style.display = showingFront ? "none" : "block";
+      } else {
+        // In normal mode, show history for both sides if enabled
+        historyDiv.style.display = "block";
+      }
     }
 
     function setupIncorrectModal() {
@@ -1386,12 +1417,16 @@
         document.getElementById("incorrect-attempts-list").innerHTML = "<p class='no-attempts-message'>No cards matched the filter.</p>";
         // Hide the absolutely required checkbox when no cards match (NEW)
         document.getElementById("required-info").style.display = "none";
+        document.getElementById("edit-actions").style.display = "none";
         return;
       }
       
       // Show the absolutely required checkbox (NEW)
       // document.getElementById("required-info").style.display = focusMode ? "none" : "block";
       document.getElementById("required-info").style.display = "block";
+      
+      // Show or hide edit actions based on edit mode
+      document.getElementById("edit-actions").style.display = editMode ? "block" : "none";
       
       if (currentIndex < 0 || currentIndex >= flashcards.length) {
         currentIndex = 0;
@@ -1452,6 +1487,9 @@
       
       // Render the incorrect attempts history
       renderIncorrectAttempts();
+      
+      // Update the visibility of the mistake history based on mode and card side
+      updateMistakesHistoryVisibility();
       
       document.getElementById("card-info").innerText = `Card ${currentIndex + 1} of ${flashcards.length}`;
       const stats = getPerformanceStats(card);
@@ -1518,7 +1556,7 @@
           // It's a tap - flip the card
           if (!editMode) {
             showingFront = !showingFront;
-            renderCard();
+            renderCard(); // This will now call updateMistakesHistoryVisibility
           }
           return;
         }
@@ -1585,13 +1623,20 @@
         editMode = !editMode;
         if (!editMode) {
           showingFront = true;
+          if (focusMode) {
+            document.getElementById("toggle-edit").style.display = "none";
+          }
+        } else {
+          document.getElementById("toggle-edit").style.display = "inline-block";
         }
-        
-        // Update UI to reflect edit mode change
         document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit" : "Edit Card";
         document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
         document.getElementById("delete-card").style.display = editMode ? "inline-block" : "none";
         document.getElementById("clear-attempts").style.display = editMode ? "inline-block" : "none";
+        
+        // Toggle visibility of the entire edit-actions section
+        document.getElementById("edit-actions").style.display = editMode ? "block" : "none";
+        
         renderCard();
       });
       
@@ -1682,32 +1727,106 @@
       document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
       document.getElementById("delete-card").style.display = editMode ? "inline-block" : "none";
       document.getElementById("clear-attempts").style.display = editMode ? "inline-block" : "none";
+      
+      // Toggle visibility of the entire edit-actions section
+      document.getElementById("edit-actions").style.display = editMode ? "block" : "none";
+      
       renderCard();
     });
 
     document.getElementById("add-card").addEventListener("click", function() {
       const tagInput = document.getElementById("tag-filter").value.trim();
       const defaultTags = tagInput ? tagInput.split(",").map(tag => tag.trim()).filter(tag => tag !== "") : [];
+      
+      // Create the new card with a unique timestamp ID
       const newCard = {
         "id": Date.now(),
         "front": "TODO: New front content",
         "back": "TODO: New back content",
         "tags": defaultTags,
         "understanding": 1,
-        "absolutelyRequired": false // Initialize with false (NEW)
+        "absolutelyRequired": false,
+        "attempts": []
       };
+      
       if (flashcards.length > 0) {
+        // Get the current card's ID
         const currentCardId = flashcards[currentIndex].id;
+        
+        // Find its position in the full card list
         const masterIndex = allFlashcards.findIndex(card => card.id === currentCardId);
-        allFlashcards.splice(masterIndex + 1, 0, newCard);
+
+        console.log("currentCardId: ", currentCardId);
+        console.log("masterIndex: ", masterIndex);
+        
+        if (masterIndex !== -1) {
+          // Insert new card after current card in master list
+          allFlashcards.splice(masterIndex + 1, 0, newCard);
+          
+          // Check if we're in a filtered view
+          const isFiltered = tagInput !== "" || 
+                          document.getElementById("search-input").value.trim() !== "" ||
+                          document.getElementById("required-filter").value !== "any";
+          
+          if (isFiltered) {
+            // For filtered views, check if the new card will be visible with current filters
+            
+            // First, store the current filter state
+            const currentTagFilter = document.getElementById("tag-filter").value;
+            const currentSearchFilter = document.getElementById("search-input").value;
+            const currentRequiredFilter = document.getElementById("required-filter").value;
+            
+            // Apply current filters to see if new card is included
+            const filteredWithNewCard = applyCurrentFilter();
+            const newCardIndex = filteredWithNewCard.findIndex(card => card.id === newCard.id);
+            
+            if (newCardIndex !== -1) {
+              // New card is visible in current filter, set current index to it
+              currentIndex = newCardIndex;
+            } else {
+              // New card is not visible in current filter
+              const userWantsToClearFilters = confirm("The new card doesn't match your current filters. Would you like to clear filters to see it?");
+              
+              if (userWantsToClearFilters) {
+                // Clear filters and show the new card
+                document.getElementById("tag-filter").value = "";
+                document.getElementById("search-input").value = "";
+                document.getElementById("required-filter").value = "any";
+                
+                // Apply empty filter to get all cards
+                flashcards = allFlashcards.slice();
+                
+                // Find the new card in the full list
+                currentIndex = flashcards.findIndex(card => card.id === newCard.id);
+              }
+              // If user doesn't want to clear filters, keep current position
+            }
+          } else {
+            // For unfiltered view, we can directly set the index to the inserted position
+            flashcards = allFlashcards.slice(); // Ensure flashcards is up to date
+            currentIndex = masterIndex + 1; // Set to the position right after the current card
+          }
+        } else {
+          // Fallback if card ID not found (shouldn't happen)
+          allFlashcards.push(newCard);
+          flashcards = allFlashcards.slice();
+          currentIndex = flashcards.length - 1;
+        }
       } else {
+        // No cards in current view
         allFlashcards.push(newCard);
+        
+        // Clear any filters
+        document.getElementById("tag-filter").value = "";
+        document.getElementById("search-input").value = "";
+        document.getElementById("required-filter").value = "any";
+        
+        // Update flashcards array
+        flashcards = allFlashcards.slice();
+        currentIndex = flashcards.length - 1;
       }
-      applyCurrentFilter();
-      currentIndex = flashcards.findIndex(card => card.id === newCard.id);
-      if (currentIndex < 0) {
-        currentIndex = 0;
-      }
+      
+      // Save changes and update display
       persistFlashcards();
       renderCard();
       saveStateToLocalStorage();
@@ -1762,6 +1881,11 @@
         document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit" : "Edit Card";
         document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
         document.getElementById("delete-card").style.display = editMode ? "inline-block" : "none";
+        document.getElementById("clear-attempts").style.display = editMode ? "inline-block" : "none";
+        
+        // Toggle visibility of the entire edit-actions section
+        document.getElementById("edit-actions").style.display = editMode ? "block" : "none";
+        
         renderCard();
         return;
       }
