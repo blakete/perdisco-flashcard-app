@@ -350,10 +350,12 @@
       margin-top: 5px;
       margin-bottom: 5px;
     }
-    .flashcard textarea {
+    .flashcard textarea, .flashcard input[type="text"] {
       width: 100%;
       resize: vertical;
       font-size: 18px;
+      box-sizing: border-box;
+      padding: 10px;
     }
     .flashcard p, .flashcard div, .flashcard ol, .flashcard ul {
       margin-top: 5px;
@@ -525,11 +527,7 @@
       font-family: sans-serif;
       font-size: 18px;
     }
-    #save-card-edits {
-      font-size: 18px;
-      padding: 5px 10px;
-      height: 32px;
-    }
+
     #grok-filter-operator {
       font-size: 18px;
     }
@@ -669,6 +667,34 @@
       padding: 8px;
       font-size: 18px;
       font-family: sans-serif;
+    }
+
+    #save-card-edits {
+      font-size: 18px;
+      padding: 5px 10px;
+      height: 32px;
+    }
+
+    #copy-card-content {
+      /* background-color: #2196F3; */
+      /* color: white; */
+      border: none;
+      border-radius: 4px;
+      padding: 8px 12px;
+      margin: 0 5px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #copy-card-content:hover {
+      background-color: #0b7dda;
+    }
+
+    #copy-card-content .material-icons {
+      font-size: 18px;
     }
   </style>
 </head>
@@ -1378,14 +1404,15 @@
       if (editMode) {
         document.getElementById("flashcard").innerHTML = `
           <div style="margin-bottom: 10px;"><label style="font-size: 24px;">Front</label></div>
-          <textarea id="edit-front" rows="5" style="width:100%; resize: vertical; overflow: hidden;">${card.front}</textarea><br>
+          <textarea id="edit-front" rows="5" style="resize: vertical; overflow: hidden;">${card.front}</textarea><br>
           <div style="margin: 10px 0px;"><label style="font-size: 24px;">Back</label></div>
-          <textarea id="edit-back" rows="5" style="width:100%; resize: vertical; overflow: hidden;">${card.back}</textarea><br>
+          <textarea id="edit-back" rows="5" style="resize: vertical; overflow: hidden;">${card.back}</textarea><br>
           <div style="margin: 10px 0px;"><label style="font-size: 24px;">Tags</label></div>
-          <input type="text" id="edit-tags" style="width:100%;" value="${card.tags.join(', ')}"><br>
+          <input type="text" id="edit-tags" value="${card.tags.join(', ')}"><br>
           <div class="card-buttons-outter">
             <div class="card-buttons-inner">
               <button id="save-card-edits">Save</button>
+              <button id="copy-card-content" title="Copy Card Content"><i class="material-icons">content_copy</i></button>
             </div>
           </div>
         `;
@@ -1401,6 +1428,7 @@
         });
         autoResizeTextarea(frontTextarea);
         autoResizeTextarea(backTextarea);
+
         document.getElementById("save-card-edits").addEventListener("click", function(e) {
           e.stopPropagation();
           flashcards[currentIndex].front = document.getElementById("edit-front").value;
@@ -1412,6 +1440,12 @@
           showSaveNotification();
           renderCard();
         });
+        
+        document.getElementById("copy-card-content").addEventListener("click", function(e) {
+          e.stopPropagation();
+          copyCardContent();
+        });
+        
       } else {
         document.getElementById("flashcard").innerHTML = showingFront ? card.front : card.back;
       }
@@ -1798,6 +1832,15 @@
           renderCard();
         }
       }
+
+      // Add keyboard shortcut for copying card content (Cmd+C or Ctrl+C when not in text field)
+      if ((e.metaKey || e.ctrlKey) && e.key === "c" && editMode) {
+        // Only trigger if not currently in a textarea or input
+        if (document.activeElement.tagName !== "TEXTAREA" && document.activeElement.tagName !== "INPUT") {
+          e.preventDefault();
+          copyCardContent();
+        }
+      }
     });
 
     document.getElementById("apply-filter").addEventListener("click", function() {
@@ -1843,6 +1886,51 @@
           saveNotification.style.display = 'none';
         }, 300);
       }, 2000);
+    }
+
+    // Add the copyCardContent function to the JavaScript section
+    function copyCardContent() {
+      if (!editMode) return;
+      
+      const frontContent = document.getElementById("edit-front").value;
+      const backContent = document.getElementById("edit-back").value;
+      
+      const textToCopy = `Card Front:
+\`\`\`html
+${frontContent}
+\`\`\`
+
+Card Back:
+\`\`\`html
+${backContent}
+\`\`\`
+`;
+      
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => {
+          showCopyNotification();
+        })
+        .catch(err => {
+          console.error('Failed to copy content: ', err);
+        });
+    }
+
+    // Add the showCopyNotification function
+    function showCopyNotification() {
+      const notification = document.createElement('div');
+      notification.className = 'save-notification';
+      notification.innerText = 'Card copied to clipboard!';
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.classList.add('show');
+        setTimeout(() => {
+          notification.classList.remove('show');
+          setTimeout(() => {
+            document.body.removeChild(notification);
+          }, 300);
+        }, 2000);
+      }, 10);
     }
   </script>
 </body>
