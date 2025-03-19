@@ -61,4 +61,4 @@ if __name__ == "__main__":
     # if os.environ.get("WERKZEUG_RUN_MAIN") is None:
     #     browswer_callback = partial(open_perdisco, url="http://127.0.0.1:8001")
     #     threading.Timer(1, browswer_callback).start()
-    app.run(host="0.0.0.0", port=8004, debug=True)
+    app.run(host="127.0.0.1", port=8004, debug=True)
