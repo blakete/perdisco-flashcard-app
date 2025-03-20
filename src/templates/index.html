@@ -1856,8 +1856,23 @@
         }
       }
       if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+        // Prevent Cmd+Z (and Ctrl+Z) from propagating to the browser when in a text field
+        // This ensures browser doesn't perform actions if there's nothing to undo in the field
+        if ((e.metaKey || e.ctrlKey) && e.key === "z") {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
         return;
       }
+      
+      // Handle Cmd+C/Ctrl+C copy shortcut first
+      if ((e.metaKey || e.ctrlKey) && e.key === "c") {
+        e.preventDefault();
+        copyCardContent();
+        return;
+      }
+      
       if (e.key === "f") {
         toggleFocusMode();
         return;
@@ -1956,15 +1971,6 @@
           renderCard();
         }
       }
-
-      // Add keyboard shortcut for copying card content (Cmd+C or Ctrl+C when not in text field)
-      if ((e.metaKey || e.ctrlKey) && e.key === "c" && editMode) {
-        // Only trigger if not currently in a textarea or input
-        if (document.activeElement.tagName !== "TEXTAREA" && document.activeElement.tagName !== "INPUT") {
-          e.preventDefault();
-          copyCardContent();
-        }
-      }
     });
 
     document.getElementById("apply-filter").addEventListener("click", function() {
@@ -2014,10 +2020,20 @@
 
     // Add the copyCardContent function to the JavaScript section
     function copyCardContent() {
-      if (!editMode) return;
+      if (flashcards.length === 0) return;
       
-      const frontContent = document.getElementById("edit-front").value;
-      const backContent = document.getElementById("edit-back").value;
+      const card = flashcards[currentIndex];
+      let frontContent, backContent;
+      
+      if (editMode) {
+        // In edit mode, get content from the edit fields
+        frontContent = document.getElementById("edit-front").value;
+        backContent = document.getElementById("edit-back").value;
+      } else {
+        // In view mode, get content from the current card object
+        frontContent = card.front;
+        backContent = card.back;
+      }
       
       const textToCopy = `Card Front:
 \`\`\`html
