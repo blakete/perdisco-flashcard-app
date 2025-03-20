@@ -641,12 +641,9 @@
       cursor: pointer;
       font-size: 16px;
     }
+    
     .modal-submit {
-      background-color: #4CAF50;
-      color: white;
-    }
-    .modal-cancel {
-      background-color: #f1f1f1;
+      background-color: green;
     }
 
     /* Add specific style for required checkbox */
@@ -943,11 +940,18 @@
         const reason = input.value.trim();
         recordAttempt(false, reason);
         closeIncorrectModal();
+        // Advance to next card after marking incorrect
+        if (currentIndex < flashcards.length - 1) {
+          currentIndex++;
+          showingFront = true;
+          renderCard();
+          saveStateToLocalStorage();
+        }
       });
 
       cancelBtn.addEventListener("click", function() {
         closeIncorrectModal();
-        recordAttempt(false);
+        // Do not record attempt or advance when canceled
       });
 
       // Allow pressing Enter to submit
@@ -962,7 +966,7 @@
       window.addEventListener("click", function(e) {
         if (e.target === modal) {
           closeIncorrectModal();
-          recordAttempt(false);
+          // Do not record attempt or advance when canceled
         }
       });
     }
@@ -1608,6 +1612,13 @@
       document.getElementById("mobile-correct").addEventListener("click", function() {
         if (!editMode && flashcards.length > 0) {
           recordAttempt(true);
+          // Advance to next card after marking correct
+          if (currentIndex < flashcards.length - 1) {
+            currentIndex++;
+            showingFront = true;
+            renderCard();
+            saveStateToLocalStorage();
+          }
         }
       });
       
@@ -1884,6 +1895,13 @@
       if (focusMode && !editMode) {
         if (e.key === "c") {
           recordAttempt(true);
+          // Advance to next card after marking correct
+          if (currentIndex < flashcards.length - 1) {
+            currentIndex++;
+            showingFront = true;
+            renderCard();
+            saveStateToLocalStorage();
+          }
           return;
         } else if (e.key === "x") {
           // Show the incorrect answer modal instead of immediately marking incorrect
