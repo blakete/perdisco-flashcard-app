@@ -636,7 +636,6 @@
     .modal-button {
       padding: 8px 16px;
       margin-left: 10px;
-      border: none;
       border-radius: 4px;
       cursor: pointer;
       font-size: 16px;
@@ -644,6 +643,7 @@
     
     .modal-submit {
       background-color: green;
+      color: white;
     }
 
     /* Add specific style for required checkbox */
@@ -718,6 +718,15 @@
     </button>
     <button class="mobile-control-button" id="mobile-clear-attempts">
       <span class="material-icons">delete_sweep</span>
+    </button>
+    <button class="mobile-control-button" id="mobile-move-up" style="display: none; background-color: #8e44ad;">
+      <span class="material-icons">arrow_upward</span>
+    </button>
+    <button class="mobile-control-button" id="mobile-move-down" style="display: none; background-color: #8e44ad;">
+      <span class="material-icons">arrow_downward</span>
+    </button>
+    <button class="mobile-control-button" id="mobile-move-to" style="display: none; background-color: #8e44ad;">
+      <span class="material-icons">open_with</span>
     </button>
   </div>
 
@@ -794,6 +803,9 @@
         <button id="add-card" style="display: none;">Add +</button>
         <button id="delete-card" style="display: none;">Delete -</button>
         <button id="clear-attempts" style="display: none;">Clear Attempts</button>
+        <button id="move-up" style="display: none;"><span class="material-icons">arrow_upward</span></button>
+        <button id="move-down" style="display: none;"><span class="material-icons">arrow_downward</span></button>
+        <button id="move-to" style="display: none;"><span class="material-icons">open_with</span></button>
       </div>
     </div>
   </div>
@@ -851,6 +863,18 @@
     </div>
   </div>
 
+  <!-- Modal for Move To specific position -->
+  <div id="move-to-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-title">Move card to position:</div>
+      <input type="number" id="move-to-position" class="modal-input" min="1" placeholder="Enter position number">
+      <div class="modal-buttons">
+        <button class="modal-button modal-submit" id="move-to-submit">Move</button>
+        <button class="modal-button modal-cancel" id="move-to-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Bottom spacer to allow scrolling content to the top of viewport -->
   <div id="bottom-spacer" style="min-height: 33vh; height: auto; width: 100%;"></div>
 
@@ -873,6 +897,7 @@
       loadStateFromLocalStorage();
       renderCard();
       setupIncorrectModal();
+      setupMoveToModal(); // Initialize move to modal
       updateMistakesHistoryVisibility(); // Apply history visibility
       initMobileHandlers(); // Initialize mobile touch and UI handlers
       
@@ -884,6 +909,11 @@
         persistFlashcards();
         showSaveNotification();
       });
+      
+      // Set up event listeners for move buttons
+      document.getElementById("move-up").addEventListener("click", moveCardUp);
+      document.getElementById("move-down").addEventListener("click", moveCardDown);
+      document.getElementById("move-to").addEventListener("click", showMoveToModal);
     };
     
     // Ensure all cards have the required properties (NEW)
@@ -1622,6 +1652,11 @@
         }
       });
       
+      // Mobile move buttons
+      document.getElementById("mobile-move-up").addEventListener("click", moveCardUp);
+      document.getElementById("mobile-move-down").addEventListener("click", moveCardDown);
+      document.getElementById("mobile-move-to").addEventListener("click", showMoveToModal);
+      
       // Control buttons
       document.getElementById("mobile-edit").addEventListener("click", function() {
         // Toggle edit mode directly instead of relying on the desktop button
@@ -1638,6 +1673,16 @@
         document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
         document.getElementById("delete-card").style.display = editMode ? "inline-block" : "none";
         document.getElementById("clear-attempts").style.display = editMode ? "inline-block" : "none";
+        
+        // Show/hide move buttons based on edit mode
+        document.getElementById("move-up").style.display = editMode ? "inline-block" : "none";
+        document.getElementById("move-down").style.display = editMode ? "inline-block" : "none";
+        document.getElementById("move-to").style.display = editMode ? "inline-block" : "none";
+        
+        // Show/hide mobile move buttons based on edit mode
+        document.getElementById("mobile-move-up").style.display = editMode ? "block" : "none";
+        document.getElementById("mobile-move-down").style.display = editMode ? "block" : "none";
+        document.getElementById("mobile-move-to").style.display = editMode ? "block" : "none";
         
         // Toggle visibility of the entire edit-actions section
         document.getElementById("edit-actions").style.display = editMode ? "block" : "none";
@@ -1732,6 +1777,9 @@
       document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
       document.getElementById("delete-card").style.display = editMode ? "inline-block" : "none";
       document.getElementById("clear-attempts").style.display = editMode ? "inline-block" : "none";
+      document.getElementById("move-up").style.display = editMode ? "inline-block" : "none";
+      document.getElementById("move-down").style.display = editMode ? "inline-block" : "none";
+      document.getElementById("move-to").style.display = editMode ? "inline-block" : "none";
       
       // Toggle visibility of the entire edit-actions section
       document.getElementById("edit-actions").style.display = editMode ? "block" : "none";
@@ -1866,13 +1914,8 @@
         }
       }
       if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-        // Prevent Cmd+Z (and Ctrl+Z) from propagating to the browser when in a text field
-        // This ensures browser doesn't perform actions if there's nothing to undo in the field
-        if ((e.metaKey || e.ctrlKey) && e.key === "z") {
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
+        // When in text fields, let default keyboard shortcuts work normally
+        // Don't intercept Cmd+Z, Cmd+C, etc. in text fields
         return;
       }
       
@@ -1880,6 +1923,13 @@
       if ((e.metaKey || e.ctrlKey) && e.key === "c") {
         e.preventDefault();
         copyCardContent();
+        return;
+      }
+      
+      // Reordering keyboard shortcuts
+      if (flashcards.length > 0 && e.key === "m") {
+        e.preventDefault();
+        showMoveToModal();
         return;
       }
       
@@ -2080,6 +2130,234 @@ ${backContent}
       document.body.appendChild(notification);
       
       setTimeout(() => {
+        notification.classList.add('show');
+        setTimeout(() => {
+          notification.classList.remove('show');
+          setTimeout(() => {
+            document.body.removeChild(notification);
+          }, 300);
+        }, 2000);
+      }, 10);
+    }
+
+    // Add setup for move to modal
+    function setupMoveToModal() {
+      const modal = document.getElementById("move-to-modal");
+      const submitBtn = document.getElementById("move-to-submit");
+      const cancelBtn = document.getElementById("move-to-cancel");
+      const input = document.getElementById("move-to-position");
+
+      submitBtn.addEventListener("click", function() {
+        const position = parseInt(input.value.trim());
+        if (isNaN(position) || position < 1 || position > flashcards.length) {
+          alert(`Please enter a valid position between 1 and ${flashcards.length}`);
+          return;
+        }
+        moveCardToPosition(position - 1); // Convert from 1-indexed UI to 0-indexed array
+      });
+
+      cancelBtn.addEventListener("click", function() {
+        closeMoveToModal();
+      });
+
+      // Allow pressing Enter to submit
+      input.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          submitBtn.click();
+        }
+      });
+
+      // Close modal if clicking outside
+      window.addEventListener("click", function(e) {
+        if (e.target === modal) {
+          closeMoveToModal();
+        }
+      });
+    }
+
+    function showMoveToModal() {
+      const modal = document.getElementById("move-to-modal");
+      const input = document.getElementById("move-to-position");
+      
+      // Use the filtered view length and position, not the master list
+      input.value = currentIndex + 1; // Show 1-indexed position in current filtered view
+      input.min = 1;
+      input.max = flashcards.length; // Max is the length of filtered cards
+      
+      // Change modal title to make it clear we're moving in the filtered view
+      const isFiltered = flashcards.length !== allFlashcards.length;
+      const modalTitle = document.querySelector("#move-to-modal .modal-title");
+      modalTitle.textContent = isFiltered 
+          ? "Move card to position (in current filtered view):" 
+          : "Move card to position:";
+      
+      modal.style.display = "block";
+      setTimeout(() => input.focus(), 100);
+    }
+
+    function closeMoveToModal() {
+      const modal = document.getElementById("move-to-modal");
+      modal.style.display = "none";
+    }
+
+    // Function to move the current card up one position
+    function moveCardUp() {
+      if (flashcards.length === 0 || currentIndex === 0) return;
+      
+      const cardId = flashcards[currentIndex].id;
+      const masterIndex = allFlashcards.findIndex(card => card.id === cardId);
+      
+      if (masterIndex > 0) {
+        // Swap with the card above it
+        const temp = allFlashcards[masterIndex];
+        allFlashcards[masterIndex] = allFlashcards[masterIndex - 1];
+        allFlashcards[masterIndex - 1] = temp;
+        
+        // Re-apply filter to update flashcards array
+        const savedIndex = currentIndex;
+        applyCurrentFilter();
+        
+        // Find the new position of the card in filtered view
+        const newIndex = flashcards.findIndex(card => card.id === cardId);
+        if (newIndex !== -1) {
+          currentIndex = newIndex;
+        } else {
+          // If card is no longer in filtered view, revert to saved index
+          currentIndex = savedIndex;
+        }
+        
+        persistFlashcards();
+        renderCard();
+        showMoveNotification("Card moved up");
+      }
+    }
+
+    // Function to move the current card down one position
+    function moveCardDown() {
+      if (flashcards.length === 0) return;
+      
+      const cardId = flashcards[currentIndex].id;
+      const masterIndex = allFlashcards.findIndex(card => card.id === cardId);
+      
+      // Check if this is the last card in the master list
+      if (masterIndex >= allFlashcards.length - 1) return;
+      
+      // Swap with the card below it
+      const temp = allFlashcards[masterIndex];
+      allFlashcards[masterIndex] = allFlashcards[masterIndex + 1];
+      allFlashcards[masterIndex + 1] = temp;
+      
+      // Re-apply filter to update flashcards array
+      const savedIndex = currentIndex;
+      applyCurrentFilter();
+      
+      // Find the new position of the card in filtered view
+      const newIndex = flashcards.findIndex(card => card.id === cardId);
+      if (newIndex !== -1) {
+        currentIndex = newIndex;
+      } else {
+        // If card is no longer in filtered view, revert to saved index
+        currentIndex = savedIndex;
+      }
+      
+      persistFlashcards();
+      renderCard();
+      showMoveNotification("Card moved down");
+    }
+
+    // Function to move the current card to a specific position in the filtered view
+    function moveCardToPosition(newFilteredPosition) {
+      if (flashcards.length === 0 || 
+          newFilteredPosition < 0 || 
+          newFilteredPosition >= flashcards.length) return;
+      
+      const cardId = flashcards[currentIndex].id;
+      const masterIndex = allFlashcards.findIndex(card => card.id === cardId);
+      
+      // Find where in the master list to insert the card
+      let targetMasterIndex;
+      
+      if (newFilteredPosition === 0) {
+        // If moving to first position in filtered view, find master index of first filtered card
+        if (flashcards.length > 0) {
+          const firstFilteredCardId = flashcards[0].id;
+          const firstFilteredCardMasterIndex = allFlashcards.findIndex(card => card.id === firstFilteredCardId);
+          targetMasterIndex = firstFilteredCardMasterIndex;
+        } else {
+          // If no cards in filtered view (shouldn't happen), just use position 0
+          targetMasterIndex = 0;
+        }
+      } else if (newFilteredPosition === flashcards.length - 1) {
+        // If moving to last position, find master index of last filtered card + 1
+        // Special case: if we're already the last card, we can't determine position this way
+        if (currentIndex === flashcards.length - 1) {
+          // We're already the last card - no need to move
+          closeMoveToModal();
+          return;
+        }
+        
+        const lastFilteredCardId = flashcards[flashcards.length - 1].id;
+        const lastFilteredCardMasterIndex = allFlashcards.findIndex(card => card.id === lastFilteredCardId);
+        targetMasterIndex = lastFilteredCardMasterIndex + 1;
+      } else {
+        // If moving to middle position, find master index of card at position and insert after it
+        const previousFilteredCardId = flashcards[newFilteredPosition].id;
+        const previousFilteredCardMasterIndex = allFlashcards.findIndex(card => card.id === previousFilteredCardId);
+        targetMasterIndex = previousFilteredCardMasterIndex + 1;
+      }
+      
+      // Don't move if target position is the same as current position
+      if (targetMasterIndex === masterIndex) {
+        closeMoveToModal();
+        return;
+      }
+      
+      // If moving backward, adjust for the removal of the card from its current position
+      if (targetMasterIndex > masterIndex) {
+        targetMasterIndex--;
+      }
+      
+      // Remove card from current position
+      const cardToMove = allFlashcards.splice(masterIndex, 1)[0];
+      
+      // Insert at new position
+      allFlashcards.splice(targetMasterIndex, 0, cardToMove);
+      
+      // Re-apply filter to update flashcards array
+      applyCurrentFilter();
+      
+      // Find the new position of the card in filtered view
+      const newIndex = flashcards.findIndex(card => card.id === cardId);
+      if (newIndex !== -1) {
+        currentIndex = newIndex;
+        persistFlashcards();
+        renderCard();
+        
+        // Show a notification that indicates we moved within the filtered view
+        const isFiltered = flashcards.length !== allFlashcards.length;
+        const message = isFiltered 
+            ? `Card moved to position ${newFilteredPosition + 1} in filtered view` 
+            : `Card moved to position ${newFilteredPosition + 1}`;
+        showMoveNotification(message);
+      } else {
+        // If card is no longer in filtered view after moving, alert user
+        alert("Card moved but is no longer visible in the current filter.");
+      }
+      
+      closeMoveToModal();
+    }
+
+    // Show notification when card is moved
+    function showMoveNotification(message) {
+      const notification = document.createElement('div');
+      notification.className = 'save-notification';
+      notification.textContent = message;
+      notification.style.display = 'none';
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.display = 'block';
         notification.classList.add('show');
         setTimeout(() => {
           notification.classList.remove('show');
