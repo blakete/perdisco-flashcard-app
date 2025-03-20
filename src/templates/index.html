@@ -690,8 +690,6 @@
     #copy-card-content {
       /* background-color: #2196F3; */
       /* color: white; */
-      border: none;
-      border-radius: 4px;
       padding: 8px 12px;
       margin: 0 5px;
       cursor: pointer;
@@ -699,10 +697,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-
-    #copy-card-content:hover {
-      background-color: #0b7dda;
     }
 
     #copy-card-content .material-icons {
@@ -1749,6 +1743,11 @@
       const tagInput = document.getElementById("tag-filter").value.trim();
       const defaultTags = tagInput ? tagInput.split(",").map(tag => tag.trim()).filter(tag => tag !== "") : [];
       
+      // Get the current "Absolutely Required" filter value
+      const requiredFilter = document.getElementById("required-filter").value;
+      // Set the new card's absolutelyRequired property based on current filter
+      const isAbsolutelyRequired = requiredFilter === "true";
+      
       // Create the new card with a unique timestamp ID
       const newCard = {
         "id": Date.now(),
@@ -1756,7 +1755,7 @@
         "back": "TODO: New back content",
         "tags": defaultTags,
         "understanding": 1,
-        "absolutelyRequired": false,
+        "absolutelyRequired": isAbsolutelyRequired, // Now dynamic based on filter
         "attempts": []
       };
       
