@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Perdisco Flashcards Tool</title>
+  <title>Perdisco</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script>
@@ -155,7 +155,8 @@
       top: 20px;
       right: 20px;
       z-index: 100;
-      background-color: #fd1414;
+      /* background-color: #fd1414; */
+      background-color: #939393;
       color: white;
       width: 40px;
       height: 40px;
@@ -1467,9 +1468,9 @@
       if (editMode) {
         document.getElementById("flashcard").innerHTML = `
           <div style="margin-bottom: 10px;"><label style="font-size: 24px;">Front</label></div>
-          <textarea id="edit-front" rows="5" style="resize: vertical; overflow: hidden;">${card.front}</textarea><br>
+          <textarea id="edit-front" rows="5" style="resize: vertical; overflow: hidden;" spellcheck="false">${card.front}</textarea><br>
           <div style="margin: 10px 0px;"><label style="font-size: 24px;">Back</label></div>
-          <textarea id="edit-back" rows="5" style="resize: vertical; overflow: hidden;">${card.back}</textarea><br>
+          <textarea id="edit-back" rows="5" style="resize: vertical; overflow: hidden;" spellcheck="false">${card.back}</textarea><br>
           <div style="margin: 10px 0px;"><label style="font-size: 24px;">Tags</label></div>
           <input type="text" id="edit-tags" value="${card.tags.join(', ')}"><br>
           <div class="card-buttons-outter">
