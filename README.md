@@ -1,8 +1,8 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Work in Progress](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/blakete/perdisco)  
 
-# Perdisco Flashcard Web App
+# Perdisco Flashcard App
 
-An open-source flashcard web app designed to help you master any subject. It's been my secret weapon for acing countless exams. 🤫
+Perdisco is an open-source flashcard web application designed to help you master any material. It's been my secret weapon for acing countless exams. 🤫
 
 **Etymology** (Latin verb): *perdisco* – to learn thoroughly, to master completely, to commit to heart.
 
