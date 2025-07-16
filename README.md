@@ -13,7 +13,7 @@ An open-source flashcard web app designed to help you master any subject. It's b
 Follow these instructions to set up and run the Perdisco flashcard web app locally. This assumes you have Python 3 installed on your system (version 3.8 or later recommended). The app is built with Flask and requires a virtual environment for dependency management.
 
 ### Prerequisites
-- Python 3 (download from [python.org](https://www.python.org) if needed).
+- Python 3.
 - Git (for cloning the repository).
 - Basic command-line knowledge.
 
