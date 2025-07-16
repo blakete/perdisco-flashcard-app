@@ -18,10 +18,17 @@ Follow these instructions to set up and run the Perdisco flashcard web app local
 - Basic command-line knowledge.
 
 ### Step 1: Clone the Repository
-Open your terminal and clone the repo to your local machine:
+Open your terminal and clone the repo to your local machine using HTTPS (recommended for most users):
 
 ```
 git clone https://github.com/blakete/perdisco.git
+cd perdisco
+```
+
+Alternatively, if you have SSH keys set up with GitHub, use:
+
+```
+git clone git@github.com:blakete/perdisco.git
 cd perdisco
 ```
 
