@@ -1,6 +1,6 @@
 # Perdisco
 
-An open-source flashcard web app designed to help you master any subject—it's been my secret weapon for acing countless exams.
+An open-source flashcard web app designed to help you master any subject. It's been my secret weapon for acing countless exams. 🤫
 
 **Etymology** (Latin verb): *perdisco* – to learn thoroughly, to master completely, to commit to heart.
 
