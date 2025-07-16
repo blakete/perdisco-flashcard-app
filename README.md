@@ -1,7 +1,6 @@
 # Perdisco
 
-[![Work in Progress](https://img.shields.io/badge/status-WIP-yellow.svg)](https://github.com/blakete/perdisco)  
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Work in Progress](https://img.shields.io/badge/status-WIP-yellow.svg)](https://github.com/blakete/perdisco)  
 
 An open-source flashcard web app designed to help you master any subject. It's been my secret weapon for acing countless exams. 🤫
 
