@@ -21,11 +21,9 @@ Follow these instructions to set up and run the Perdisco flashcard web app local
 Open your terminal and clone the repo to your local machine:
 
 ```
-git clone https://github.com/YOUR_USERNAME/perdisco.git
+git clone https://github.com/blakete/perdisco.git
 cd perdisco
 ```
-
-Replace `YOUR_USERNAME` with your actual GitHub username (e.g., `https://github.com/blake/perdisco.git`).
 
 ### Step 2: Set Up a Virtual Environment
 Create a virtual environment to isolate dependencies:
