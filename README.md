@@ -8,6 +8,20 @@ An open-source flashcard web app designed to help you master any subject. It's b
 
 ---
 
+## Screenshots
+
+Here are some previews of the app in action. These are optimized for viewing on both desktop and mobile browsers—images scale responsively using percentage widths (e.g., full-width for mobile emulation, half-width for desktop views on larger screens).
+
+### Desktop Views
+<img src="demo/desktop-screenshot.png" alt="Desktop Screenshot" width="70%">
+
+<img src="demo/desktop-focus-study-mode.png" alt="Desktop Focus Study Mode" width="70%">
+
+### Mobile View (iPhone 14 Pro Max)
+<img src="demo/iphone-14-pro-max-screenshot.png" alt="iPhone 14 Pro Max Screenshot" width="30%">
+
+---
+
 ## Getting Started
 
 Follow these instructions to set up and run the Perdisco flashcard web app locally. This assumes you have Python 3 installed on your system (version 3.8 or later recommended). The app is built with Flask and requires a virtual environment for dependency management.
