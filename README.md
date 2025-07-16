@@ -10,7 +10,7 @@ An open-source flashcard web app designed to help you master any subject. It's b
 
 ## Screenshots
 
-Here are some previews of the app in action. These are optimized for viewing on both desktop and mobile browsers—images scale responsively using percentage widths (e.g., full-width for mobile emulation, half-width for desktop views on larger screens).
+Here are some previews of the app in action on both desktop and mobile.
 
 ### Desktop Views
 <img src="demo/desktop-screenshot.png" alt="Desktop Screenshot" width="70%">
