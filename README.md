@@ -13,13 +13,13 @@ An open-source flashcard web app designed to help you master any subject. It's b
 Here are some previews of the app in action on both desktop and mobile.
 
 ### Desktop Views
-<img src="demo/desktop-screenshot.png" alt="Desktop Screenshot" width="70%">
+<img src="demo/desktop-screenshot.png" alt="Desktop Screenshot" width="95%">
 
 #### Focused Study Mode
-<img src="demo/desktop-focus-study-mode.png" alt="Desktop Focus Study Mode" width="70%">
+<img src="demo/desktop-focus-study-mode.png" alt="Desktop Focus Study Mode" width="95%">
 
 ### Mobile View (iPhone 14 Pro Max)
-<img src="demo/iphone-14-pro-max-screenshot.png" alt="iPhone 14 Pro Max Screenshot" width="30%">
+<img src="demo/iphone-14-pro-max-screenshot.png" alt="iPhone 14 Pro Max Screenshot" width="40%">
 
 ---
 
