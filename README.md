@@ -15,6 +15,7 @@ Here are some previews of the app in action on both desktop and mobile.
 ### Desktop Views
 <img src="demo/desktop-screenshot.png" alt="Desktop Screenshot" width="70%">
 
+#### Focused Study Mode
 <img src="demo/desktop-focus-study-mode.png" alt="Desktop Focus Study Mode" width="70%">
 
 ### Mobile View (iPhone 14 Pro Max)
