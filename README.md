@@ -1,5 +1,8 @@
 # Perdisco
-Definition (Verb): to learn thoroughly, to learn completely, to get by heart.
+
+An open-source flashcard web app designed to help you master any subject—it's been my secret weapon for acing countless exams.
+
+**Etymology** (Latin verb): *perdisco* – to learn thoroughly, to master completely, to commit to heart.
 
 ## Core Principles
 1. **Active Recall**: Retrieving information strengthens memory more than passive review.
