@@ -1,4 +1,4 @@
-# Perdisco
+# Perdisco Flashcard Web App
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Work in Progress](https://img.shields.io/badge/status-WIP-yellow.svg)](https://github.com/blakete/perdisco)  
 
