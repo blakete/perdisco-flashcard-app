@@ -1,10 +1,93 @@
-# Perdisco Flashcard Web App
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Work in Progress](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/blakete/perdisco)  
 
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Work in Progress](https://img.shields.io/badge/status-WIP-yellow.svg)](https://github.com/blakete/perdisco)  
+# Perdisco Flashcard Web App
 
 An open-source flashcard web app designed to help you master any subject. It's been my secret weapon for acing countless exams. 🤫
 
 **Etymology** (Latin verb): *perdisco* – to learn thoroughly, to master completely, to commit to heart.
+
+---
+
+## Getting Started
+
+Follow these instructions to set up and run the Perdisco flashcard web app locally. This assumes you have Python 3 installed on your system (version 3.8 or later recommended). The app is built with Flask and requires a virtual environment for dependency management.
+
+### Prerequisites
+- Python 3 (download from [python.org](https://www.python.org) if needed).
+- Git (for cloning the repository).
+- Basic command-line knowledge.
+
+### Step 1: Clone the Repository
+Open your terminal and clone the repo to your local machine:
+
+```
+git clone https://github.com/YOUR_USERNAME/perdisco.git
+cd perdisco
+```
+
+Replace `YOUR_USERNAME` with your actual GitHub username (e.g., `https://github.com/blake/perdisco.git`).
+
+### Step 2: Set Up a Virtual Environment
+Create a virtual environment to isolate dependencies:
+
+```
+python3 -m venv .venv
+```
+
+Activate the virtual environment:
+- On macOS/Linux:
+  ```
+  source .venv/bin/activate
+  ```
+- On Windows:
+  ```
+  .venv\Scripts\activate
+  ```
+
+Your terminal prompt should now show `(.venv)` to indicate the environment is active.
+
+### Step 3: Install Dependencies
+Install the required packages (Flask and its dependencies) from the `requirements.txt` file:
+
+```
+pip install -r requirements.txt
+```
+
+**Note:** If you accidentally run `pip install requirements.txt` without the `-r` flag, you'll get an error like "Could not find a version that satisfies the requirement requirements.txt." Always include `-r` to install from the file.
+
+### Step 4: Run the App
+The app script (`flashcards.py`) and supporting files (like `flashcards.json`) are in the `src` directory. Navigate there and start the server:
+
+```
+cd src
+python3 flashcards.py
+```
+
+You should see output like this:
+
+```
+ * Serving Flask app 'flashcards'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8006
+ * Running on http://YOUR_LOCAL_IP:8006
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: XXX-XXX-XXX
+```
+
+**Troubleshooting:**
+- If you get a `FileNotFoundError` for `flashcards.json`, ensure you're running the script from the `src` directory (where the file is located). The app loads it relative to the script's path.
+- The repo includes a `start.sh` script in the root directory. If you prefer, make it executable (`chmod +x start.sh`) and run it with `./start.sh`—it may automate some steps, but the manual method above works reliably.
+
+### Step 5: Access the App
+Open a web browser and go to `http://127.0.0.1:8006` (or the local IP shown in the terminal output). The flashcard app should now be running!
+
+To stop the server, press `CTRL+C` in the terminal.
+
+---
 
 ## Core Principles
 1. **Active Recall**: Retrieving information strengthens memory more than passive review.
