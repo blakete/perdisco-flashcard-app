@@ -1359,31 +1359,36 @@
       document.getElementById("clear-attempts").addEventListener("click", closePopovers);
     }
 
-    function persistFlashcards() {
-      fetch("/save", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(allFlashcards)
+    // Each change is saved with one small API call (the server stores the deck in SQLite).
+    function api(method, url, body) {
+      return fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: body === undefined ? undefined : JSON.stringify(body)
       })
-      .then(response => response.json())
-      .then(data => {
-        if (!data.success) {
-          alert("Failed to save changes.");
-        }
-      })
+      .then(response => response.json().then(data => {
+        if (!response.ok || !data.success) throw new Error(data.error || `HTTP ${response.status}`);
+        return data;
+      }))
       .catch(error => {
-        console.error("Persist error:", error);
-        alert("Error saving changes.");
+        console.error(`Save failed: ${method} ${url}`, error);
+        alert(`Error saving changes: ${error.message}`);
+        return null;
       });
+    }
+
+    // Tell the server where a card now sits in the full deck (after its new left neighbour).
+    function persistPosition(cardId) {
+      const idx = allFlashcards.findIndex(c => c.id === cardId);
+      if (idx === -1) return;
+      return api("POST", `/api/cards/${cardId}/move`, { after_id: idx > 0 ? allFlashcards[idx - 1].id : null });
     }
 
     function clearCardAttempts() {
       if (flashcards.length === 0) return;
       const card = flashcards[currentIndex];
       card.attempts = [];
-      persistFlashcards();
+      api("DELETE", `/api/cards/${card.id}/attempts`);
       renderCard();
     }
     
@@ -1558,7 +1563,7 @@
       }
       
       card.attempts.push(attemptData);
-      persistFlashcards();
+      api("POST", `/api/cards/${card.id}/attempts`, attemptData);
       renderCard();
     }
 
@@ -1576,7 +1581,7 @@
       const card = flashcards[currentIndex];
       card.absolutelyRequired = !card.absolutelyRequired;
       renderRequiredStar(card);
-      persistFlashcards();
+      api("PATCH", `/api/cards/${card.id}`, { absolutelyRequired: card.absolutelyRequired });
       showSaveNotification();
     }
 
@@ -1714,7 +1719,7 @@
         card.attempts.splice(attemptIndex, 1);
         
         // Persist the change
-        persistFlashcards();
+        api("DELETE", `/api/cards/${card.id}/attempts/${parseInt(timestamp, 10)}`);
         
         // Re-render the list
         renderIncorrectAttempts();
@@ -1776,7 +1781,8 @@
           flashcards[currentIndex].tags = document.getElementById("edit-tags").value.split(',')
             .map(tag => tag.trim())
             .filter(tag => tag.length > 0);
-          persistFlashcards();
+          const edited = flashcards[currentIndex];
+          api("PATCH", `/api/cards/${edited.id}`, { front: edited.front, back: edited.back, tags: edited.tags });
           showSaveNotification();
           renderCard();
         });
@@ -2026,8 +2032,13 @@
         currentIndex = flashcards.length - 1;
       }
       
-      // Save changes and update display
-      persistFlashcards();
+      // Save the new card right after its left neighbour in the full deck
+      const newIdx = allFlashcards.findIndex(c => c.id === newCard.id);
+      api("POST", "/api/cards", { card: newCard, after_id: newIdx > 0 ? allFlashcards[newIdx - 1].id : null })
+        .then(data => {
+          // The server picks a new id if this one is already taken
+          if (data && data.card && data.card.id !== newCard.id) newCard.id = data.card.id;
+        });
       renderCard();
       saveStateToLocalStorage();
     });
@@ -2043,7 +2054,7 @@
       if (currentIndex >= flashcards.length) {
         currentIndex = flashcards.length - 1;
       }
-      persistFlashcards();
+      api("DELETE", `/api/cards/${cardId}`);
       renderCard();
       saveStateToLocalStorage();
     });
@@ -2369,7 +2380,7 @@ ${backContent}
           currentIndex = savedIndex;
         }
         
-        persistFlashcards();
+        persistPosition(cardId);
         renderCard();
         showMoveNotification("Card moved up");
       }
@@ -2403,7 +2414,7 @@ ${backContent}
         currentIndex = savedIndex;
       }
       
-      persistFlashcards();
+      persistPosition(cardId);
       renderCard();
       showMoveNotification("Card moved down");
     }
@@ -2473,7 +2484,7 @@ ${backContent}
       const newIndex = flashcards.findIndex(card => card.id === cardId);
       if (newIndex !== -1) {
         currentIndex = newIndex;
-        persistFlashcards();
+        persistPosition(cardId);
         renderCard();
         
         // Show a notification that indicates we moved within the filtered view
@@ -2484,6 +2495,7 @@ ${backContent}
         showMoveNotification(message);
       } else {
         // If card is no longer in filtered view after moving, alert user
+        persistPosition(cardId);
         alert("Card moved but is no longer visible in the current filter.");
       }
       

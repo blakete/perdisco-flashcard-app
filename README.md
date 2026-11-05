@@ -128,6 +128,27 @@ On a phone: tap the card to flip it, swipe to change cards, and use the bottom b
 
 To run on a different port, set `PERDISCO_PORT` (e.g. `PERDISCO_PORT=8007 ./start.sh`).
 
+## Your Data
+
+The deck is stored in SQLite (`perdisco.db`). Every action (grading, starring, editing, adding, moving, deleting) is saved immediately as its own small change, so several open tabs or devices don't overwrite each other.
+
+By default the app uses the demo deck in `src/`. To keep your own deck private, point the app at a separate data folder, ideally its own **private** git repo:
+
+```
+# local.env (in the repo root; not committed)
+PERDISCO_DATA=~/repos/perdisco-data
+```
+
+That folder holds:
+
+| File | What it is | Commit it? |
+|---|---|---|
+| `perdisco.db` | live database | no (git can't diff or merge it) |
+| `flashcards.json` | stable, diff-friendly export of the whole deck | **yes** |
+| `assets/` | images you drag into cards | **yes** |
+
+To back up, run `tools/snapshot.sh`: it exports `flashcards.json`, commits it and new images in the data repo, then pushes (`--no-push` to skip the push). On a new machine, clone the data repo and start the app: when `perdisco.db` is missing it is rebuilt from `flashcards.json`. To rebuild by hand: `PERDISCO_DATA=... python3 src/store.py import`.
+
 ---
 
 ## Core Principles

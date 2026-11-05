@@ -1,2 +1,6 @@
 .venv
 .DS_store
+local.env
+src/perdisco.db*
+*.tmp
+__pycache__/

@@ -1,33 +1,33 @@
-from functools import partial
-import threading
-import webbrowser
-from flask import Flask, render_template, request, jsonify, send_from_directory
-import json
 import os
+
+from flask import Flask, abort, jsonify, render_template, request, send_from_directory
 from werkzeug.utils import secure_filename
+
+import store
 
 app = Flask(__name__)
 
-# Load flashcards from disk
-FLASHCARDS_FILE = os.path.join(os.getcwd(), "flashcards.json")
-with open(FLASHCARDS_FILE, "r", encoding="utf-8") as f:
-    flashcards = json.load(f)
+# Deck lives in PERDISCO_DATA (database + flashcards.json export + assets/),
+# or in src/ when unset (the demo deck shipped with the app).
+store.init()
+os.makedirs(store.assets_dir(), exist_ok=True)
+LEGACY_ASSETS = os.path.join(store.SRC_DIR, "assets")
+print(f"[perdisco] data: {store.data_dir()}")
 
-# Configure the assets folder (create it if it doesn't exist)
-ASSETS_FOLDER = os.path.join(os.getcwd(), "assets")
-if not os.path.exists(ASSETS_FOLDER):
-    os.makedirs(ASSETS_FOLDER)
-# print(f"Assets Folder: {ASSETS_FOLDER}")
-app.config["ASSETS_FOLDER"] = ASSETS_FOLDER
 
 @app.route("/")
 def index():
-    # Pass the flashcards to the template as JSON
-    return render_template("index.html", flashcards=flashcards)
+    return render_template("index.html", flashcards=store.all_cards())
+
 
 @app.route("/assets/<filename>")
 def serve_asset(filename):
-    return send_from_directory(app.config["ASSETS_FOLDER"], filename)
+    # Uploads go to the data folder; fall back to images shipped in src/assets.
+    for folder in (store.assets_dir(), LEGACY_ASSETS):
+        if os.path.exists(os.path.join(folder, filename)):
+            return send_from_directory(folder, filename)
+    abort(404)
+
 
 @app.route("/upload", methods=["POST"])
 def upload():
@@ -37,28 +37,54 @@ def upload():
     if file.filename == "":
         return jsonify({"error": "No selected file"}), 400
     filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config["ASSETS_FOLDER"], filename)
-    file.save(filepath)
-    # Return the URL relative to your assets folder.
+    file.save(os.path.join(store.assets_dir(), filename))
     return jsonify({"url": f"/assets/{filename}"})
 
-@app.route("/save", methods=["POST"])
-def save():
-    global flashcards
-    try:
-        flashcards = request.get_json()
-        with open(FLASHCARDS_FILE, "w", encoding="utf-8") as f:
-            json.dump(flashcards, f, indent=2)
-        return jsonify({"success": True})
-    except Exception as e:
-        print("Error saving flashcards:", e)
-        return jsonify({"success": False, "error": str(e)}), 500
 
-def open_perdisco(url):
-    webbrowser.open(url)
+# ---------- per-action API (each call is one small transaction) ----------
+
+def _ok(result=True, status=200):
+    if result is None or result is False:
+        return jsonify({"success": False, "error": "card not found"}), 404
+    return jsonify({"success": True, "card": result if isinstance(result, dict) else None}), status
+
+
+@app.route("/api/cards", methods=["POST"])
+def api_add_card():
+    body = request.get_json(force=True)
+    return _ok(store.add_card(body["card"], body.get("after_id")), 201)
+
+
+@app.route("/api/cards/<int:card_id>", methods=["PATCH"])
+def api_update_card(card_id):
+    return _ok(store.update_card(card_id, request.get_json(force=True)))
+
+
+@app.route("/api/cards/<int:card_id>", methods=["DELETE"])
+def api_delete_card(card_id):
+    return _ok(store.delete_card(card_id))
+
+
+@app.route("/api/cards/<int:card_id>/move", methods=["POST"])
+def api_move_card(card_id):
+    return _ok(store.move_card(card_id, request.get_json(force=True).get("after_id")))
+
+
+@app.route("/api/cards/<int:card_id>/attempts", methods=["POST"])
+def api_add_attempt(card_id):
+    a = request.get_json(force=True)
+    return _ok(store.add_attempt(card_id, a["timestamp"], a["correct"], a.get("reason")), 201)
+
+
+@app.route("/api/cards/<int:card_id>/attempts", methods=["DELETE"])
+def api_clear_attempts(card_id):
+    return _ok(store.clear_attempts(card_id))
+
+
+@app.route("/api/cards/<int:card_id>/attempts/<int:timestamp>", methods=["DELETE"])
+def api_delete_attempt(card_id, timestamp):
+    return _ok(store.delete_attempt(card_id, timestamp))
+
 
 if __name__ == "__main__":
-    # if os.environ.get("WERKZEUG_RUN_MAIN") is None:
-    #     browswer_callback = partial(open_perdisco, url="http://127.0.0.1:8001")
-    #     threading.Timer(1, browswer_callback).start()
     app.run(host="0.0.0.0", port=int(os.environ.get("PERDISCO_PORT", "8006")), debug=True)
