@@ -142,10 +142,6 @@
       body {
         padding-bottom: 100px;
       }
-      
-      #performance-stats {
-        margin-top: 20px; /* Additional margin for the first content element */
-      }
     }
     
     .mobile-button {
@@ -264,11 +260,6 @@
       font-family: sans-serif;
       font-size: 18px;
     }
-    #card-info, #tags-info {
-      margin-top: 10px;
-      font-size: 18px;
-      color: #555;
-    }
     #card-controls {
       margin: 18px auto;
       width: 100%;
@@ -331,11 +322,6 @@
       margin: 0 !important;
       padding: 0 !important;
       font-size: 1em !important;
-    }
-    #performance-stats {
-      margin-top: 10px;
-      font-size: 18px;
-      color: #555;
     }
     .high-performance {
       color: #28a745 !important;
@@ -412,32 +398,11 @@
       color: white;
     }
 
-    /* Add specific style for required checkbox */
-    #required-info {
-      margin-top: 10px;
-      font-size: 18px;
-      color: #555;
-      display: flex;
-      align-items: center;
-    }
-    
     /* Utility class to hide elements without removing them from DOM */
     .visually-hidden {
       display: none !important;
     }
     
-    #absolutely-required-checkbox {
-      margin-right: 8px;
-      cursor: pointer;
-      width: 18px;
-      height: 18px;
-    }
-    
-    /* Make the checkbox label clickable */
-    .required-label {
-      cursor: pointer;
-      user-select: none;
-    }
     
     #save-card-edits {
       font-size: 18px;
@@ -690,7 +655,121 @@
     body.focus #filter-chips,
     body.focus #filter-panel,
     body.focus #overflow-menu,
-    body.focus #tags-info { display: none !important; }
+    body.focus .card-foot { display: none !important; }
+
+    /* Card frame: header (position, progress, required) + card + footer (performance, tags) */
+    .card-frame {
+      width: 90%;
+      max-width: 600px;
+      margin: 16px auto 10px;
+      background: #fff;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      text-align: left;
+    }
+    .card-frame .flashcard {
+      width: auto !important;
+      max-width: none !important;
+      margin: 0 !important;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .card-head, .card-foot {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 10px 6px 16px;
+      font-size: 15px;
+      color: #666;
+      background: #fafafe;
+    }
+    .card-head { border-bottom: 1px solid #ececf4; }
+    .card-foot {
+      flex-wrap: wrap;
+      justify-content: space-between;
+      padding: 8px 16px;
+      border-top: 1px solid #ececf4;
+    }
+    .card-pos {
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .card-progress {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: #e6e6f0;
+      overflow: hidden;
+    }
+    .card-progress-fill {
+      height: 100%;
+      width: 0;
+      background: #4682B4;
+      transition: width 0.2s;
+    }
+    .required-star {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 40px;
+      min-height: 40px;
+      border: none;
+      border-radius: 20px;
+      background: none;
+      color: #b0b0bf;
+      cursor: pointer;
+    }
+    .required-star:hover { background: #f0f0f8; }
+    .required-star.on { color: #f5a623; }
+    .required-star .material-icons { font-size: 26px; }
+    .perf {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .perf-dots { display: inline-flex; gap: 3px; }
+    .perf-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #dc3545;
+    }
+    .perf-dot.ok { background: #28a745; }
+    .perf-score { font-weight: bold; }
+    .perf-sep { color: #bbb; }
+    .perf-new {
+      padding: 1px 8px;
+      border-radius: 10px;
+      background: #ececf4;
+      color: #777;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 0.03em;
+    }
+    .tag-chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-left: auto;
+    }
+    .tag-chip {
+      min-height: 26px;
+      min-width: 0;
+      padding: 0 10px;
+      border: 1px solid #d6d6e4;
+      border-radius: 13px;
+      background: #f2f2f8;
+      color: #555;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .tag-chip:hover { background: #e6e6f2; border-color: #c4c4d8; }
+    body.editing #tags-info { display: none; }
 
     /* Shortcuts & help panel */
     .help-content {
@@ -850,16 +929,21 @@
     <div id="sheet-backdrop"></div>
   </header>
   <!-- Absolutely Required Checkbox (NEW) -->
-  <div id="required-info">
-    <input type="checkbox" id="absolutely-required-checkbox">
-    <label for="absolutely-required-checkbox" class="required-label">Absolutely Required</label>
+  <!-- Card frame: position + required star on top, performance + tags underneath -->
+  <div class="card-frame" id="card-frame">
+    <div class="card-head">
+      <span class="card-pos" id="card-info"></span>
+      <div class="card-progress"><div class="card-progress-fill" id="card-progress-fill"></div></div>
+      <button class="required-star" id="required-toggle" aria-pressed="false" title="Absolutely required (r)" aria-label="Absolutely required">
+        <span class="material-icons">star_border</span>
+      </button>
+    </div>
+    <div class="flashcard" id="flashcard"></div>
+    <div class="card-foot">
+      <div class="perf" id="performance-stats"></div>
+      <div class="tag-chips" id="tags-info"></div>
+    </div>
   </div>
-  <div id="performance-stats"></div>
-
-  <div class="flashcard" id="flashcard"></div>
-  
-  <div id="card-info"></div>
-  <div id="tags-info"></div>
 
   <!-- Mobile action buttons -->
   <div class="mobile-actions">
@@ -951,14 +1035,8 @@
       updateMistakesHistoryVisibility(); // Apply history visibility
       initMobileHandlers(); // Initialize mobile touch and UI handlers
       
-      // Set up event listener for the absolutelyRequired checkbox (NEW)
-      document.getElementById("absolutely-required-checkbox").addEventListener("change", function() {
-        if (flashcards.length === 0) return;
-        const card = flashcards[currentIndex];
-        card.absolutelyRequired = this.checked;
-        persistFlashcards();
-        showSaveNotification();
-      });
+      // "Absolutely required" star in the card header
+      document.getElementById("required-toggle").addEventListener("click", toggleRequired);
       
       // Set up event listeners for move buttons
       document.getElementById("move-up").addEventListener("click", moveCardUp);
@@ -1484,21 +1562,71 @@
       renderCard();
     }
 
-    function applyPerformanceColor(percentage, totalAttempts) {
-      const performanceStats = document.getElementById("performance-stats");
-      performanceStats.classList.remove("high-performance", "medium-performance", "low-performance");
-      
-      // Only apply colors if there are attempts
-      if (totalAttempts > 0) {
-        if (percentage >= 80) {
-          performanceStats.classList.add("high-performance");
-        } else if (percentage >= 50) {
-          performanceStats.classList.add("medium-performance");
-        } else {
-          // This will now apply to 0% with attempts as well
-          performanceStats.classList.add("low-performance");
-        }
+    function renderRequiredStar(card) {
+      const star = document.getElementById("required-toggle");
+      const on = !!card.absolutelyRequired;
+      star.classList.toggle("on", on);
+      star.setAttribute("aria-pressed", on ? "true" : "false");
+      star.title = on ? "Absolutely required (r to unmark)" : "Mark as absolutely required (r)";
+      star.firstElementChild.textContent = on ? "star" : "star_border";
+    }
+
+    function toggleRequired() {
+      if (flashcards.length === 0) return;
+      const card = flashcards[currentIndex];
+      card.absolutelyRequired = !card.absolutelyRequired;
+      renderRequiredStar(card);
+      persistFlashcards();
+      showSaveNotification();
+    }
+
+    function timeAgo(ts) {
+      const sec = Math.max(0, (Date.now() - ts) / 1000);
+      if (sec < 60) return "just now";
+      const units = [["y", 31536000], ["mo", 2592000], ["w", 604800], ["d", 86400], ["h", 3600], ["m", 60]];
+      for (const [label, size] of units) {
+        if (sec >= size) return `${Math.floor(sec / size)}${label} ago`;
       }
+    }
+
+    function renderPerformance(card) {
+      const el = document.getElementById("performance-stats");
+      const attempts = (card.attempts || []).slice().sort((a, b) => a.timestamp - b.timestamp);
+      if (attempts.length === 0) {
+        el.innerHTML = `<span class="perf-new" title="Never attempted">NEW</span>`;
+        return;
+      }
+      const correct = attempts.filter(a => a.correct).length;
+      const pct = Math.round((100 * correct) / attempts.length);
+      const tier = pct >= 80 ? "high-performance" : pct >= 50 ? "medium-performance" : "low-performance";
+      const last = attempts.slice(-5);
+      const dots = last.map(a =>
+        `<span class="perf-dot${a.correct ? " ok" : ""}" title="${a.correct ? "Correct" : "Incorrect"} · ${new Date(a.timestamp).toLocaleString()}"></span>`).join("");
+      el.innerHTML =
+        `<span class="perf-dots" title="Last ${last.length} attempts, oldest first">${dots}</span>` +
+        `<span>${correct}/${attempts.length}</span><span class="perf-sep">·</span>` +
+        `<span class="perf-score ${tier}">${pct}%</span><span class="perf-sep">·</span>` +
+        `<span title="Last reviewed ${new Date(attempts[attempts.length - 1].timestamp).toLocaleString()}">${timeAgo(attempts[attempts.length - 1].timestamp)}</span>`;
+    }
+
+    function renderTagChips(card) {
+      const el = document.getElementById("tags-info");
+      el.innerHTML = "";
+      (card.tags || []).forEach(tag => {
+        const chip = document.createElement("button");
+        chip.className = "tag-chip";
+        chip.textContent = tag;
+        chip.title = `Show only cards tagged “${tag}”`;
+        chip.addEventListener("click", e => {
+          e.stopPropagation();
+          document.getElementById("tag-filter").value = tag;
+          applyCurrentFilter();
+          const idx = flashcards.findIndex(c => c.id === card.id);
+          currentIndex = idx === -1 ? 0 : idx;
+          renderCard();
+        });
+        el.appendChild(chip);
+      });
     }
 
     function autoResizeTextarea(textarea) {
@@ -1596,25 +1724,22 @@
     function renderCard() {
       if (flashcards.length === 0) {
         document.getElementById("flashcard").innerText = "No cards match the filter.";
-        document.getElementById("card-info").innerText = "";
-        document.getElementById("performance-stats").innerText = "";
+        document.getElementById("card-info").innerText = "0 / 0";
+        document.getElementById("card-progress-fill").style.width = "0";
+        document.getElementById("performance-stats").innerHTML = "";
+        document.getElementById("tags-info").innerHTML = "";
+        document.getElementById("required-toggle").style.visibility = "hidden";
         document.getElementById("incorrect-attempts-list").innerHTML = "<p class='no-attempts-message'>No cards matched the filter.</p>";
-        // Hide the absolutely required checkbox when no cards match (NEW)
-        document.getElementById("required-info").style.display = "none";
         return;
       }
-      
-      // Show the absolutely required checkbox (NEW)
-      // document.getElementById("required-info").style.display = focusMode ? "none" : "block";
-      document.getElementById("required-info").style.display = "block";
+      document.getElementById("required-toggle").style.visibility = "visible";
       
       if (currentIndex < 0 || currentIndex >= flashcards.length) {
         currentIndex = 0;
       }
       const card = flashcards[currentIndex];
       
-      // Update the absolutely required checkbox (NEW)
-      document.getElementById("absolutely-required-checkbox").checked = card.absolutelyRequired || false;
+      renderRequiredStar(card);
       
       if (editMode) {
         document.getElementById("flashcard").innerHTML = `
@@ -1671,13 +1796,10 @@
       // Update the visibility of the mistake history based on mode and card side
       updateMistakesHistoryVisibility();
       
-      document.getElementById("card-info").innerText = `Card ${currentIndex + 1} of ${flashcards.length}`;
-      const stats = getPerformanceStats(card);
-      document.getElementById("performance-stats").innerText = `${stats.percentage}% correct (${stats.total} attempts)`;
-      applyPerformanceColor(parseFloat(stats.percentage), stats.total);
-      if (!focusMode) {
-        document.getElementById("tags-info").innerText = `Tags: ${card.tags.join(", ")}`;
-      }
+      document.getElementById("card-info").innerText = `${currentIndex + 1} / ${flashcards.length}`;
+      document.getElementById("card-progress-fill").style.width = `${(100 * (currentIndex + 1)) / flashcards.length}%`;
+      renderPerformance(card);
+      renderTagChips(card);
       if (window.MathJax) {
         if (typeof MathJax.typesetPromise === "function") {
           MathJax.typesetPromise();
@@ -2031,10 +2153,7 @@
         return;
       }
       if (e.key === "r") {
-        const absolutelyRequiredCheckbox = document.getElementById("absolutely-required-checkbox");
-        if (absolutelyRequiredCheckbox) {
-          absolutelyRequiredCheckbox.click();
-        }
+        toggleRequired();
         return;
       }
       if (flashcards.length === 0) return;
