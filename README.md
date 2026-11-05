@@ -109,6 +109,27 @@ To stop the server, press `CTRL+C` in the terminal.
 
 ---
 
+## Using the App
+
+Press **`?`** in the app (or open **⋮ → Shortcuts & help**) for the full list of keyboard shortcuts, touch gestures and modes. The panel is generated from the `SHORTCUTS` list in `src/templates/index.html`, so update it there when you add a shortcut.
+
+The essentials:
+
+| Keys | Action |
+|---|---|
+| `←` `→` | Previous / next card |
+| `Space` | Flip card |
+| `c` / `x` | Mark correct / incorrect |
+| `f` | Focus mode (just the card) |
+| `e` | Edit mode (then `a` add, `d` delete, `s` save) |
+| `?` | All shortcuts |
+
+On a phone: tap the card to flip it, swipe to change cards, and use the bottom bar to grade.
+
+To run on a different port, set `PERDISCO_PORT` (e.g. `PERDISCO_PORT=8007 ./start.sh`).
+
+---
+
 ## Core Principles
 1. **Active Recall**: Retrieving information strengthens memory more than passive review.
 2. **Spaced Repetition**: Revisit material at increasing intervals to combat forgetting.

@@ -692,6 +692,54 @@
     body.focus #overflow-menu,
     body.focus #tags-info { display: none !important; }
 
+    /* Shortcuts & help panel */
+    .help-content {
+      max-width: 640px;
+      max-height: 80vh;
+      overflow-y: auto;
+      margin: 8vh auto;
+      text-align: left;
+      box-sizing: border-box;
+    }
+    .help-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .help-header .modal-title { margin: 0; font-weight: bold; }
+    .help-group h4 {
+      margin: 16px 0 6px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #888;
+    }
+    .help-row {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding: 4px 0;
+      font-size: 16px;
+      color: #333;
+    }
+    .help-keys { flex: 0 0 150px; }
+    .help-keys kbd {
+      display: inline-block;
+      min-width: 18px;
+      margin: 0 2px 2px 0;
+      padding: 1px 6px;
+      font-family: monospace;
+      font-size: 14px;
+      text-align: center;
+      color: #333;
+      background: #f6f6fb;
+      border: 1px solid #ccc;
+      border-bottom-width: 2px;
+      border-radius: 4px;
+    }
+    .help-mode { padding: 4px 0; font-size: 16px; color: #333; }
+    .help-mode b { color: #4682B4; }
+
     /* Desktop vs mobile parts of the bar */
     @media (max-width: 768px) {
       #command-bar { padding: 8px 10px 4px; }
@@ -717,6 +765,7 @@
         border-radius: 16px 16px 0 0;
       }
       #overflow-menu { right: 10px; }
+      .help-keys { flex-basis: 100px; }
     }
     @media (min-width: 769px) {
       .cb-mobile { display: none !important; }
@@ -794,6 +843,7 @@
       <button class="menu-item cb-mobile" data-action="history" role="menuitem"><span class="material-icons">history</span><span class="history-label">Hide mistakes</span><kbd>h</kbd></button>
       <button class="menu-item" data-action="copy" role="menuitem"><span class="material-icons">content_copy</span>Copy card<kbd>⌘C</kbd></button>
       <button class="menu-item" data-action="focus" role="menuitem"><span class="material-icons">center_focus_strong</span>Focus mode<kbd>f</kbd></button>
+      <button class="menu-item" data-action="help" role="menuitem"><span class="material-icons">help_outline</span>Shortcuts &amp; help<kbd>?</kbd></button>
       <div class="menu-sep"></div>
       <button class="menu-item cb-danger" id="clear-attempts" role="menuitem"><span class="material-icons">delete_sweep</span>Clear attempts…<kbd>⌃R</kbd></button>
     </div>
@@ -849,6 +899,17 @@
         <button class="modal-button modal-submit" id="incorrect-submit">Submit</button>
         <button class="modal-button modal-cancel" id="incorrect-cancel">Cancel</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Shortcuts & help panel, filled from SHORTCUTS / MODES in the script -->
+  <div id="help-modal" class="modal" role="dialog" aria-label="Shortcuts and help">
+    <div class="modal-content help-content">
+      <div class="help-header">
+        <span class="modal-title">Shortcuts &amp; help</span>
+        <button class="cb-btn" id="help-close" aria-label="Close"><span class="material-icons">close</span></button>
+      </div>
+      <div id="help-body"></div>
     </div>
   </div>
 
@@ -1055,6 +1116,68 @@
       saveStateToLocalStorage();
     }
 
+    // ===== Shortcuts & help =====
+    // Single source for the help panel: keep in sync with the keydown handler below.
+    const SHORTCUTS = [
+      { group: "Studying", items: [
+        [["←", "→"], "Previous / next card"],
+        [["Space", "↑", "↓"], "Flip card"],
+        [["c"], "Mark correct and go to the next card"],
+        [["x"], "Mark incorrect (asks what you got wrong)"],
+      ]},
+      { group: "Modes and views", items: [
+        [["f"], "Focus mode on / off"],
+        [["e"], "Edit mode on / off"],
+        [["h"], "Show / hide previous mistakes"],
+        [["?"], "This help"],
+      ]},
+      { group: "Current card", items: [
+        [["r"], "Toggle “Absolutely required”"],
+        [["m"], "Move card to a position"],
+        [["⌘/Ctrl", "C"], "Copy card (front and back) to the clipboard"],
+        [["Ctrl", "R"], "Clear this card’s attempt history (asks first)"],
+      ]},
+      { group: "While editing", items: [
+        [["a"], "Add a card after this one"],
+        [["d"], "Delete this card (asks first)"],
+        [["s"], "Save edits"],
+      ]},
+      { group: "Anywhere", items: [
+        [["Esc"], "Leave a text box, or close a panel / menu"],
+        [["Enter"], "In “Jump to card”: go to the next match; in filters: apply"],
+      ]},
+    ];
+    const TOUCH = [
+      [["Tap card"], "Flip card"],
+      [["Swipe ← →"], "Next / previous card"],
+      [["✕", "✓"], "Mark incorrect / correct (bottom bar)"],
+      [["⋮"], "Edit, mistakes, copy, focus, clear attempts"],
+    ];
+    const MODES = [
+      ["Study", "the default: card, stats, tags and previous mistakes."],
+      ["Focus", "hides everything but the card; previous mistakes show only on the back. Leave with f or the focus button."],
+      ["Edit", "the card becomes editable and the bar turns into an edit toolbar (move, add, delete, Done)."],
+      ["Filters", "narrow the deck by content, tags (all must match) and “Absolutely required”; active filters show as removable chips under the bar."],
+    ];
+
+    function renderHelp() {
+      const kbd = keys => keys.map(k => `<kbd>${k}</kbd>`).join("");
+      const rows = items => items.map(([keys, text]) =>
+        `<div class="help-row"><span class="help-keys">${kbd(keys)}</span><span>${text}</span></div>`).join("");
+      document.getElementById("help-body").innerHTML =
+        `<div class="help-group cb-mobile"><h4>Touch</h4>${rows(TOUCH)}</div>` +
+        SHORTCUTS.map(g => `<div class="help-group cb-desktop"><h4>${g.group}</h4>${rows(g.items)}</div>`).join("") +
+        `<div class="help-group"><h4>Modes</h4>${MODES.map(([name, text]) =>
+          `<div class="help-mode"><b>${name}</b>: ${text}</div>`).join("")}</div>`;
+    }
+
+    function toggleHelp(show) {
+      const modal = document.getElementById("help-modal");
+      const open = show === undefined ? modal.style.display !== "block" : show;
+      if (open) renderHelp();
+      modal.style.display = open ? "block" : "none";
+    }
+
     // ===== Command bar =====
     function setEditMode(on) {
       editMode = on;
@@ -1131,6 +1254,7 @@
         edit: () => setEditMode(!editMode),
         history: () => { closePopovers(); toggleMistakesHistoryVisibility(); },
         copy: () => { closePopovers(); copyCardContent(); },
+        help: () => { closePopovers(); toggleHelp(true); },
         filters: () => {
           if (togglePopover("filters-open", "filter-toggle") && window.innerWidth > 768) {
             setTimeout(() => document.getElementById("search-input").focus(), 50);
@@ -1145,6 +1269,10 @@
         });
       });
       document.getElementById("sheet-backdrop").addEventListener("click", closePopovers);
+      document.getElementById("help-close").addEventListener("click", () => toggleHelp(false));
+      document.getElementById("help-modal").addEventListener("click", e => {
+        if (e.target.id === "help-modal") toggleHelp(false);
+      });
       // Click outside an open popover closes it
       document.addEventListener("click", e => {
         if (!e.target.closest("#filter-panel, #overflow-menu")) closePopovers();
@@ -1800,6 +1928,11 @@
 
     document.addEventListener('keydown', function(e) {
       if (e.key === "Escape") {
+        if (document.getElementById("help-modal").style.display === "block") {
+          toggleHelp(false);
+          e.preventDefault();
+          return;
+        }
         if (document.body.classList.contains("filters-open") || document.body.classList.contains("menu-open")) {
           closePopovers();
           if (document.activeElement) document.activeElement.blur();
@@ -1825,6 +1958,16 @@
         return;
       }
       
+      // Other modified keys belong to the browser (e.g. Cmd+R must reload, not toggle "required")
+      if (e.metaKey || e.altKey || (e.ctrlKey && e.key !== "r")) return;
+
+      // Help panel
+      if (e.key === "?") {
+        e.preventDefault();
+        toggleHelp();
+        return;
+      }
+
       // Reordering keyboard shortcuts
       if (flashcards.length > 0 && e.key === "m") {
         e.preventDefault();
@@ -1840,7 +1983,7 @@
         toggleMistakesHistoryVisibility();
         return;
       }
-      if (focusMode && !editMode) {
+      if (!editMode) {
         if (e.key === "c") {
           recordAttempt(true);
           // Advance to next card after marking correct
@@ -1862,18 +2005,11 @@
         return;
       }
       if (e.key === "r" && e.ctrlKey) {
+        e.preventDefault(); // otherwise the browser reloads the page too
         if (flashcards.length === 0) return;
         if (confirm("Are you sure you want to clear all attempt history for this card?")) {
           clearCardAttempts();
         }
-        return;
-      }
-      if (["1", "2", "3"].includes(e.key)) {
-        const newValue = parseInt(e.key, 10);
-        if (flashcards.length === 0) return;
-        persistFlashcards();
-        renderCard();
-        saveStateToLocalStorage();
         return;
       }
       if (e.key === "a" && editMode) {
