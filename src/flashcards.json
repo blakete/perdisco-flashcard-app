@@ -1,0 +1,64 @@
+[
+  {
+    "absolutelyRequired": true,
+    "attempts": [],
+    "back": "Grade yourself with <kbd>c</kbd> (correct) or <kbd>x</kbd> (incorrect), or the ✓ / ✕ buttons on a phone. Press <kbd>?</kbd> for every shortcut.",
+    "front": "Welcome to <b>Perdisco</b>. Press <kbd>Space</kbd> (or tap the card) to flip it.",
+    "id": 1700000000000,
+    "tags": [
+      "perdisco"
+    ]
+  },
+  {
+    "absolutelyRequired": false,
+    "attempts": [],
+    "back": "Press <kbd>e</kbd> (or ⋮ → Edit card). The bar becomes an edit toolbar: move, <b>+ Add</b>, <b>Delete</b>, <b>Done</b>. Drag an image into a text box to embed it.",
+    "front": "How do you edit, add or delete cards?",
+    "id": 1700000000001,
+    "tags": [
+      "perdisco"
+    ]
+  },
+  {
+    "absolutelyRequired": false,
+    "attempts": [],
+    "back": "In SQLite, in the folder set by <code>PERDISCO_DATA</code> (see the README). Keep it in its own <b>private</b> git repo and back it up with <code>tools/snapshot.sh</code>.",
+    "front": "Where is my deck stored?",
+    "id": 1700000000002,
+    "tags": [
+      "perdisco"
+    ]
+  },
+  {
+    "absolutelyRequired": true,
+    "attempts": [],
+    "back": "$$A\\mathbf{v} = \\lambda \\mathbf{v}, \\quad \\mathbf{v} \\neq \\mathbf{0}$$ The eigenvalues are the roots of $\\det(A - \\lambda I) = 0$.",
+    "front": "State the eigenvalue equation for a square matrix $A$.",
+    "id": 1700000000003,
+    "tags": [
+      "math",
+      "linear-algebra"
+    ]
+  },
+  {
+    "absolutelyRequired": false,
+    "attempts": [],
+    "back": "Chain rule: $$\\frac{d}{dx}\\sin(x^2) = 2x\\cos(x^2)$$",
+    "front": "What is the derivative of $\\sin(x^2)$?",
+    "id": 1700000000004,
+    "tags": [
+      "math",
+      "calculus"
+    ]
+  },
+  {
+    "absolutelyRequired": false,
+    "attempts": [],
+    "back": "<ol><li>Explain the concept simply, as if teaching someone.</li><li>Find the gaps where you got stuck.</li><li>Go back to the source, then simplify again.</li></ol>",
+    "front": "<b>Feynman technique</b>: what are the steps?",
+    "id": 1700000000005,
+    "tags": [
+      "study"
+    ]
+  }
+]
