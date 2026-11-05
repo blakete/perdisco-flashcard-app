@@ -118,94 +118,6 @@
       color: black;
     }
     
-    /* Update the mobile control bar to position at bottom left */
-    .mobile-control-bar {
-      position: fixed;
-      top: 80px; /* Position further up to make room for both buttons */
-      right: 20px;
-      transform: none;
-      z-index: 100;
-      display: none; /* Hidden by default */
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    /* Make the focus mode button match the styling of the control buttons */
-    #focus-mode-toggle {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      z-index: 100;
-      background-color: #4682B4;
-      color: white;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      cursor: pointer;
-    }
-
-    /* Menu button styling */
-    #mobile-menu-toggle {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 100;
-      /* background-color: #fd1414; */
-      background-color: #939393;
-      color: white;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      cursor: pointer;
-    }
-
-    /* Hide mobile menu toggle on desktop */
-    @media (min-width: 769px) {
-      #mobile-menu-toggle {
-        display: none;
-      }
-    }
-    
-    .mobile-control-button {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: none;
-      background-color: #6c757d;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      cursor: pointer;
-    }
-    
-    #mobile-edit {
-      background-color: #6610f2;
-    }
-    
-    #mobile-filter {
-      background-color: #fd7e14;
-    }
-    
-    #mobile-history {
-      background-color: #20c997;
-    }
-    
-    #mobile-clear-attempts {
-      background-color: #dc3545;
-    }
-    
     /* Update the mobile actions bar to float at bottom of screen */
     .mobile-actions {
       position: fixed;
@@ -229,7 +141,6 @@
     @media (max-width: 768px) {
       body {
         padding-bottom: 100px;
-        padding-top: 50px; /* Add top padding to make room for buttons */
       }
       
       #performance-stats {
@@ -278,14 +189,6 @@
       .mobile-actions {
         display: none;
       }
-      
-      #focus-mode-toggle {
-        display: none;
-      }
-      
-      .mobile-control-bar {
-        display: none;
-      }
     }
     
     .flashcard {
@@ -294,30 +197,8 @@
       padding: 15px !important;
     }
     
-    #filter-controls {
-      max-width: 90% !important;
-    }
-    
     #incorrect-attempts-history {
       width: 90% !important;
-    }
-    
-    .filter-label {
-      display: none; /* Hide labels on mobile to save space */
-    }
-    
-    .filter-input {
-      width: 100% !important;
-    }
-    
-    #search-input, #tag-filter, #jump-search-input {
-      width: 100% !important;
-      padding: 8px !important;
-      font-size: 18px !important;
-    }
-    
-    .mobile-control-bar {
-      display: flex; /* Show on mobile */
     }
     
     /* Adjust the modal size for mobile */
@@ -388,104 +269,10 @@
       font-size: 18px;
       color: #555;
     }
-    /* New Jump Search Row with same formatting as filter rows */
-    #jump-search-controls {
-      margin: 18px auto;
-      width: 100%;
-      max-width: 400px;
-    }
-    #jump-search-controls input {
-      font-family: sans-serif;
-      font-size: 18px;
-    }
-    #jump-search-controls .filter-input {
-      width: 200px !important;
-    }
-    #jump-search-input {
-      width: 200px !important;
-    }
-    /* The jump search row will reuse the filter table styling */
-    .filter-table {
-      display: table;
-      margin: 10px auto;
-      width: 100%;
-      max-width: 400px;
-    }
-    .filter-row {
-      display: table-row;
-    }
-    .filter-cell {
-      display: table-cell;
-      padding: 5px;
-      vertical-align: middle;
-      font-size: 18px;
-      color: #555;
-    }
-    .filter-label {
-      text-align: right;
-      white-space: nowrap;
-    }
-    .filter-input {
-      width: 80px !important;
-    }
-    .filter-value,
-    .filter-operator {
-      text-align: left;
-      padding-left: 10px;
-    }
-    .filter-value {
-      text-align: center;
-      padding-left: 10px;
-      width: 40px;
-    }
-    #filter-controls {
-      margin: 18px auto;
-      width: 100%;
-      max-width: 400px;
-    }
-    #filter-controls input {
-      font-family: sans-serif;
-      font-size: 18px;
-    }
     #card-controls {
       margin: 18px auto;
       width: 100%;
       max-width: 300px;
-    }
-    #filter-actions, #edit-actions, #card-info-and-actions {
-      margin-bottom: 10px;
-    }
-    #edit-actions {
-      margin-top: 10px;
-    }
-    #controls input, #controls button {
-      font-size: 18px;
-      padding: 5px 5px;
-      margin: 0 5px;
-    }
-    .filter-buttons-wrapper {
-      display: table-cell;
-      width: 100%;
-      text-align: center;
-    }
-    .filter-buttons-inner {
-      display: inline-flex;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    .filter-buttons-inner button {
-      font-size: 18px;
-      padding: 5px 5px;
-      box-sizing: border-box;
-    }
-    .edit-buttons-inner {
-      display: inline-flex;
-      gap: 10px;
-    }
-    .edit-buttons-inner button {
-      font-size: 18px;
-      padding: 5px 5px;
-      box-sizing: border-box;
     }
     .card-buttons-outter {
       display: flex;
@@ -530,33 +317,11 @@
       padding-left: 10px;
       width: 40px;
     }
-    #apply-filter {
-      font-family: sans-serif;
-      font-size: 18px;
-    }
-    #clear-filter {
-      font-family: sans-serif;
-      font-size: 18px;
-    }
-
-    #grok-filter-operator {
-      font-size: 18px;
-    }
     textarea {
       font-family: sans-serif;
       font-size: 18px;
     }
     button {
-      font-family: sans-serif;
-      font-size: 18px;
-    }
-    #search-input {
-      width: 200px !important;
-      font-family: sans-serif;
-      font-size: 18px;
-    }
-    #tag-filter {
-      width: 200px !important;
       font-family: sans-serif;
       font-size: 18px;
     }
@@ -674,14 +439,6 @@
       user-select: none;
     }
     
-    /* Style for the required filter dropdown */
-    #required-filter {
-      width: 100%;
-      padding: 8px;
-      font-size: 18px;
-      font-family: sans-serif;
-    }
-
     #save-card-edits {
       font-size: 18px;
       padding: 5px 10px;
@@ -703,114 +460,345 @@
     #copy-card-content .material-icons {
       font-size: 18px;
     }
+
+    /* ===== Command bar (one bar for desktop + mobile) ===== */
+    #command-bar {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 16px 6px;
+      background: rgba(238, 238, 255, 0.92);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border-bottom: 1px solid #d8d8ea;
+    }
+    .cb-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .cb-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 44px;
+      min-width: 44px;
+      padding: 0 10px;
+      border: 1px solid #c9c9dc;
+      border-radius: 22px;
+      background: #fff;
+      color: #444;
+      font-size: 16px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .cb-btn:hover { background: #f4f4fb; }
+    .cb-btn:active { transform: scale(0.97); }
+    .cb-btn .material-icons { font-size: 22px; }
+    .cb-btn.active { background: #4682B4; border-color: #4682B4; color: #fff; }
+    .cb-btn.cb-primary { background: #28a745; border-color: #28a745; color: #fff; }
+    .cb-btn.cb-danger { color: #dc3545; }
+    .cb-search {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      height: 44px;
+      padding: 0 12px;
+      border: 1px solid #c9c9dc;
+      border-radius: 22px;
+      background: #fff;
+      color: #888;
+    }
+    .cb-search input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 17px;
+      font-family: sans-serif;
+      margin-left: 6px;
+    }
+    .cb-badge {
+      min-width: 20px;
+      height: 20px;
+      padding: 0 5px;
+      box-sizing: border-box;
+      border-radius: 10px;
+      background: #fd7e14;
+      color: #fff;
+      font-size: 13px;
+      font-weight: bold;
+      line-height: 20px;
+    }
+    .cb-badge[hidden] { display: none; }
+    .cb-edit-label {
+      flex: 1;
+      text-align: left;
+      font-weight: bold;
+      color: #6610f2;
+      white-space: nowrap;
+    }
+    .cb-edit-row { display: none; }
+    body.editing .cb-main-row { display: none; }
+    body.editing .cb-edit-row { display: flex; }
+
+    /* Active filter chips */
+    #filter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      max-width: 760px;
+      margin: 8px auto 2px;
+      font-size: 15px;
+      color: #555;
+    }
+    #filter-chips[hidden] { display: none; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      height: 30px;
+      min-height: 30px;
+      min-width: 0;
+      padding: 0 4px 0 12px;
+      border: 1px solid #f3b27a;
+      border-radius: 15px;
+      background: #fff4ea;
+      color: #8a4a10;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .chip .material-icons { font-size: 18px; }
+    .chip-count { margin-left: 4px; }
+
+    /* Filter panel: popover on desktop, bottom sheet on mobile */
+    #filter-panel {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 420px;
+      margin-top: 6px;
+      padding: 16px;
+      box-sizing: border-box;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+      text-align: left;
+      z-index: 300;
+    }
+    body.filters-open #filter-panel { display: block; }
+    .fp-title {
+      font-weight: bold;
+      color: #444;
+      margin-bottom: 10px;
+    }
+    .fp-field { margin-bottom: 12px; }
+    .fp-field label {
+      display: block;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .fp-field input, .fp-field select {
+      width: 100%;
+      box-sizing: border-box;
+      height: 42px;
+      padding: 6px 10px;
+      font-size: 17px;
+      font-family: sans-serif;
+      border: 1px solid #c9c9dc;
+      border-radius: 8px;
+      background: #fff;
+    }
+    .fp-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    #sheet-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 250;
+    }
+
+    /* Overflow menu */
+    #overflow-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: max(16px, calc((100% - 760px) / 2));
+      margin-top: 6px;
+      min-width: 240px;
+      padding: 6px 0;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+      text-align: left;
+      z-index: 300;
+    }
+    body.menu-open #overflow-menu { display: block; }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      min-height: 44px;
+      padding: 0 16px;
+      border: none;
+      background: none;
+      font-size: 16px;
+      color: #333;
+      text-align: left;
+      cursor: pointer;
+    }
+    .menu-item:hover { background: #f4f4fb; }
+    .menu-item .material-icons { font-size: 20px; color: #666; }
+    .menu-item kbd {
+      margin-left: auto;
+      font-family: monospace;
+      font-size: 13px;
+      color: #888;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 1px 6px;
+    }
+    .menu-item.cb-danger, .menu-item.cb-danger .material-icons { color: #dc3545; }
+    .menu-sep { height: 1px; margin: 6px 0; background: #eee; }
+
+    /* Focus mode: the bar shrinks to the focus button */
+    body.focus #command-bar {
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border-bottom-color: transparent;
+    }
+    body.focus .cb-main-row > :not(#focus-mode-toggle),
+    body.focus #filter-chips,
+    body.focus #filter-panel,
+    body.focus #overflow-menu,
+    body.focus #tags-info { display: none !important; }
+
+    /* Desktop vs mobile parts of the bar */
+    @media (max-width: 768px) {
+      #command-bar { padding: 8px 10px 4px; }
+      .cb-row { gap: 6px; }
+      .cb-desktop, .cb-label { display: none !important; }
+      .cb-btn { padding: 0 8px; }
+      body.filters-open #sheet-backdrop { display: block; }
+      /* backdrop-filter would make the bar the containing block for the fixed sheet */
+      body.filters-open #command-bar {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+      #filter-panel {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        transform: none;
+        width: 100%;
+        margin: 0;
+        padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+        border-radius: 16px 16px 0 0;
+      }
+      #overflow-menu { right: 10px; }
+    }
+    @media (min-width: 769px) {
+      .cb-mobile { display: none !important; }
+    }
   </style>
 </head>
 <body>
-  <!-- Mobile control bar with action buttons -->
-  <div class="mobile-control-bar">
-    <button class="mobile-control-button" id="mobile-edit">
-      <span class="material-icons">edit</span>
-    </button>
-    <button class="mobile-control-button" id="mobile-filter">
-      <span class="material-icons">filter_list</span>
-    </button>
-    <button class="mobile-control-button" id="mobile-history">
-      <span class="material-icons">history</span>
-    </button>
-    <button class="mobile-control-button" id="mobile-clear-attempts">
-      <span class="material-icons">delete_sweep</span>
-    </button>
-    <button class="mobile-control-button" id="mobile-move-up" style="display: none; background-color: #8e44ad;">
-      <span class="material-icons">arrow_upward</span>
-    </button>
-    <button class="mobile-control-button" id="mobile-move-down" style="display: none; background-color: #8e44ad;">
-      <span class="material-icons">arrow_downward</span>
-    </button>
-    <button class="mobile-control-button" id="mobile-move-to" style="display: none; background-color: #8e44ad;">
-      <span class="material-icons">open_with</span>
-    </button>
-  </div>
+  <!-- Command bar: one bar for desktop and mobile -->
+  <header id="command-bar">
+    <div class="cb-row cb-main-row">
+      <button class="cb-btn" id="focus-mode-toggle" data-action="focus" title="Focus mode (f)" aria-label="Focus mode">
+        <span class="material-icons">center_focus_strong</span>
+      </button>
+      <label class="cb-search" title="Enter jumps to the next matching card">
+        <span class="material-icons">search</span>
+        <input type="search" id="jump-search-input" placeholder="Jump to card…" autocomplete="off" enterkeyhint="search">
+      </label>
+      <button class="cb-btn" id="filter-toggle" data-action="filters" aria-expanded="false" title="Filters">
+        <span class="material-icons">filter_list</span><span class="cb-label">Filters</span>
+        <span class="cb-badge" id="filter-badge" hidden></span>
+      </button>
+      <button class="cb-btn cb-desktop" data-action="edit" title="Edit card (e)" aria-label="Edit card">
+        <span class="material-icons">edit</span>
+      </button>
+      <button class="cb-btn cb-desktop" data-action="history" id="history-toggle" title="Show/hide mistakes (h)" aria-label="Show or hide mistakes">
+        <span class="material-icons">history</span>
+      </button>
+      <button class="cb-btn" id="menu-toggle" data-action="menu" aria-expanded="false" aria-haspopup="true" title="More" aria-label="More actions">
+        <span class="material-icons">more_vert</span>
+      </button>
+    </div>
 
-  <!-- Focus mode toggle button (visible on mobile) -->
-  <button id="focus-mode-toggle">
-    <span class="material-icons">center_focus_strong</span>
-  </button>
+    <!-- Replaces the main row while editing -->
+    <div class="cb-row cb-edit-row" id="edit-actions">
+      <span class="cb-edit-label">Editing</span>
+      <button class="cb-btn" id="move-up" title="Move card up"><span class="material-icons">arrow_upward</span></button>
+      <button class="cb-btn" id="move-down" title="Move card down"><span class="material-icons">arrow_downward</span></button>
+      <button class="cb-btn" id="move-to" title="Move card to position (m)"><span class="material-icons">open_with</span></button>
+      <button class="cb-btn" id="add-card" title="Add card after this one (a)"><span class="material-icons">add</span><span class="cb-label">Add</span></button>
+      <button class="cb-btn cb-danger" id="delete-card" title="Delete card (d)"><span class="material-icons">delete</span><span class="cb-label">Delete</span></button>
+      <button class="cb-btn cb-primary" data-action="edit" title="Exit edit mode (e)"><span class="material-icons">check</span><span class="cb-label">Done</span></button>
+    </div>
 
-  <!-- Menu button to show/hide mobile controls (visible on mobile) -->
-  <button id="mobile-menu-toggle">
-    <span class="material-icons">menu</span>
-  </button>
+    <!-- Active filters, only shown when a filter is applied -->
+    <div id="filter-chips" hidden></div>
 
-  <div id="filter-controls">
-    <div id="filter-actions">
-      <div class="filter-table">
-        <!-- Jump search -->
-        <div class="filter-row">
-          <div class="filter-cell filter-label">
-            <label for="jump-search-input">Jump Search:</label>
-          </div>
-          <div class="filter-cell filter-input">
-            <input type="text" id="jump-search-input" placeholder="(e.g., eigen value)">
-          </div>
-          <div class="filter-cell filter-value"></div>
-          <div class="filter-cell filter-operator"></div>
-        </div>
-        <!-- Filter by content Row -->
-        <div class="filter-row">
-          <div class="filter-cell filter-label">
-            <label for="search-input">Filter by content:</label>
-          </div>
-          <div class="filter-cell filter-input">
-            <input type="text" id="search-input" placeholder="(e.g., decomposition)">
-          </div>
-          <div class="filter-cell filter-value"></div>
-          <div class="filter-cell filter-operator"></div>
-        </div>
-        <!-- Tag Filter Row -->
-        <div class="filter-row">
-          <div class="filter-cell filter-label">
-            <label for="tag-filter">Filter by Tag:</label>
-          </div>
-          <div class="filter-cell filter-input">
-            <input type="text" id="tag-filter" placeholder="(e.g., 16.32)">
-          </div>
-          <div class="filter-cell filter-value"></div>
-          <div class="filter-cell filter-operator"></div>
-        </div>
-        <!-- Absolutely Required Filter Row (NEW) -->
-        <div class="filter-row">
-          <div class="filter-cell filter-label">
-            <label for="required-filter">Absolutely Required:</label>
-          </div>
-          <div class="filter-cell filter-input">
-            <select id="required-filter">
-              <option value="any">Any</option>
-              <option value="true">Yes</option>
-              <option value="false">No</option>
-            </select>
-          </div>
-          <div class="filter-cell filter-value"></div>
-          <div class="filter-cell filter-operator"></div>
-        </div>
+    <!-- Filter panel: popover on desktop, bottom sheet on mobile -->
+    <div id="filter-panel" role="dialog" aria-label="Filters">
+      <div class="fp-title">Filters</div>
+      <div class="fp-field">
+        <label for="search-input">Content contains</label>
+        <input type="text" id="search-input" placeholder="e.g. decomposition" autocomplete="off">
       </div>
-      <div class="filter-buttons-inner">
-        <button id="apply-filter" style="margin-right: 10px;">Apply Filter</button>
-        <button id="clear-filter" style="margin-left: 10px;">Clear Filter</button>
+      <div class="fp-field">
+        <label for="tag-filter">Tags (comma separated, all must match)</label>
+        <input type="text" id="tag-filter" placeholder="e.g. 16.32" autocomplete="off">
+      </div>
+      <div class="fp-field">
+        <label for="required-filter">Absolutely required</label>
+        <select id="required-filter">
+          <option value="any">Any</option>
+          <option value="true">Yes</option>
+          <option value="false">No</option>
+        </select>
+      </div>
+      <div class="fp-buttons">
+        <button class="cb-btn" id="clear-filter">Clear</button>
+        <button class="cb-btn active" id="apply-filter">Apply</button>
       </div>
     </div>
-    <div id="edit-actions">
-      <div class="edit-buttons-inner">
-        <button id="toggle-edit" class="visually-hidden">Edit Card</button>
-        <button id="add-card" style="display: none;">Add +</button>
-        <button id="delete-card" style="display: none;">Delete -</button>
-        <button id="clear-attempts" style="display: none;">Clear Attempts</button>
-        <button id="move-up" style="display: none;"><span class="material-icons">arrow_upward</span></button>
-        <button id="move-down" style="display: none;"><span class="material-icons">arrow_downward</span></button>
-        <button id="move-to" style="display: none;"><span class="material-icons">open_with</span></button>
-      </div>
-    </div>
-  </div>
 
+    <!-- Overflow menu -->
+    <div id="overflow-menu" role="menu">
+      <button class="menu-item cb-mobile" data-action="edit" role="menuitem"><span class="material-icons">edit</span>Edit card<kbd>e</kbd></button>
+      <button class="menu-item cb-mobile" data-action="history" role="menuitem"><span class="material-icons">history</span><span class="history-label">Hide mistakes</span><kbd>h</kbd></button>
+      <button class="menu-item" data-action="copy" role="menuitem"><span class="material-icons">content_copy</span>Copy card<kbd>⌘C</kbd></button>
+      <button class="menu-item" data-action="focus" role="menuitem"><span class="material-icons">center_focus_strong</span>Focus mode<kbd>f</kbd></button>
+      <div class="menu-sep"></div>
+      <button class="menu-item cb-danger" id="clear-attempts" role="menuitem"><span class="material-icons">delete_sweep</span>Clear attempts…<kbd>⌃R</kbd></button>
+    </div>
+    <div id="sheet-backdrop"></div>
+  </header>
   <!-- Absolutely Required Checkbox (NEW) -->
   <div id="required-info">
     <input type="checkbox" id="absolutely-required-checkbox">
@@ -939,6 +927,10 @@
     // Function to update visibility based on state
     function updateMistakesHistoryVisibility() {
       const historyDiv = document.getElementById("incorrect-attempts-history");
+      document.getElementById("history-toggle").classList.toggle("active", mistakesHistoryVisible);
+      document.querySelectorAll(".history-label").forEach(el => {
+        el.textContent = mistakesHistoryVisible ? "Hide mistakes" : "Show mistakes";
+      });
       
       // Base visibility on mistakesHistoryVisible setting
       if (!mistakesHistoryVisible) {
@@ -1055,81 +1047,110 @@
     }
 
     function toggleFocusMode() {
-      // Add this line to get a reference to the menu button
-      const menuButton = document.getElementById("mobile-menu-toggle");
-
       focusMode = !focusMode;
-
-      // Elements to hide in focus mode
-      const nonEssentialElements = [
-        document.getElementById("filter-actions"),
-        document.getElementById("tags-info"),
-        document.getElementById("edit-actions"),
-        // document.getElementById("required-info") // Also hide the required info in focus mode (NEW)
-      ];
-      
-      // Mobile-specific elements to toggle in focus mode
-      const mobileControlBar = document.querySelector(".mobile-control-bar");
-      const filterControls = document.getElementById("filter-controls");
-      
-      if (focusMode) {
-        // Add this line to hide the menu button in focus mode
-        if (menuButton) menuButton.style.display = "none";
-
-        // Hide non-essential elements
-        nonEssentialElements.forEach(el => {
-          if (el) el.style.display = "none";
-        });
-        
-        // Hide filter controls container in focus mode
-        if (filterControls) filterControls.style.display = "none";
-        
-        // Hide edit button if not in edit mode
-        if (!editMode) {
-          document.getElementById("toggle-edit").style.display = "none";
-        }
-        
-        // Hide mobile control bar in focus mode
-        if (mobileControlBar) mobileControlBar.style.display = "none";
-        
-        // Keep mobile action buttons visible even in focus mode
-        // They're essential for card interaction on mobile
-      } else {
-        // Add this line to show the menu button when exiting focus mode
-        if (menuButton) menuButton.style.display = "flex";
-
-        // For desktop view, show non-essential elements
-        if (window.innerWidth > 768) {
-          nonEssentialElements.forEach(el => {
-            if (el) el.style.display = "block";
-          });
-          
-          // Show filter controls container
-          if (filterControls) filterControls.style.display = "block";
-          
-          if (!editMode) {
-            document.getElementById("toggle-edit").style.display = "block";
-          }
-        } else {
-          // For mobile view, keep filter controls hidden until explicitly shown
-          // but make sure they're ready to be shown
-          if (filterControls) filterControls.style.display = "none";
-          document.getElementById("filter-actions").style.display = "block";
-        }
-        
-          // MODIFY this line to ensure mobile control bar is hidden when exiting focus mode
-          if (mobileControlBar) mobileControlBar.style.display = "none";
-      }
-      
-      // Update button appearance
-      const focusButton = document.getElementById("focus-mode-toggle");
-      if (focusMode) {
-        focusButton.style.backgroundColor = "#28a745"; // Green when active
-      } else {
-        focusButton.style.backgroundColor = "#4682B4"; // Default blue when inactive
-      }
-      
+      document.body.classList.toggle("focus", focusMode);
+      document.getElementById("focus-mode-toggle").classList.toggle("active", focusMode);
+      closePopovers();
+      updateMistakesHistoryVisibility();
       saveStateToLocalStorage();
+    }
+
+    // ===== Command bar =====
+    function setEditMode(on) {
+      editMode = on;
+      if (!editMode) showingFront = true;
+      document.body.classList.toggle("editing", editMode);
+      closePopovers();
+      renderCard();
+    }
+
+    function closePopovers() {
+      document.body.classList.remove("filters-open", "menu-open");
+      document.getElementById("filter-toggle").setAttribute("aria-expanded", "false");
+      document.getElementById("menu-toggle").setAttribute("aria-expanded", "false");
+    }
+
+    function togglePopover(cls, buttonId) {
+      const wasOpen = document.body.classList.contains(cls);
+      closePopovers();
+      if (!wasOpen) {
+        document.body.classList.add(cls);
+        document.getElementById(buttonId).setAttribute("aria-expanded", "true");
+      }
+      return !wasOpen;
+    }
+
+    // Applied filter values (what the chips show), set by applyCurrentFilter()
+    let appliedFilter = { content: "", tags: [], required: "any" };
+
+    function updateFilterSummary() {
+      const chips = document.getElementById("filter-chips");
+      const badge = document.getElementById("filter-badge");
+      const items = [];
+      if (appliedFilter.content) items.push({ key: "content", text: `“${appliedFilter.content}”` });
+      appliedFilter.tags.forEach(tag => items.push({ key: "tag", value: tag, text: `#${tag}` }));
+      if (appliedFilter.required !== "any") {
+        items.push({ key: "required", text: appliedFilter.required === "true" ? "required" : "not required" });
+      }
+      badge.hidden = items.length === 0;
+      badge.textContent = items.length;
+      chips.hidden = items.length === 0;
+      chips.innerHTML = "";
+      items.forEach(item => {
+        const chip = document.createElement("button");
+        chip.className = "chip";
+        chip.title = "Remove this filter";
+        chip.innerHTML = `<span></span><span class="material-icons">close</span>`;
+        chip.firstChild.textContent = item.text;
+        chip.addEventListener("click", e => { e.stopPropagation(); removeFilter(item); });
+        chips.appendChild(chip);
+      });
+      if (items.length) {
+        const count = document.createElement("span");
+        count.className = "chip-count";
+        count.textContent = `${flashcards.length} of ${allFlashcards.length} cards`;
+        chips.appendChild(count);
+      }
+    }
+
+    function removeFilter(item) {
+      if (item.key === "content") document.getElementById("search-input").value = "";
+      if (item.key === "required") document.getElementById("required-filter").value = "any";
+      if (item.key === "tag") {
+        const tagInput = document.getElementById("tag-filter");
+        tagInput.value = tagInput.value.split(",").map(t => t.trim())
+          .filter(t => t !== "" && t.toLowerCase() !== item.value).join(", ");
+      }
+      applyCurrentFilter();
+      renderCard();
+    }
+
+    function initCommandBar() {
+      const actions = {
+        focus: () => toggleFocusMode(),
+        edit: () => setEditMode(!editMode),
+        history: () => { closePopovers(); toggleMistakesHistoryVisibility(); },
+        copy: () => { closePopovers(); copyCardContent(); },
+        filters: () => {
+          if (togglePopover("filters-open", "filter-toggle") && window.innerWidth > 768) {
+            setTimeout(() => document.getElementById("search-input").focus(), 50);
+          }
+        },
+        menu: () => togglePopover("menu-open", "menu-toggle"),
+      };
+      document.querySelectorAll("[data-action]").forEach(btn => {
+        btn.addEventListener("click", e => {
+          e.stopPropagation();
+          actions[btn.dataset.action]();
+        });
+      });
+      document.getElementById("sheet-backdrop").addEventListener("click", closePopovers);
+      // Click outside an open popover closes it
+      document.addEventListener("click", e => {
+        if (!e.target.closest("#filter-panel, #overflow-menu")) closePopovers();
+      });
+      // Overflow menu items close the menu after acting
+      document.getElementById("clear-attempts").addEventListener("click", closePopovers);
     }
 
     function persistFlashcards() {
@@ -1245,6 +1266,12 @@
       }
       
       flashcards = filteredCards;
+      appliedFilter = {
+        content: searchText,
+        tags: tagInput === "" ? [] : tagInput.split(",").map(tag => tag.trim()).filter(tag => tag !== ""),
+        required: requiredFilter
+      };
+      updateFilterSummary();
       saveStateToLocalStorage();
       return flashcards;
     }
@@ -1446,16 +1473,12 @@
         document.getElementById("incorrect-attempts-list").innerHTML = "<p class='no-attempts-message'>No cards matched the filter.</p>";
         // Hide the absolutely required checkbox when no cards match (NEW)
         document.getElementById("required-info").style.display = "none";
-        document.getElementById("edit-actions").style.display = "none";
         return;
       }
       
       // Show the absolutely required checkbox (NEW)
       // document.getElementById("required-info").style.display = focusMode ? "none" : "block";
       document.getElementById("required-info").style.display = "block";
-      
-      // Show or hide edit actions based on edit mode
-      document.getElementById("edit-actions").style.display = editMode ? "block" : "none";
       
       if (currentIndex < 0 || currentIndex >= flashcards.length) {
         currentIndex = 0;
@@ -1653,140 +1676,8 @@
         }
       });
       
-      // Mobile move buttons
-      document.getElementById("mobile-move-up").addEventListener("click", moveCardUp);
-      document.getElementById("mobile-move-down").addEventListener("click", moveCardDown);
-      document.getElementById("mobile-move-to").addEventListener("click", showMoveToModal);
-      
-      // Control buttons
-      document.getElementById("mobile-edit").addEventListener("click", function() {
-        // Toggle edit mode directly instead of relying on the desktop button
-        editMode = !editMode;
-        if (!editMode) {
-          showingFront = true;
-          if (focusMode) {
-            document.getElementById("toggle-edit").style.display = "none";
-          }
-        } else {
-          document.getElementById("toggle-edit").style.display = "inline-block";
-        }
-        document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit" : "Edit Card";
-        document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
-        document.getElementById("delete-card").style.display = editMode ? "inline-block" : "none";
-        document.getElementById("clear-attempts").style.display = editMode ? "inline-block" : "none";
-        
-        // Show/hide move buttons based on edit mode
-        document.getElementById("move-up").style.display = editMode ? "inline-block" : "none";
-        document.getElementById("move-down").style.display = editMode ? "inline-block" : "none";
-        document.getElementById("move-to").style.display = editMode ? "inline-block" : "none";
-        
-        // Show/hide mobile move buttons based on edit mode
-        document.getElementById("mobile-move-up").style.display = editMode ? "block" : "none";
-        document.getElementById("mobile-move-down").style.display = editMode ? "block" : "none";
-        document.getElementById("mobile-move-to").style.display = editMode ? "block" : "none";
-        
-        // Toggle visibility of the entire edit-actions section
-        document.getElementById("edit-actions").style.display = editMode ? "block" : "none";
-        
-        renderCard();
-      });
-      
-      document.getElementById("mobile-filter").addEventListener("click", function() {
-        const filterControls = document.getElementById("filter-controls");
-        const filterActions = document.getElementById("filter-actions");
-        
-        // Toggle visibility of the filter controls
-        if (filterControls.style.display === "none") {
-          filterControls.style.display = "block";
-          filterActions.style.display = "block"; // Make sure the inner content is also visible
-        } else {
-          filterControls.style.display = "none";
-        }
-      });
-      
-      document.getElementById("mobile-history").addEventListener("click", function() {
-        toggleMistakesHistoryVisibility();
-      });
-      
-      document.getElementById("mobile-clear-attempts").addEventListener("click", function() {
-        if (flashcards.length === 0) return;
-        
-        if (confirm("Are you sure you want to clear all attempt history for this card?")) {
-          clearCardAttempts();
-        }
-      });
-      
-      // Focus mode toggle button
-      document.getElementById("focus-mode-toggle").addEventListener("click", function() {
-        toggleFocusMode();
-      });
-
-      // Menu toggle button
-      document.getElementById("mobile-menu-toggle").addEventListener("click", function() {
-        const mobileControlBar = document.querySelector(".mobile-control-bar");
-        if (mobileControlBar.style.display === "flex") {
-          mobileControlBar.style.display = "none";
-        } else {
-          mobileControlBar.style.display = "flex";
-        }
-      });
-      
-      // Adjust UI for mobile
-      setupMobileUI();
+      initCommandBar();
     }
-    
-    function setupMobileUI() {
-      // Initially hide the mobile control bar
-      const mobileControlBar = document.querySelector(".mobile-control-bar");
-      if (mobileControlBar) {
-        mobileControlBar.style.display = "none";
-      }
-
-      // Show/hide menu button based on focus mode
-      const menuButton = document.getElementById("mobile-menu-toggle");
-      if (menuButton) {
-        menuButton.style.display = focusMode ? "none" : "flex";
-      }
-
-      // Check if we're on a mobile device
-      if (window.innerWidth <= 768) {
-        // Initially hide filter controls until explicitly shown by the user
-        const filterControls = document.getElementById("filter-controls");
-        // Only set display none if it's not already set by focus mode
-        if (!focusMode) {
-          filterControls.style.display = "none";
-        }
-      }
-    }
-    
-    // Add window resize event to adjust UI for orientation changes
-    window.addEventListener('resize', function() {
-      setupMobileUI();
-    });
-
-    document.getElementById("toggle-edit").addEventListener("click", function() {
-      editMode = !editMode;
-      if (!editMode) {
-        showingFront = true;
-        if (focusMode) {
-          document.getElementById("toggle-edit").style.display = "none";
-        }
-      } else {
-        document.getElementById("toggle-edit").style.display = "inline-block";
-      }
-      document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit" : "Edit Card";
-      document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
-      document.getElementById("delete-card").style.display = editMode ? "inline-block" : "none";
-      document.getElementById("clear-attempts").style.display = editMode ? "inline-block" : "none";
-      document.getElementById("move-up").style.display = editMode ? "inline-block" : "none";
-      document.getElementById("move-down").style.display = editMode ? "inline-block" : "none";
-      document.getElementById("move-to").style.display = editMode ? "inline-block" : "none";
-      
-      // Toggle visibility of the entire edit-actions section
-      document.getElementById("edit-actions").style.display = editMode ? "block" : "none";
-      
-      renderCard();
-    });
 
     document.getElementById("add-card").addEventListener("click", function() {
       const tagInput = document.getElementById("tag-filter").value.trim();
@@ -1893,9 +1784,10 @@
 
     document.getElementById("delete-card").addEventListener("click", function() {
       if (flashcards.length === 0) return;
+      if (!confirm("Are you sure you want to delete this card?")) return;
       const cardId = flashcards[currentIndex].id;
       allFlashcards = allFlashcards.filter(card => card.id !== cardId);
-      savedCurrentIdx = currentIndex;
+      const savedCurrentIdx = currentIndex;
       applyCurrentFilter();
       currentIndex = savedCurrentIdx;
       if (currentIndex >= flashcards.length) {
@@ -1908,13 +1800,19 @@
 
     document.addEventListener('keydown', function(e) {
       if (e.key === "Escape") {
+        if (document.body.classList.contains("filters-open") || document.body.classList.contains("menu-open")) {
+          closePopovers();
+          if (document.activeElement) document.activeElement.blur();
+          e.preventDefault();
+          return;
+        }
         if (document.activeElement && document.activeElement !== document.body) {
           document.activeElement.blur();
           e.preventDefault();
           return;
         }
       }
-      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
         // When in text fields, let default keyboard shortcuts work normally
         // Don't intercept Cmd+Z, Cmd+C, etc. in text fields
         return;
@@ -1960,16 +1858,7 @@
         }
       }
       if (e.key === "e") {
-        editMode = !editMode;
-        document.getElementById("toggle-edit").innerText = editMode ? "Exit Edit" : "Edit Card";
-        document.getElementById("add-card").style.display = editMode ? "inline-block" : "none";
-        document.getElementById("delete-card").style.display = editMode ? "inline-block" : "none";
-        document.getElementById("clear-attempts").style.display = editMode ? "inline-block" : "none";
-        
-        // Toggle visibility of the entire edit-actions section
-        document.getElementById("edit-actions").style.display = editMode ? "block" : "none";
-        
-        renderCard();
+        setEditMode(!editMode);
         return;
       }
       if (e.key === "r" && e.ctrlKey) {
@@ -1995,13 +1884,8 @@
         return;
       }
       if (e.key === "d" && editMode) {
-        if (confirm("Are you sure you want to delete this card?")) {
-          const deleteButton = document.getElementById("delete-card");
-          if (deleteButton) {
-            deleteButton.click();
-          }
-          return;
-        }
+        document.getElementById("delete-card").click();
+        return;
       }
       if (e.key === "s" && editMode) {
         const saveButton = document.getElementById("save-card-edits");
@@ -2042,6 +1926,7 @@
     });
 
     document.getElementById("apply-filter").addEventListener("click", function() {
+      closePopovers();
       applyCurrentFilter();
       renderCard();
       saveStateToLocalStorage();
@@ -2051,7 +1936,8 @@
       document.getElementById("tag-filter").value = "";
       document.getElementById("search-input").value = "";
       document.getElementById("required-filter").value = "any"; // Reset required filter (NEW)
-      flashcards = allFlashcards.slice();
+      closePopovers();
+      applyCurrentFilter();
       renderCard();
       saveStateToLocalStorage();
     });
