@@ -586,6 +586,44 @@
       border-radius: 8px;
       background: #fff;
     }
+    /* Tag browser: check tags off instead of typing them */
+    #tag-browser {
+      margin-top: 6px;
+      border: 1px solid #e0e0ec;
+      border-radius: 8px;
+      background: #fafaff;
+    }
+    .fp-field #tag-browser-search {
+      height: 34px;
+      font-size: 15px;
+      border: none;
+      border-bottom: 1px solid #e0e0ec;
+      border-radius: 8px 8px 0 0;
+      background: transparent;
+    }
+    #tag-browser-list {
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+    .tb-item {
+      display: flex !important;
+      align-items: center;
+      gap: 8px;
+      margin: 0 !important;
+      padding: 6px 10px;
+      font-size: 15px !important;
+      color: #333 !important;
+      cursor: pointer;
+    }
+    .tb-item:hover { background: #eef0fa; }
+    .tb-item input { width: 18px !important; height: 18px !important; margin: 0; flex: none; }
+    .tb-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    .tb-count { color: #888; font-size: 13px; }
+    .tb-empty { padding: 8px 10px; color: #888; font-size: 14px; }
+    @media (max-width: 768px) {
+      #tag-browser-list { max-height: 30vh; }
+    }
     .fp-buttons {
       display: flex;
       justify-content: flex-end;
@@ -899,8 +937,12 @@
         <input type="text" id="search-input" placeholder="e.g. decomposition" autocomplete="off">
       </div>
       <div class="fp-field">
-        <label for="tag-filter">Tags (comma separated, all must match)</label>
+        <label for="tag-filter">Tags (type comma separated, or check below; all must match)</label>
         <input type="text" id="tag-filter" placeholder="e.g. 16.32" autocomplete="off">
+        <div id="tag-browser">
+          <input type="search" id="tag-browser-search" placeholder="Find a tag…" autocomplete="off" aria-label="Find a tag">
+          <div id="tag-browser-list" role="group" aria-label="Tags"></div>
+        </div>
       </div>
       <div class="fp-field">
         <label for="required-filter">Absolutely required</label>
@@ -1235,7 +1277,7 @@
       ["Study", "the default: card, stats, tags and previous mistakes."],
       ["Focus", "hides everything but the card; previous mistakes show only on the back. Leave with f or the focus button."],
       ["Edit", "the card becomes editable and the bar turns into an edit toolbar (move, add, delete, Done)."],
-      ["Filters", "narrow the deck by content, tags (all must match) and “Absolutely required”; active filters show as removable chips under the bar."],
+      ["Filters", "narrow the deck by content, tags (type them or check them off in the tag list; all must match) and “Absolutely required”; active filters show as removable chips under the bar."],
     ];
 
     function renderHelp() {
@@ -1334,7 +1376,12 @@
         copy: () => { closePopovers(); copyCardContent(); },
         help: () => { closePopovers(); toggleHelp(true); },
         filters: () => {
-          if (togglePopover("filters-open", "filter-toggle") && window.innerWidth > 768) {
+          const opened = togglePopover("filters-open", "filter-toggle");
+          if (opened) {
+            document.getElementById("tag-browser-search").value = "";
+            renderTagBrowser();
+          }
+          if (opened && window.innerWidth > 768) {
             setTimeout(() => document.getElementById("search-input").focus(), 50);
           }
         },
@@ -1446,6 +1493,78 @@
         } else {
           alert("No card with that content is found.");
         }
+      }
+    });
+
+    // ---------- Tag browser ----------
+    function selectedFilterTags() {
+      return document.getElementById("tag-filter").value.split(",")
+        .map(t => t.trim()).filter(t => t !== "");
+    }
+
+    function renderTagBrowser() {
+      const list = document.getElementById("tag-browser-list");
+      const query = document.getElementById("tag-browser-search").value.trim().toLowerCase();
+      const selected = new Set(selectedFilterTags().map(t => t.toLowerCase()));
+      const counts = new Map(); // lowercased tag -> {name, count}
+      allFlashcards.forEach(card => (card.tags || []).forEach(tag => {
+        const key = tag.trim().toLowerCase();
+        if (!key) return;
+        const entry = counts.get(key) || { name: tag.trim(), count: 0 };
+        entry.count++;
+        counts.set(key, entry);
+      }));
+      // Selected tags first, then by card count, then alphabetically.
+      const tags = [...counts.entries()]
+        .filter(([key]) => !query || key.includes(query))
+        .sort((a, b) => (selected.has(b[0]) - selected.has(a[0])) ||
+                        (b[1].count - a[1].count) || a[0].localeCompare(b[0]));
+      list.innerHTML = "";
+      if (tags.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "tb-empty";
+        empty.textContent = counts.size === 0 ? "No cards have tags yet." : "No matching tags.";
+        list.appendChild(empty);
+        return;
+      }
+      tags.forEach(([key, { name, count }]) => {
+        const label = document.createElement("label");
+        label.className = "tb-item";
+        const box = document.createElement("input");
+        box.type = "checkbox";
+        box.checked = selected.has(key);
+        box.addEventListener("change", () => toggleFilterTag(name, box.checked));
+        const text = document.createElement("span");
+        text.className = "tb-name";
+        text.textContent = name;
+        const num = document.createElement("span");
+        num.className = "tb-count";
+        num.textContent = count;
+        label.append(box, text, num);
+        list.appendChild(label);
+      });
+    }
+
+    function toggleFilterTag(name, on) {
+      const key = name.toLowerCase();
+      const tags = selectedFilterTags().filter(t => t.toLowerCase() !== key);
+      if (on) tags.push(name);
+      document.getElementById("tag-filter").value = tags.join(", ");
+      applyCurrentFilter();
+      renderCard();
+      renderTagBrowser();
+    }
+
+    document.getElementById("tag-filter").addEventListener("input", renderTagBrowser);
+    document.getElementById("tag-browser-search").addEventListener("input", renderTagBrowser);
+    document.getElementById("tag-browser-search").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        // Enter checks the first unchecked match, so you can filter by keyboard.
+        e.preventDefault();
+        const first = document.querySelector("#tag-browser-list .tb-item input:not(:checked)");
+        if (first) { first.checked = true; first.dispatchEvent(new Event("change")); }
+        this.value = "";
+        renderTagBrowser();
       }
     });
 
