@@ -1717,7 +1717,7 @@
       const el = document.getElementById("performance-stats");
       const attempts = (card.attempts || []).slice().sort((a, b) => a.timestamp - b.timestamp);
       if (attempts.length === 0) {
-        el.innerHTML = `<span class="perf-new" title="Never attempted">NEW</span>`;
+        el.innerHTML = `<span class="perf-new" title="Never attempted">0 attempts</span>`;
         return;
       }
       const correct = attempts.filter(a => a.correct).length;
