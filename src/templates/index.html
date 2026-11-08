@@ -1261,6 +1261,7 @@
         [["a"], "Add a card after this one"],
         [["d"], "Delete this card (asks first)"],
         [["s"], "Save edits"],
+        [["⌘/Ctrl", "V"], "In front/back: paste an image (e.g. a screenshot) to upload and embed it at the cursor"],
       ]},
       { group: "Anywhere", items: [
         [["Esc"], "Leave a text box, or close a panel / menu"],
@@ -1606,6 +1607,50 @@
       return flashcards;
     }
 
+    // Upload an image file to /upload and resolve with its URL.
+    function uploadImage(file) {
+      const formData = new FormData();
+      formData.append("image", file);
+      return fetch("/upload", { method: "POST", body: formData })
+        .then(response => response.json())
+        .then(data => {
+          if (!data.url) throw new Error(data.error || "Image upload failed.");
+          return data.url;
+        });
+    }
+
+    function imageHtml(url) {
+      return `<div style="width: 100%; height: 100%;"><img class="embedded-card-image" src="${url}"></div>`;
+    }
+
+    // Replace textarea[start, end) with text and put the cursor after it.
+    function insertIntoTextarea(textarea, start, end, text) {
+      textarea.value = textarea.value.slice(0, start) + text + textarea.value.slice(end);
+      textarea.selectionStart = textarea.selectionEnd = start + text.length;
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    // Upload images and insert them at [start, end), showing a placeholder meanwhile.
+    function insertImages(textarea, files, start, end) {
+      const placeholder = `[uploading ${files.length > 1 ? files.length + " images" : "image"}…]`;
+      insertIntoTextarea(textarea, start, end, placeholder);
+      Promise.allSettled(files.map(uploadImage)).then(results => {
+        const html = results.filter(r => r.status === "fulfilled").map(r => imageHtml(r.value)).join("");
+        const at = textarea.value.indexOf(placeholder);
+        if (at === -1) {
+          textarea.value += html; // placeholder was edited away: append instead
+          textarea.dispatchEvent(new Event("input", { bubbles: true }));
+        } else {
+          insertIntoTextarea(textarea, at, at + placeholder.length, html);
+        }
+        const failed = results.filter(r => r.status === "rejected");
+        if (failed.length) {
+          console.error("Upload error:", failed.map(r => r.reason));
+          alert(`${failed.length} image upload${failed.length > 1 ? "s" : ""} failed.`);
+        }
+      });
+    }
+
     function setupDragDrop(textareaId) {
       const textarea = document.getElementById(textareaId);
       if (!textarea) return;
@@ -1614,32 +1659,28 @@
       });
       textarea.addEventListener("drop", function(e) {
         e.preventDefault();
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-          const file = files[0];
-          if (!file.type.startsWith("image/")) {
-            alert("Only image files are allowed.");
-            return;
-          }
-          const formData = new FormData();
-          formData.append("image", file);
-          fetch("/upload", {
-            method: "POST",
-            body: formData
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.url) {
-              textarea.value += `<div style="width: 100%; height: 100%;"><img class="embedded-card-image" src="${data.url}"></div>`;
-            } else {
-              alert("Image upload failed.");
-            }
-          })
-          .catch(error => {
-            console.error("Upload error:", error);
-            alert("Image upload error.");
-          });
+        const files = [...e.dataTransfer.files];
+        if (files.length === 0) return;
+        const images = files.filter(f => f.type.startsWith("image/"));
+        if (images.length === 0) {
+          alert("Only image files are allowed.");
+          return;
         }
+        insertImages(textarea, images, textarea.selectionStart, textarea.selectionEnd);
+      });
+      // Ctrl+V / Cmd+V an image (screenshot, copied image) to upload and embed it.
+      textarea.addEventListener("paste", function(e) {
+        const items = [...((e.clipboardData && e.clipboardData.items) || [])];
+        const images = items.filter(i => i.kind === "file" && i.type.startsWith("image/"))
+          .map(i => i.getAsFile()).filter(Boolean)
+          .map((f, n) => {
+            // Clipboard images are all called "image.png": give each a unique name.
+            const ext = (f.type.split("/")[1] || "png").replace(/[^a-z0-9]/gi, "") || "png";
+            return new File([f], `pasted-${Date.now()}${n ? "-" + n : ""}.${ext}`, { type: f.type });
+          });
+        if (images.length === 0) return; // plain text paste: let the browser handle it
+        e.preventDefault();
+        insertImages(textarea, images, textarea.selectionStart, textarea.selectionEnd);
       });
     }
 
