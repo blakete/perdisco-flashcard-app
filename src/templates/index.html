@@ -1886,6 +1886,27 @@
       }
     }
     
+    // Card text is HTML, where newlines are just spaces. Turn the newlines a
+    // person typed into <br>s, except inside math (MathJax needs the raw TeX),
+    // inside <pre>, and next to tags that already break the line (<br>, <div>,
+    // <li>, ...) so cards written with explicit HTML look the same as before.
+    const BLOCK_TAG = "(?:br|div|p|ol|ul|li|table|thead|tbody|tr|td|th|h[1-6]|hr|pre|blockquote|details|summary)";
+    const ENDS_WITH_BLOCK = new RegExp(`<\\/?${BLOCK_TAG}\\b[^>]*>\\s*$`, "i");
+    const STARTS_WITH_BLOCK = new RegExp(`^\\s*<\\/?${BLOCK_TAG}\\b`, "i");
+    const PROTECTED = /\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\\begin\{([a-z*]+)\}[\s\S]*?\\end\{\1\}|\$(?:\\.|[^$\\])+\$|<pre\b[\s\S]*?<\/pre>|<!--[\s\S]*?-->/gi;
+    function formatCardHtml(html) {
+      if (!html || html.indexOf("\n") === -1) return html || "";
+      const kept = [];
+      const masked = html.replace(/\r\n?/g, "\n").replace(PROTECTED, m => `\u0000${kept.push(m) - 1}\u0000`);
+      const out = masked.replace(/[ \t]*\n(?:[ \t]*\n)*[ \t]*/g, (run, offset, all) => {
+        const before = all.slice(0, offset), after = all.slice(offset + run.length);
+        if (before.trim() === "" || after.trim() === "") return run; // leading/trailing
+        if (ENDS_WITH_BLOCK.test(before) || STARTS_WITH_BLOCK.test(after)) return run;
+        return "<br>".repeat(run.split("\n").length - 1);
+      });
+      return out.replace(/\u0000(\d+)\u0000/g, (_, i) => kept[+i]);
+    }
+
     function renderCard() {
       if (flashcards.length === 0) {
         document.getElementById("flashcard").innerText = "No cards match the filter.";
@@ -1953,7 +1974,7 @@
         });
         
       } else {
-        document.getElementById("flashcard").innerHTML = showingFront ? card.front : card.back;
+        document.getElementById("flashcard").innerHTML = formatCardHtml(showingFront ? card.front : card.back);
       }
       
       // Render the incorrect attempts history
