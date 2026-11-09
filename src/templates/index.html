@@ -4,17 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Perdisco</title>
-  <script>
-    // Apply the theme before first paint (no white flash). A saved choice wins; otherwise follow the system.
-    (function () {
-      let theme;
-      try { theme = JSON.parse(localStorage.getItem('flashcardState') || '{}').theme; } catch (e) {}
-      if (theme !== 'dark' && theme !== 'light') {
-        theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      }
-      document.documentElement.dataset.theme = theme;
-    })();
-  </script>
+  <meta name="theme-color" content="">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script>
@@ -962,6 +952,25 @@
       .cb-mobile { display: none !important; }
     }
   </style>
+  <script>
+    // Single place the theme is applied: page colors (data-theme) and the browser's own
+    // toolbar/status bar (theme-color, read from the --bg token). Runs here, after the
+    // stylesheet and before first paint, so there is no white flash.
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+      document.querySelector('meta[name="theme-color"]').content = bg;
+    }
+    (function () {
+      // A saved choice wins; otherwise follow the system.
+      let theme;
+      try { theme = JSON.parse(localStorage.getItem('flashcardState') || '{}').theme; } catch (e) {}
+      if (theme !== 'dark' && theme !== 'light') {
+        theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      applyTheme(theme);
+    })();
+  </script>
 </head>
 <body>
   <!-- Command bar: one bar for desktop and mobile -->
@@ -1313,10 +1322,8 @@
       saveStateToLocalStorage();
     }
 
-    // The theme itself is set in <head> before first paint; this flips it and keeps the menu item in sync.
     function toggleDarkMode() {
-      const root = document.documentElement;
-      root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+      applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
       updateThemeMenuItem();
       closePopovers();
       saveStateToLocalStorage();
