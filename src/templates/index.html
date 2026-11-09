@@ -4,6 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Perdisco</title>
+  <script>
+    // Apply the theme before first paint (no white flash). A saved choice wins; otherwise follow the system.
+    (function () {
+      let theme;
+      try { theme = JSON.parse(localStorage.getItem('flashcardState') || '{}').theme; } catch (e) {}
+      if (theme !== 'dark' && theme !== 'light') {
+        theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script>
@@ -18,6 +29,68 @@
     src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
   </script>
   <style>
+    /* Color tokens: every color in this sheet comes from here. Dark mode only swaps the values. */
+    :root {
+      color-scheme: light;
+      --bg: #eef;
+      --bar-bg: rgba(238, 238, 255, 0.92);
+      --mobile-bar-bg: rgba(240, 240, 245, 0.8);
+      --surface: #fff;
+      --surface-2: #fafafe;
+      --hover: #f4f4fb;
+      --fill: #ececf4;
+      --fill-hover: #e6e6f2;
+      --border: #d8d8ea;
+      --border-strong: #c9c9dc;
+      --divider: #ececf4;
+      --fg: #000;
+      --text: #333;
+      --text-2: #555;
+      --text-3: #888;
+      --text-faint: #b0b0bf;
+      --accent: #4682B4;
+      --success: #28a745;
+      --danger: #dc3545;
+      --warning: #ffc107;
+      --neutral: #6c757d;
+      --star: #f5a623;
+      --badge: #fd7e14;
+      --edit: #6610f2;
+      --chip-bg: #fff4ea;
+      --chip-border: #f3b27a;
+      --chip-text: #8a4a10;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #15161c;
+      --bar-bg: rgba(21, 22, 28, 0.92);
+      --mobile-bar-bg: rgba(40, 41, 52, 0.85);
+      --surface: #1f2029;
+      --surface-2: #252631;
+      --hover: #2c2d3a;
+      --fill: #2e2f3c;
+      --fill-hover: #383a48;
+      --border: #383a48;
+      --border-strong: #464858;
+      --divider: #2e2f3c;
+      --fg: #e8e8f0;
+      --text: #d6d6e0;
+      --text-2: #b4b4c2;
+      --text-3: #8c8c9c;
+      --text-faint: #5c5c6c;
+      --accent: #4f8fc9;
+      --success: #2ea44f;
+      --danger: #e5534b;
+      --warning: #ffc107;
+      --neutral: #5a6270;
+      --star: #f5a623;
+      --badge: #fd7e14;
+      --edit: #a78bfa;
+      --chip-bg: #3a2a1c;
+      --chip-border: #8a5a2e;
+      --chip-text: #f3b27a;
+    }
+
     /* Disable double-tap zoom on all elements */
     * {
       touch-action: manipulation;
@@ -27,7 +100,7 @@
       min-height: 100%;
       margin: 0;
       padding: 0;
-      background: #eef;
+      background: var(--bg);
     }
     
     body {
@@ -37,7 +110,8 @@
       padding: 0;
       font-family: sans-serif;
       text-align: center;
-      background: #eef;
+      background: var(--bg);
+      color: var(--fg);
       font-size: 18px;
       display: flex;
       flex-direction: column;
@@ -52,7 +126,7 @@
     }
     
     #incorrect-attempts-history h3 {
-      color: #555;
+      color: var(--text-2);
       font-size: 18px;
       margin-bottom: 10px;
     }
@@ -66,15 +140,15 @@
     .incorrect-attempt-item {
       padding: 10px;
       margin-bottom: 8px;
-      border-left: 3px solid #dc3545;
-      background-color: #f8f9fa;
+      border-left: 3px solid var(--danger);
+      background-color: var(--surface-2);
       border-radius: 4px;
       position: relative; /* For positioning the delete button */
     }
     
     .incorrect-attempt-date {
       font-size: 14px;
-      color: #6c757d;
+      color: var(--text-3);
       margin-bottom: 5px;
       padding-right: 25px; /* Make room for delete button */
     }
@@ -84,7 +158,7 @@
     }
     
     .no-attempts-message {
-      color: #6c757d;
+      color: var(--text-3);
       font-style: italic;
     }
     
@@ -96,7 +170,7 @@
       width: 24px;
       height: 24px;
       border-radius: 50%;
-      background-color: #ffffff;
+      background-color: var(--surface);
       color: white;
       border: none;
       cursor: pointer;
@@ -115,7 +189,7 @@
     .delete-attempt-button .material-icons {
       font-size: 16px;
       line-height: 1;
-      color: black;
+      color: var(--fg);
     }
     
     /* Update the mobile actions bar to float at bottom of screen */
@@ -129,7 +203,7 @@
       margin: 0 auto;
       gap: 20px;
       padding: 10px;
-      background-color: rgba(240, 240, 245, 0.8); /* Semi-transparent background */
+      background-color: var(--mobile-bar-bg); /* Semi-transparent background */
       backdrop-filter: blur(5px); /* Blur background for better readability */
       border-radius: 30px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
@@ -166,17 +240,17 @@
     }
     
     .correct-button {
-      background-color: #28a745;
+      background-color: var(--success);
       color: white;
     }
     
     .incorrect-button {
-      background-color: #dc3545;
+      background-color: var(--danger);
       color: white;
     }
     
     .nav-button {
-      background-color: #6c757d;
+      background-color: var(--neutral);
       color: white;
     }
     
@@ -222,12 +296,12 @@
     .flashcard {
       margin: 20px auto;
       padding: 20px;
-      border: 2px solid #ccc;
+      border: 2px solid var(--border-strong);
       width: 60%;
       min-height: 300px;
       max-width: 600px !important;
       text-align: left;
-      background: #fff;
+      background: var(--surface);
       border-radius: 10px;
       cursor: pointer;
       box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
@@ -293,7 +367,7 @@
       padding: 5px;
       vertical-align: middle;
       font-size: 20px;
-      color: #555;
+      color: var(--text-2);
     }
     .card-label {
       text-align: right;
@@ -324,20 +398,20 @@
       font-size: 1em !important;
     }
     .high-performance {
-      color: #28a745 !important;
+      color: var(--success) !important;
     }
     .medium-performance {
-      color: #ffc107 !important;
+      color: var(--warning) !important;
     }
     .low-performance {
-      color: #dc3545 !important;
+      color: var(--danger) !important;
     }
     .save-notification {
       position: fixed;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background-color: #4CAF50;
+      background-color: var(--success);
       color: white;
       padding: 10px 20px;
       border-radius: 4px;
@@ -361,10 +435,10 @@
       background-color: rgba(0,0,0,0.4);
     }
     .modal-content {
-      background-color: #fefefe;
+      background-color: var(--surface);
       margin: 15% auto;
       padding: 20px;
-      border: 1px solid #888;
+      border: 1px solid var(--border-strong);
       width: 80%;
       max-width: 500px;
       border-radius: 5px;
@@ -394,7 +468,7 @@
     }
     
     .modal-submit {
-      background-color: green;
+      background-color: var(--success);
       color: white;
     }
 
@@ -434,10 +508,10 @@
       width: 100%;
       box-sizing: border-box;
       padding: 10px 16px 6px;
-      background: rgba(238, 238, 255, 0.92);
+      background: var(--bar-bg);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
-      border-bottom: 1px solid #d8d8ea;
+      border-bottom: 1px solid var(--border);
     }
     .cb-row {
       display: flex;
@@ -454,21 +528,21 @@
       height: 44px;
       min-width: 44px;
       padding: 0 10px;
-      border: 1px solid #c9c9dc;
+      border: 1px solid var(--border-strong);
       border-radius: 22px;
-      background: #fff;
-      color: #444;
+      background: var(--surface);
+      color: var(--text);
       font-size: 16px;
       cursor: pointer;
       white-space: nowrap;
       flex-shrink: 0;
     }
-    .cb-btn:hover { background: #f4f4fb; }
+    .cb-btn:hover { background: var(--hover); }
     .cb-btn:active { transform: scale(0.97); }
     .cb-btn .material-icons { font-size: 22px; }
-    .cb-btn.active { background: #4682B4; border-color: #4682B4; color: #fff; }
-    .cb-btn.cb-primary { background: #28a745; border-color: #28a745; color: #fff; }
-    .cb-btn.cb-danger { color: #dc3545; }
+    .cb-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .cb-btn.cb-primary { background: var(--success); border-color: var(--success); color: #fff; }
+    .cb-btn.cb-danger { color: var(--danger); }
     .cb-search {
       flex: 1;
       min-width: 0;
@@ -476,10 +550,10 @@
       align-items: center;
       height: 44px;
       padding: 0 12px;
-      border: 1px solid #c9c9dc;
+      border: 1px solid var(--border-strong);
       border-radius: 22px;
-      background: #fff;
-      color: #888;
+      background: var(--surface);
+      color: var(--text-3);
     }
     .cb-search input {
       flex: 1;
@@ -497,7 +571,7 @@
       padding: 0 5px;
       box-sizing: border-box;
       border-radius: 10px;
-      background: #fd7e14;
+      background: var(--badge);
       color: #fff;
       font-size: 13px;
       font-weight: bold;
@@ -508,7 +582,7 @@
       flex: 1;
       text-align: left;
       font-weight: bold;
-      color: #6610f2;
+      color: var(--edit);
       white-space: nowrap;
     }
     .cb-edit-row { display: none; }
@@ -524,7 +598,7 @@
       max-width: 760px;
       margin: 8px auto 2px;
       font-size: 15px;
-      color: #555;
+      color: var(--text-2);
     }
     #filter-chips[hidden] { display: none; }
     .chip {
@@ -535,10 +609,10 @@
       min-height: 30px;
       min-width: 0;
       padding: 0 4px 0 12px;
-      border: 1px solid #f3b27a;
+      border: 1px solid var(--chip-border);
       border-radius: 15px;
-      background: #fff4ea;
-      color: #8a4a10;
+      background: var(--chip-bg);
+      color: var(--chip-text);
       font-size: 15px;
       cursor: pointer;
     }
@@ -556,7 +630,7 @@
       margin-top: 6px;
       padding: 16px;
       box-sizing: border-box;
-      background: #fff;
+      background: var(--surface);
       border-radius: 12px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
       text-align: left;
@@ -565,14 +639,14 @@
     body.filters-open #filter-panel { display: block; }
     .fp-title {
       font-weight: bold;
-      color: #444;
+      color: var(--text);
       margin-bottom: 10px;
     }
     .fp-field { margin-bottom: 12px; }
     .fp-field label {
       display: block;
       font-size: 14px;
-      color: #666;
+      color: var(--text-2);
       margin-bottom: 4px;
     }
     .fp-field input, .fp-field select {
@@ -582,22 +656,22 @@
       padding: 6px 10px;
       font-size: 17px;
       font-family: sans-serif;
-      border: 1px solid #c9c9dc;
+      border: 1px solid var(--border-strong);
       border-radius: 8px;
-      background: #fff;
+      background: var(--surface);
     }
     /* Tag browser: check tags off instead of typing them */
     #tag-browser {
       margin-top: 6px;
-      border: 1px solid #e0e0ec;
+      border: 1px solid var(--divider);
       border-radius: 8px;
-      background: #fafaff;
+      background: var(--surface-2);
     }
     .fp-field #tag-browser-search {
       height: 34px;
       font-size: 15px;
       border: none;
-      border-bottom: 1px solid #e0e0ec;
+      border-bottom: 1px solid var(--divider);
       border-radius: 8px 8px 0 0;
       background: transparent;
     }
@@ -613,14 +687,14 @@
       margin: 0 !important;
       padding: 6px 10px;
       font-size: 15px !important;
-      color: #333 !important;
+      color: var(--text) !important;
       cursor: pointer;
     }
-    .tb-item:hover { background: #eef0fa; }
+    .tb-item:hover { background: var(--hover); }
     .tb-item input { width: 18px !important; height: 18px !important; margin: 0; flex: none; }
     .tb-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-    .tb-count { color: #888; font-size: 13px; }
-    .tb-empty { padding: 8px 10px; color: #888; font-size: 14px; }
+    .tb-count { color: var(--text-3); font-size: 13px; }
+    .tb-empty { padding: 8px 10px; color: var(--text-3); font-size: 14px; }
     @media (max-width: 768px) {
       #tag-browser-list { max-height: 30vh; }
     }
@@ -647,7 +721,7 @@
       margin-top: 6px;
       min-width: 240px;
       padding: 6px 0;
-      background: #fff;
+      background: var(--surface);
       border-radius: 12px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
       text-align: left;
@@ -664,23 +738,23 @@
       border: none;
       background: none;
       font-size: 16px;
-      color: #333;
+      color: var(--text);
       text-align: left;
       cursor: pointer;
     }
-    .menu-item:hover { background: #f4f4fb; }
-    .menu-item .material-icons { font-size: 20px; color: #666; }
+    .menu-item:hover { background: var(--hover); }
+    .menu-item .material-icons { font-size: 20px; color: var(--text-2); }
     .menu-item kbd {
       margin-left: auto;
       font-family: monospace;
       font-size: 13px;
-      color: #888;
-      border: 1px solid #ddd;
+      color: var(--text-3);
+      border: 1px solid var(--border);
       border-radius: 4px;
       padding: 1px 6px;
     }
-    .menu-item.cb-danger, .menu-item.cb-danger .material-icons { color: #dc3545; }
-    .menu-sep { height: 1px; margin: 6px 0; background: #eee; }
+    .menu-item.cb-danger, .menu-item.cb-danger .material-icons { color: var(--danger); }
+    .menu-sep { height: 1px; margin: 6px 0; background: var(--divider); }
 
     /* Focus mode: the bar shrinks to the focus button */
     body.focus #command-bar {
@@ -700,8 +774,8 @@
       width: 90%;
       max-width: 600px;
       margin: 16px auto 10px;
-      background: #fff;
-      border: 2px solid #ccc;
+      background: var(--surface);
+      border: 2px solid var(--border-strong);
       border-radius: 10px;
       box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
       overflow: hidden;
@@ -721,15 +795,15 @@
       gap: 12px;
       padding: 6px 10px 6px 16px;
       font-size: 15px;
-      color: #666;
-      background: #fafafe;
+      color: var(--text-2);
+      background: var(--surface-2);
     }
-    .card-head { border-bottom: 1px solid #ececf4; }
+    .card-head { border-bottom: 1px solid var(--divider); }
     .card-foot {
       flex-wrap: wrap;
       justify-content: space-between;
       padding: 8px 16px;
-      border-top: 1px solid #ececf4;
+      border-top: 1px solid var(--divider);
     }
     .card-pos {
       font-variant-numeric: tabular-nums;
@@ -739,13 +813,13 @@
       flex: 1;
       height: 4px;
       border-radius: 2px;
-      background: #e6e6f0;
+      background: var(--fill);
       overflow: hidden;
     }
     .card-progress-fill {
       height: 100%;
       width: 0;
-      background: #4682B4;
+      background: var(--accent);
       transition: width 0.2s;
     }
     .required-star {
@@ -757,11 +831,11 @@
       border: none;
       border-radius: 20px;
       background: none;
-      color: #b0b0bf;
+      color: var(--text-faint);
       cursor: pointer;
     }
-    .required-star:hover { background: #f0f0f8; }
-    .required-star.on { color: #f5a623; }
+    .required-star:hover { background: var(--hover); }
+    .required-star.on { color: var(--star); }
     .required-star .material-icons { font-size: 26px; }
     .perf {
       display: flex;
@@ -774,16 +848,16 @@
       width: 9px;
       height: 9px;
       border-radius: 50%;
-      background: #dc3545;
+      background: var(--danger);
     }
-    .perf-dot.ok { background: #28a745; }
+    .perf-dot.ok { background: var(--success); }
     .perf-score { font-weight: bold; }
-    .perf-sep { color: #bbb; }
+    .perf-sep { color: var(--text-faint); }
     .perf-new {
       padding: 1px 8px;
       border-radius: 10px;
-      background: #ececf4;
-      color: #777;
+      background: var(--fill);
+      color: var(--text-3);
       font-size: 13px;
       font-weight: bold;
       letter-spacing: 0.03em;
@@ -799,14 +873,14 @@
       min-height: 26px;
       min-width: 0;
       padding: 0 10px;
-      border: 1px solid #d6d6e4;
+      border: 1px solid var(--border);
       border-radius: 13px;
-      background: #f2f2f8;
-      color: #555;
+      background: var(--fill);
+      color: var(--text-2);
       font-size: 14px;
       cursor: pointer;
     }
-    .tag-chip:hover { background: #e6e6f2; border-color: #c4c4d8; }
+    .tag-chip:hover { background: var(--fill-hover); border-color: var(--border-strong); }
     body.editing #tags-info { display: none; }
 
     /* Shortcuts & help panel */
@@ -829,7 +903,7 @@
       font-size: 14px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      color: #888;
+      color: var(--text-3);
     }
     .help-row {
       display: flex;
@@ -837,7 +911,7 @@
       gap: 12px;
       padding: 4px 0;
       font-size: 16px;
-      color: #333;
+      color: var(--text);
     }
     .help-keys { flex: 0 0 150px; }
     .help-keys kbd {
@@ -848,14 +922,14 @@
       font-family: monospace;
       font-size: 14px;
       text-align: center;
-      color: #333;
-      background: #f6f6fb;
-      border: 1px solid #ccc;
+      color: var(--text);
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
       border-bottom-width: 2px;
       border-radius: 4px;
     }
-    .help-mode { padding: 4px 0; font-size: 16px; color: #333; }
-    .help-mode b { color: #4682B4; }
+    .help-mode { padding: 4px 0; font-size: 16px; color: var(--text); }
+    .help-mode b { color: var(--accent); }
 
     /* Desktop vs mobile parts of the bar */
     @media (max-width: 768px) {
@@ -964,6 +1038,7 @@
       <button class="menu-item cb-mobile" data-action="history" role="menuitem"><span class="material-icons">history</span><span class="history-label">Hide mistakes</span><kbd>h</kbd></button>
       <button class="menu-item" data-action="copy" role="menuitem"><span class="material-icons">content_copy</span>Copy card<kbd>⌘C</kbd></button>
       <button class="menu-item" data-action="focus" role="menuitem"><span class="material-icons">center_focus_strong</span>Focus mode<kbd>f</kbd></button>
+      <button class="menu-item" data-action="theme" role="menuitem"><span class="material-icons theme-icon">dark_mode</span><span class="theme-label">Dark mode</span><kbd>t</kbd></button>
       <button class="menu-item" data-action="help" role="menuitem"><span class="material-icons">help_outline</span>Shortcuts &amp; help<kbd>?</kbd></button>
       <div class="menu-sep"></div>
       <button class="menu-item cb-danger" id="clear-attempts" role="menuitem"><span class="material-icons">delete_sweep</span>Clear attempts…<kbd>⌃R</kbd></button>
@@ -1071,6 +1146,7 @@
     window.onload = function() {
       ensureCardProperties();
       loadStateFromLocalStorage();
+      updateThemeMenuItem();
       renderCard();
       setupIncorrectModal();
       setupMoveToModal(); // Initialize move to modal
@@ -1188,6 +1264,7 @@
         searchInput: document.getElementById("search-input").value,
         requiredFilter: document.getElementById("required-filter").value, // NEW
         focusMode: focusMode,
+        theme: document.documentElement.dataset.theme,
         currentIndex: currentIndex,
         mistakesHistoryVisible: mistakesHistoryVisible
       };
@@ -1236,6 +1313,21 @@
       saveStateToLocalStorage();
     }
 
+    // The theme itself is set in <head> before first paint; this flips it and keeps the menu item in sync.
+    function toggleDarkMode() {
+      const root = document.documentElement;
+      root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+      updateThemeMenuItem();
+      closePopovers();
+      saveStateToLocalStorage();
+    }
+
+    function updateThemeMenuItem() {
+      const dark = document.documentElement.dataset.theme === "dark";
+      document.querySelectorAll(".theme-label").forEach(el => el.textContent = dark ? "Light mode" : "Dark mode");
+      document.querySelectorAll(".theme-icon").forEach(el => el.textContent = dark ? "light_mode" : "dark_mode");
+    }
+
     // ===== Shortcuts & help =====
     // Single source for the help panel: keep in sync with the keydown handler below.
     const SHORTCUTS = [
@@ -1247,6 +1339,7 @@
       ]},
       { group: "Modes and views", items: [
         [["f"], "Focus mode on / off"],
+        [["t"], "Dark mode on / off"],
         [["e"], "Edit mode on / off"],
         [["h"], "Show / hide previous mistakes"],
         [["?"], "This help"],
@@ -1272,7 +1365,7 @@
       [["Tap card"], "Flip card"],
       [["Swipe ← →"], "Next / previous card"],
       [["✕", "✓"], "Mark incorrect / correct (bottom bar)"],
-      [["⋮"], "Edit, mistakes, copy, focus, clear attempts"],
+      [["⋮"], "Edit, mistakes, copy, focus, dark mode, clear attempts"],
     ];
     const MODES = [
       ["Study", "the default: card, stats, tags and previous mistakes."],
@@ -1372,6 +1465,7 @@
     function initCommandBar() {
       const actions = {
         focus: () => toggleFocusMode(),
+        theme: () => toggleDarkMode(),
         edit: () => setEditMode(!editMode),
         history: () => { closePopovers(); toggleMistakesHistoryVisibility(); },
         copy: () => { closePopovers(); copyCardContent(); },
@@ -2291,6 +2385,10 @@
       
       if (e.key === "f") {
         toggleFocusMode();
+        return;
+      }
+      if (e.key === "t") {
+        toggleDarkMode();
         return;
       }
       if (e.key === "h") {
