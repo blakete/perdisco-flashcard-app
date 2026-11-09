@@ -300,6 +300,20 @@
       margin-top: 5px;
       margin-bottom: 5px;
     }
+    .flashcard table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 10px 0;
+      font-size: 0.9em;
+      line-height: 1.35;
+    }
+    .flashcard th, .flashcard td {
+      border: 1px solid var(--border-strong);
+      padding: 6px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .flashcard th { background: var(--surface-2); }
     .flashcard textarea, .flashcard input[type="text"] {
       width: 100%;
       resize: vertical;
@@ -377,6 +391,14 @@
     button {
       font-family: sans-serif;
       font-size: 18px;
+    }
+    /* Display math ($$…$$, \[…\]) wider than the card scrolls sideways instead of being cut off */
+    mjx-container[jax="CHTML"][display="true"] {
+      display: inline-block !important;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      vertical-align: middle !important;
     }
     mjx-container[jax="CHTML"] {
       display: inline !important;
