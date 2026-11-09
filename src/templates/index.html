@@ -954,12 +954,17 @@
   </style>
   <script>
     // Single place the theme is applied: page colors (data-theme) and the browser's own
-    // toolbar/status bar (theme-color, read from the --bg token). Runs here, after the
+    // toolbar/status bar (theme-color, from the page background). Runs here, after the
     // stylesheet and before first paint, so there is no white flash.
     function applyTheme(theme) {
-      document.documentElement.dataset.theme = theme;
-      const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
-      document.querySelector('meta[name="theme-color"]').content = bg;
+      const root = document.documentElement;
+      root.dataset.theme = theme;
+      // Resolved rgb() rather than the raw token (mobile browsers reject e.g. "#eef"), and a
+      // fresh <meta> rather than editing content (some browsers, notably Safari, miss edits).
+      const meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      meta.content = getComputedStyle(root).backgroundColor;
+      document.querySelector('meta[name="theme-color"]').replaceWith(meta);
     }
     (function () {
       // A saved choice wins; otherwise follow the system.
