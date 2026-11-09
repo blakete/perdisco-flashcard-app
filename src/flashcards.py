@@ -36,7 +36,13 @@ def upload():
     file = request.files["image"]
     if file.filename == "":
         return jsonify({"error": "No selected file"}), 400
-    filename = secure_filename(file.filename)
+    filename = secure_filename(file.filename) or "image.png"
+    # Never overwrite an existing image: add a numeric suffix instead.
+    base, ext = os.path.splitext(filename)
+    n = 1
+    while os.path.exists(os.path.join(store.assets_dir(), filename)):
+        filename = f"{base}-{n}{ext}"
+        n += 1
     file.save(os.path.join(store.assets_dir(), filename))
     return jsonify({"url": f"/assets/{filename}"})
 
