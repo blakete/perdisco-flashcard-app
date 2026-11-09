@@ -2126,6 +2126,8 @@
       });
       
       flashcard.addEventListener('touchend', e => {
+        // Editing: touches are for the text boxes, not for flipping or changing cards
+        if (editMode) return;
         touchEndX = e.changedTouches[0].screenX;
         touchEndY = e.changedTouches[0].screenY;
         const touchEndTime = new Date().getTime();
@@ -2137,10 +2139,8 @@
         // Check if it's a tap (short duration, minimal movement)
         if (isTap && touchEndTime - touchStartTime < 300) {
           // It's a tap - flip the card
-          if (!editMode) {
-            showingFront = !showingFront;
-            renderCard(); // This will now call updateMistakesHistoryVisibility
-          }
+          showingFront = !showingFront;
+          renderCard(); // This will now call updateMistakesHistoryVisibility
           return;
         }
         
