@@ -23,7 +23,6 @@
     :root {
       color-scheme: light;
       --bg: #eef;
-      --bar-bg: rgba(238, 238, 255, 0.92);
       --mobile-bar-bg: rgba(240, 240, 245, 0.8);
       --surface: #fff;
       --surface-2: #fafafe;
@@ -53,7 +52,6 @@
     :root[data-theme="dark"] {
       color-scheme: dark;
       --bg: #15161c;
-      --bar-bg: rgba(21, 22, 28, 0.92);
       --mobile-bar-bg: rgba(40, 41, 52, 0.85);
       --surface: #1f2029;
       --surface-2: #252631;
@@ -498,9 +496,9 @@
       width: 100%;
       box-sizing: border-box;
       padding: 10px 16px 6px;
-      background: var(--bar-bg);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
+      /* Solid on purpose: iOS Safari colors the status bar from the top sticky element,
+         and only follows a plain background color (translucent/blurred gets sampled once). */
+      background: var(--bg);
       border-bottom: 1px solid var(--border);
     }
     .cb-row {
@@ -747,12 +745,7 @@
     .menu-sep { height: 1px; margin: 6px 0; background: var(--divider); }
 
     /* Focus mode: the bar shrinks to the focus button */
-    body.focus #command-bar {
-      background: transparent;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-      border-bottom-color: transparent;
-    }
+    body.focus #command-bar { border-bottom-color: transparent; }
     body.focus .cb-main-row > :not(#focus-mode-toggle),
     body.focus #filter-chips,
     body.focus #filter-panel,
@@ -928,11 +921,6 @@
       .cb-desktop, .cb-label { display: none !important; }
       .cb-btn { padding: 0 8px; }
       body.filters-open #sheet-backdrop { display: block; }
-      /* backdrop-filter would make the bar the containing block for the fixed sheet */
-      body.filters-open #command-bar {
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-      }
       #filter-panel {
         position: fixed;
         top: auto;
