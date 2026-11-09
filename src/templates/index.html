@@ -1998,6 +1998,12 @@
       const kept = [];
       const keep = m => `\u0000${kept.push(m[0] === "`" ? `<code>${m.slice(1, -1)}</code>` : m) - 1}\u0000`;
       let html = text.replace(/\r\n?/g, "\n").replace(PROTECTED, keep);
+      // A <!-- comment --> alone on its line takes no line of its own (no blank line, no break
+      // in a list): it joins the line above, or at the very top the line below.
+      const allComments = phs => phs.match(/\d+/g).every(i => kept[+i].startsWith("<!--"));
+      html = html
+        .replace(/\n[ \t]*(\u0000\d+\u0000)[ \t]*(?=\n|$)/g, (m, ph) => allComments(ph) ? ph : m)
+        .replace(/^[ \t]*((?:\u0000\d+\u0000)+)[ \t]*\n/, (m, phs) => allComments(phs) ? phs : m);
       html = renderMarkdownLists(html);
       html = html
         .replace(/\*\*(?=\S)([^\n]*?\S)\*\*/g, "<strong>$1</strong>")
