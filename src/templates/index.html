@@ -1385,7 +1385,7 @@
     ];
     const TOUCH = [
       [["Tap card"], "Flip card"],
-      [["Swipe ← →"], "Next / previous card"],
+      [["←", "→"], "Previous / next card (bottom bar)"],
       [["✕", "✓"], "Mark incorrect / correct (bottom bar)"],
       [["⋮"], "Edit, mistakes, copy, focus, dark mode, clear attempts"],
     ];
@@ -2157,82 +2157,36 @@
 
     // Mobile touch and UI handlers
     function initMobileHandlers() {
-      // Touch variables for swipe detection
-      let touchStartX = 0;
-      let touchEndX = 0;
-      let touchStartY = 0;
-      let touchEndY = 0;
-      
-      // Minimum distance for a swipe
-      const minSwipeDistance = 50;
-      
-      // Add touch event handlers to the flashcard
+      // Tap the card to flip it. (Swiping between cards is turned off: use the bottom bar.)
       const flashcard = document.getElementById("flashcard");
-      
-      // Track if it's a tap or a swipe
-      let isTap = false;
+      let touchStartX = 0;
+      let touchStartY = 0;
       let touchStartTime = 0;
-      
+      let isTap = false;
+
       flashcard.addEventListener('touchstart', e => {
         touchStartX = e.changedTouches[0].screenX;
         touchStartY = e.changedTouches[0].screenY;
-        touchStartTime = new Date().getTime();
+        touchStartTime = Date.now();
         isTap = true;
       });
-      
+
       flashcard.addEventListener('touchmove', e => {
-        // If moved more than a small threshold, it's not a tap
+        // Moving more than a few pixels (scrolling, selecting) is not a tap
         const moveX = Math.abs(e.changedTouches[0].screenX - touchStartX);
         const moveY = Math.abs(e.changedTouches[0].screenY - touchStartY);
-        if (moveX > 10 || moveY > 10) {
-          isTap = false;
-        }
+        if (moveX > 10 || moveY > 10) isTap = false;
       });
-      
-      flashcard.addEventListener('touchend', e => {
-        // Editing: touches are for the text boxes, not for flipping or changing cards
+
+      flashcard.addEventListener('touchend', () => {
+        // Editing: touches are for the text boxes, not for flipping the card
         if (editMode) return;
-        touchEndX = e.changedTouches[0].screenX;
-        touchEndY = e.changedTouches[0].screenY;
-        const touchEndTime = new Date().getTime();
-        
-        // Calculate horizontal distance
-        const deltaX = touchEndX - touchStartX;
-        const deltaY = touchEndY - touchStartY;
-        
-        // Check if it's a tap (short duration, minimal movement)
-        if (isTap && touchEndTime - touchStartTime < 300) {
-          // It's a tap - flip the card
+        if (isTap && Date.now() - touchStartTime < 300) {
           showingFront = !showingFront;
-          renderCard(); // This will now call updateMistakesHistoryVisibility
-          return;
-        }
-        
-        // Check if horizontal swipe is more significant than vertical
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          // Check if it's a left or right swipe (with minimum distance)
-          if (Math.abs(deltaX) > minSwipeDistance) {
-            if (deltaX > 0) {
-              // Right swipe - previous card
-              if (currentIndex > 0) {
-                currentIndex--;
-                showingFront = true;
-                renderCard();
-                saveStateToLocalStorage();
-              }
-            } else {
-              // Left swipe - next card
-              if (currentIndex < flashcards.length - 1) {
-                currentIndex++;
-                showingFront = true;
-                renderCard();
-                saveStateToLocalStorage();
-              }
-            }
-          }
+          renderCard();
         }
       });
-      
+
       // Mobile action buttons
       document.getElementById("mobile-prev").addEventListener("click", function() {
         if (!editMode && currentIndex > 0) {
