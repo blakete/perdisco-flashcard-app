@@ -1150,6 +1150,17 @@
     </div>
   </div>
 
+  <!-- Asked before leaving a card with unsaved edits; Cancel is the default -->
+  <div id="discard-modal" class="modal" role="alertdialog" aria-labelledby="discard-title">
+    <div class="modal-content">
+      <div class="modal-title" id="discard-title">This card has unsaved changes. Discard them?</div>
+      <div class="modal-buttons">
+        <button class="modal-button modal-submit" id="discard-cancel">Cancel</button>
+        <button class="modal-button modal-cancel" id="discard-ok">OK</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Bottom spacer to allow scrolling content to the top of viewport -->
   <div id="bottom-spacer" style="min-height: 33vh; height: auto; width: 100%;"></div>
 
@@ -1414,8 +1425,62 @@
       modal.style.display = open ? "block" : "none";
     }
 
+    // ===== Unsaved edits =====
+    // True when the edit form holds changes to the current card that were not saved.
+    function hasUnsavedEdits() {
+      if (!editMode || flashcards.length === 0) return false;
+      const front = document.getElementById("edit-front");
+      const back = document.getElementById("edit-back");
+      const tags = document.getElementById("edit-tags");
+      if (!front || !back || !tags) return false;
+      const card = flashcards[currentIndex];
+      const formTags = tags.value.split(",").map(t => t.trim()).filter(t => t.length > 0);
+      return front.value !== card.front || back.value !== card.back ||
+        formTags.join("\n") !== card.tags.join("\n");
+    }
+
+    // Call before anything that leaves edit mode or shows another card:
+    //   if (!guardEdits(() => sameActionAgain())) return;
+    // Returns true when there is nothing to lose. Otherwise it asks (Cancel is the
+    // default) and returns false; on OK the form is reverted and `retry` runs.
+    let discardRetry = null;
+    function guardEdits(retry) {
+      if (!hasUnsavedEdits()) return true;
+      discardRetry = retry;
+      document.getElementById("discard-modal").style.display = "block";
+      document.getElementById("discard-cancel").focus();
+      return false;
+    }
+
+    function discardModalOpen() {
+      return document.getElementById("discard-modal").style.display === "block";
+    }
+
+    function closeDiscardModal(discard) {
+      document.getElementById("discard-modal").style.display = "none";
+      const retry = discardRetry;
+      discardRetry = null;
+      if (!discard) {
+        document.getElementById("edit-back")?.focus();
+        return;
+      }
+      renderCard(); // reverts the form to the saved card, so the retry is not asked again
+      if (retry) retry();
+    }
+
+    document.getElementById("discard-cancel").addEventListener("click", e => { e.stopPropagation(); closeDiscardModal(false); });
+    document.getElementById("discard-ok").addEventListener("click", e => { e.stopPropagation(); closeDiscardModal(true); });
+    document.getElementById("discard-modal").addEventListener("click", e => {
+      if (e.target.id === "discard-modal") closeDiscardModal(false);
+    });
+
+    window.addEventListener("beforeunload", e => {
+      if (hasUnsavedEdits()) e.preventDefault();
+    });
+
     // ===== Command bar =====
     function setEditMode(on) {
+      if (!on && !guardEdits(() => setEditMode(on))) return;
       editMode = on;
       if (!editMode) showingFront = true;
       document.body.classList.toggle("editing", editMode);
@@ -1473,6 +1538,7 @@
     }
 
     function removeFilter(item) {
+      if (!guardEdits(() => removeFilter(item))) return;
       if (item.key === "content") document.getElementById("search-input").value = "";
       if (item.key === "required") document.getElementById("required-filter").value = "any";
       if (item.key === "tag") {
@@ -1584,6 +1650,7 @@
         e.preventDefault();
         let term = this.value.trim().toLowerCase();
         if (term === "") return;
+        if (!guardEdits(() => this.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" })))) return;
         // If the term is different from the last jump search, recalc the results.
         if (term !== jumpSearchTerm) {
           jumpSearchTerm = term;
@@ -1663,6 +1730,7 @@
     }
 
     function toggleFilterTag(name, on) {
+      if (!guardEdits(() => toggleFilterTag(name, on))) { renderTagBrowser(); return; }
       const key = name.toLowerCase();
       const tags = selectedFilterTags().filter(t => t.toLowerCase() !== key);
       if (on) tags.push(name);
@@ -1900,6 +1968,7 @@
         chip.title = `Show only cards tagged “${tag}”`;
         chip.addEventListener("click", e => {
           e.stopPropagation();
+          if (!guardEdits(() => chip.click())) return;
           document.getElementById("tag-filter").value = tag;
           applyCurrentFilter();
           const idx = flashcards.findIndex(c => c.id === card.id);
@@ -2229,6 +2298,7 @@
     }
 
     document.getElementById("add-card").addEventListener("click", function() {
+      if (!guardEdits(() => this.click())) return;
       const tagInput = document.getElementById("tag-filter").value.trim();
       const defaultTags = tagInput ? tagInput.split(",").map(tag => tag.trim()).filter(tag => tag !== "") : [];
       
@@ -2353,6 +2423,11 @@
     });
 
     document.addEventListener('keydown', function(e) {
+      if (discardModalOpen()) {
+        // Enter/Space press the focused button (Cancel by default); no shortcuts underneath
+        if (e.key === "Escape") { e.preventDefault(); closeDiscardModal(false); }
+        return;
+      }
       if (e.key === "Escape") {
         if (document.getElementById("help-modal").style.display === "block") {
           toggleHelp(false);
@@ -2466,14 +2541,14 @@
       }
       if (flashcards.length === 0) return;
       if (e.key === "ArrowRight") {
-        if (currentIndex < flashcards.length - 1) {
+        if (currentIndex < flashcards.length - 1 && guardEdits(() => document.dispatchEvent(new KeyboardEvent("keydown", { key: e.key })))) {
           currentIndex++;
           showingFront = true;
           renderCard();
           saveStateToLocalStorage();
         }
       } else if (e.key === "ArrowLeft") {
-        if (currentIndex > 0) {
+        if (currentIndex > 0 && guardEdits(() => document.dispatchEvent(new KeyboardEvent("keydown", { key: e.key })))) {
           currentIndex--;
           showingFront = true;
           renderCard();
@@ -2489,6 +2564,7 @@
     });
 
     document.getElementById("apply-filter").addEventListener("click", function() {
+      if (!guardEdits(() => this.click())) return;
       closePopovers();
       applyCurrentFilter();
       renderCard();
@@ -2496,6 +2572,7 @@
     });
 
     document.getElementById("clear-filter").addEventListener("click", function() {
+      if (!guardEdits(() => this.click())) return;
       document.getElementById("tag-filter").value = "";
       document.getElementById("search-input").value = "";
       document.getElementById("required-filter").value = "any"; // Reset required filter (NEW)
@@ -2627,6 +2704,7 @@ ${backContent}
     }
 
     function showMoveToModal() {
+      if (!guardEdits(showMoveToModal)) return;
       const modal = document.getElementById("move-to-modal");
       const input = document.getElementById("move-to-position");
       
@@ -2653,6 +2731,7 @@ ${backContent}
 
     // Function to move the current card up one position
     function moveCardUp() {
+      if (!guardEdits(moveCardUp)) return;
       if (flashcards.length === 0 || currentIndex === 0) return;
       
       const cardId = flashcards[currentIndex].id;
@@ -2685,6 +2764,7 @@ ${backContent}
 
     // Function to move the current card down one position
     function moveCardDown() {
+      if (!guardEdits(moveCardDown)) return;
       if (flashcards.length === 0) return;
       
       const cardId = flashcards[currentIndex].id;
