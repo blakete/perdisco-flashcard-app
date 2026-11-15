@@ -143,6 +143,7 @@
     
     .incorrect-attempt-reason {
       font-size: 16px;
+      white-space: pre-wrap; /* keep the line breaks typed into the reason box */
     }
     
     .no-attempts-message {
@@ -1119,7 +1120,7 @@
   <div id="incorrect-modal" class="modal">
     <div class="modal-content">
       <div class="modal-title">What did you get wrong?</div>
-      <input type="text" id="incorrect-reason" class="modal-input" placeholder="Describe what you got wrong (optional)">
+      <textarea id="incorrect-reason" class="modal-input" rows="3" style="resize: vertical; overflow: hidden;" placeholder="Describe what you got wrong (optional)"></textarea>
       <div class="modal-buttons">
         <button class="modal-button modal-submit" id="incorrect-submit">Submit</button>
         <button class="modal-button modal-cancel" id="incorrect-cancel">Cancel</button>
@@ -1263,13 +1264,14 @@
         // Do not record attempt or advance when canceled
       });
 
-      // Allow pressing Enter to submit
+      // Multi-line like the card edit boxes: Enter adds a line, ⌘/Ctrl+Enter submits
       input.addEventListener("keydown", function(e) {
-        if (e.key === "Enter") {
+        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
           e.preventDefault();
           submitBtn.click();
         }
       });
+      input.addEventListener("input", () => autoResizeTextarea(input));
 
       // Close modal if clicking outside
       window.addEventListener("click", function(e) {
@@ -1285,6 +1287,7 @@
       const input = document.getElementById("incorrect-reason");
       input.value = "";
       modal.style.display = "block";
+      autoResizeTextarea(input); // shrink back after a long previous reason
       setTimeout(() => input.focus(), 100);
     }
 
@@ -1368,7 +1371,7 @@
         [["←", "→"], "Previous / next card"],
         [["Space", "↑", "↓"], "Flip card"],
         [["c"], "Mark correct and go to the next card"],
-        [["x"], "Mark incorrect (asks what you got wrong)"],
+        [["x"], "Mark incorrect (asks what you got wrong; ⌘/Ctrl+Enter submits)"],
       ]},
       { group: "Modes and views", items: [
         [["f"], "Focus mode on / off"],
