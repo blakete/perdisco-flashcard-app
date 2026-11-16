@@ -2277,8 +2277,9 @@
       });
 
       // Mobile action buttons
+      // ← / → work in edit mode too (like the arrow keys): unsaved edits ask first, then the next card opens in edit mode
       document.getElementById("mobile-prev").addEventListener("click", function() {
-        if (!editMode && currentIndex > 0) {
+        if (currentIndex > 0 && guardEdits(() => this.click())) {
           currentIndex--;
           showingFront = true;
           renderCard();
@@ -2287,7 +2288,7 @@
       });
       
       document.getElementById("mobile-next").addEventListener("click", function() {
-        if (!editMode && currentIndex < flashcards.length - 1) {
+        if (currentIndex < flashcards.length - 1 && guardEdits(() => this.click())) {
           currentIndex++;
           showingFront = true;
           renderCard();
