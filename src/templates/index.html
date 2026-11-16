@@ -242,6 +242,19 @@
       background-color: var(--neutral);
       color: white;
     }
+
+    /* Edit mode: ✕ is grayed out (does nothing) and ✓ becomes a save button */
+    .mobile-button .when-editing { display: none; }
+    body.editing .mobile-button .when-editing { display: inline; }
+    body.editing .mobile-button .when-studying { display: none; }
+    body.editing #mobile-correct { background-color: var(--accent); }
+    body.editing #mobile-incorrect {
+      background-color: var(--neutral);
+      opacity: 0.35;
+      box-shadow: none;
+      cursor: default;
+      pointer-events: none;
+    }
     
     /* Hide mobile controls on desktop, show on mobile */
     @media (min-width: 769px) {
@@ -1092,11 +1105,12 @@
     <button class="mobile-button nav-button" id="mobile-prev">
       <span class="material-icons">arrow_back</span>
     </button>
-    <button class="mobile-button incorrect-button" id="mobile-incorrect">
+    <button class="mobile-button incorrect-button" id="mobile-incorrect" aria-label="Mark incorrect">
       <span class="material-icons">highlight_off</span>
     </button>
-    <button class="mobile-button correct-button" id="mobile-correct">
-      <span class="material-icons">check_circle</span>
+    <button class="mobile-button correct-button" id="mobile-correct" aria-label="Mark correct">
+      <span class="material-icons when-studying">check_circle</span>
+      <span class="material-icons when-editing">save</span>
     </button>
     <button class="mobile-button nav-button" id="mobile-next">
       <span class="material-icons">arrow_forward</span>
@@ -1400,7 +1414,7 @@
     const TOUCH = [
       [["Tap card"], "Flip card"],
       [["←", "→"], "Previous / next card (bottom bar)"],
-      [["✕", "✓"], "Mark incorrect / correct (bottom bar); in edit mode ✓ saves the card"],
+      [["✕", "✓"], "Mark incorrect / correct (bottom bar); in edit mode ✓ turns into Save and ✕ is off"],
       [["⋮"], "Edit, mistakes, copy, focus, dark mode, clear attempts"],
     ];
     const MODES = [
@@ -1501,6 +1515,8 @@
       editMode = on;
       if (!editMode) showingFront = true;
       document.body.classList.toggle("editing", editMode);
+      document.getElementById("mobile-correct").setAttribute("aria-label", editMode ? "Save card" : "Mark correct");
+      document.getElementById("mobile-incorrect").disabled = editMode;
       closePopovers();
       renderCard();
     }
@@ -2286,7 +2302,7 @@
       
       document.getElementById("mobile-correct").addEventListener("click", function() {
         if (editMode) {
-          saveCardEdits(); // in edit mode ✓ saves the card (and stays editing); it never marks it correct
+          saveCardEdits(); // in edit mode this is the Save button (and stays editing); it never marks it correct
           return;
         }
         if (flashcards.length > 0) {
