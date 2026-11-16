@@ -2162,6 +2162,15 @@
       return out.join("\n");
     }
 
+    // iOS Safari sometimes repaints only part of the card after its text is swapped
+    // (e.g. a flip), leaving the old side's text visible below the new one. Taking the
+    // element out of the layout and back in, within one frame, makes it repaint all of it.
+    function forceRepaint(el) {
+      el.style.display = "none";
+      void el.offsetHeight; // force layout while hidden
+      el.style.display = "";
+    }
+
     function renderCard() {
       if (flashcards.length === 0) {
         document.getElementById("flashcard").innerText = "No cards match the filter.";
@@ -2221,7 +2230,9 @@
         });
         
       } else {
-        document.getElementById("flashcard").innerHTML = formatCardHtml(showingFront ? card.front : card.back);
+        const cardEl = document.getElementById("flashcard");
+        cardEl.innerHTML = formatCardHtml(showingFront ? card.front : card.back);
+        forceRepaint(cardEl);
       }
       
       // Render the incorrect attempts history
