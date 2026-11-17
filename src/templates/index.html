@@ -1257,15 +1257,9 @@
 
       submitBtn.addEventListener("click", function() {
         const reason = input.value.trim();
-        recordAttempt(false, reason);
+        const recorded = recordAttempt(false, reason);
         closeIncorrectModal();
-        // Advance to next card after marking incorrect
-        if (currentIndex < flashcards.length - 1) {
-          currentIndex++;
-          showingFront = true;
-          renderCard();
-          saveStateToLocalStorage();
-        }
+        advanceAfterAnswer(recorded);
       });
 
       cancelBtn.addEventListener("click", function() {
@@ -1303,6 +1297,13 @@
     function closeIncorrectModal() {
       const modal = document.getElementById("incorrect-modal");
       modal.style.display = "none";
+      // Hiding the dialog can leave its textarea focused, and keys typed into a
+      // hidden field never reach the c/x shortcuts.
+      document.getElementById("incorrect-reason").blur();
+    }
+
+    function incorrectModalOpen() {
+      return document.getElementById("incorrect-modal").style.display === "block";
     }
 
     function saveStateToLocalStorage() {
@@ -1628,11 +1629,15 @@
     }
 
     // Each change is saved with one small API call (the server stores the deck in SQLite).
+    // A request that never answers would hold up every later change in queueChange(),
+    // so give up after API_TIMEOUT_MS and report it like any other failure.
+    const API_TIMEOUT_MS = 10000;
     function api(method, url, body) {
       return fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: body === undefined ? undefined : JSON.stringify(body)
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: AbortSignal.timeout(API_TIMEOUT_MS)
       })
       .then(response => response.json().then(data => {
         if (!response.ok || !data.success) throw new Error(data.error || `HTTP ${response.status}`);
@@ -1640,7 +1645,10 @@
       }))
       .catch(error => {
         console.error(`Save failed: ${method} ${url}`, error);
-        alert(`Error saving changes: ${error.message}`);
+        const reason = error.name === "TimeoutError"
+          ? `the server did not answer within ${API_TIMEOUT_MS / 1000} s (it may still have saved it; reload to check)`
+          : error.message;
+        alert(`Error saving changes: ${reason}`);
         return null;
       });
     }
@@ -1951,8 +1959,9 @@
       };
     }
 
+    // Resolves true once the server has stored the attempt.
     function recordAttempt(correct, reason = null) {
-      if (flashcards.length === 0) return;
+      if (flashcards.length === 0) return Promise.resolve(false);
       const card = flashcards[currentIndex];
       const attemptData = {
         timestamp: Date.now(),
@@ -1964,11 +1973,25 @@
         attemptData.reason = reason;
       }
       
-      queueChange(async () => {
-        if (!await api("POST", `/api/cards/${card.id}/attempts`, attemptData)) return;
+      return queueChange(async () => {
+        if (!await api("POST", `/api/cards/${card.id}/attempts`, attemptData)) return false;
         (card.attempts ||= []).push(attemptData);
         refreshCard();
+        return true;
       });
+    }
+
+    // After an answer: show the next card, or on the last card say so once the
+    // answer is stored (otherwise the key looks like it did nothing).
+    function advanceAfterAnswer(recorded) {
+      if (currentIndex < flashcards.length - 1) {
+        currentIndex++;
+        showingFront = true;
+        renderCard();
+        saveStateToLocalStorage();
+      } else {
+        recorded.then(ok => { if (ok) showNotice("Answer recorded. That was the last card."); });
+      }
     }
 
     function renderRequiredStar(card) {
@@ -2339,14 +2362,7 @@
           return;
         }
         if (flashcards.length > 0) {
-          recordAttempt(true);
-          // Advance to next card after marking correct
-          if (currentIndex < flashcards.length - 1) {
-            currentIndex++;
-            showingFront = true;
-            renderCard();
-            saveStateToLocalStorage();
-          }
+          advanceAfterAnswer(recordAttempt(true));
         }
       });
       
@@ -2446,6 +2462,16 @@
         return;
       }
       if (e.key === "Escape") {
+        if (incorrectModalOpen()) {
+          closeIncorrectModal(); // cancel: no attempt recorded
+          e.preventDefault();
+          return;
+        }
+        if (moveToModalOpen()) {
+          closeMoveToModal();
+          e.preventDefault();
+          return;
+        }
         if (document.getElementById("help-modal").style.display === "block") {
           toggleHelp(false);
           e.preventDefault();
@@ -2507,14 +2533,7 @@
       }
       if (!editMode) {
         if (e.key === "c") {
-          recordAttempt(true);
-          // Advance to next card after marking correct
-          if (currentIndex < flashcards.length - 1) {
-            currentIndex++;
-            showingFront = true;
-            renderCard();
-            saveStateToLocalStorage();
-          }
+          advanceAfterAnswer(recordAttempt(true));
           return;
         } else if (e.key === "x") {
           // Show the incorrect answer modal instead of immediately marking incorrect
@@ -2741,6 +2760,11 @@ ${backContent}
     function closeMoveToModal() {
       const modal = document.getElementById("move-to-modal");
       modal.style.display = "none";
+      document.getElementById("move-to-position").blur(); // see closeIncorrectModal
+    }
+
+    function moveToModalOpen() {
+      return document.getElementById("move-to-modal").style.display === "block";
     }
 
     // Move the current card in the full deck from its index m to `target(m)`; once the
@@ -2757,7 +2781,7 @@ ${backContent}
         const newIndex = flashcards.findIndex(card => card.id === cardId);
         currentIndex = newIndex !== -1 ? newIndex : savedIndex;
         renderCard();
-        showMoveNotification(message);
+        showNotice(message);
       });
     }
 
@@ -2807,7 +2831,7 @@ ${backContent}
           currentIndex = newIndex;
           renderCard();
           const isFiltered = flashcards.length !== allFlashcards.length;
-          showMoveNotification(isFiltered
+          showNotice(isFiltered
             ? `Card moved to position ${newFilteredPosition + 1} in filtered view`
             : `Card moved to position ${newFilteredPosition + 1}`);
         } else {
@@ -2816,8 +2840,8 @@ ${backContent}
       });
     }
 
-    // Show notification when card is moved
-    function showMoveNotification(message) {
+    // Short message at the bottom of the screen that fades after 2 s
+    function showNotice(message) {
       const notification = document.createElement('div');
       notification.className = 'save-notification';
       notification.textContent = message;
