@@ -462,6 +462,32 @@
       border-radius: 5px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
+    /* "What did you get wrong?" docks at the bottom of the screen instead of covering
+       the card, so the card behind stays visible, scrollable and selectable. */
+    #incorrect-modal {
+      background-color: transparent;
+      pointer-events: none; /* clicks and scrolls reach the card */
+    }
+    #incorrect-modal .modal-content {
+      pointer-events: auto;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: var(--answer-panel-bottom);
+      margin: 0 auto;
+      width: 90%;
+      max-width: 600px;
+      box-sizing: border-box;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+    :root { --answer-panel-bottom: 20px; }
+    @media (max-width: 768px) {
+      /* just above the floating mobile-actions bar (20px offset + 80px tall + 10px gap) */
+      :root { --answer-panel-bottom: 110px; }
+    }
+    /* Room under the card so its end can be scrolled above the docked dialog
+       (--answer-panel-space is set from the dialog's height while it is open). */
+    body.answering { padding-bottom: var(--answer-panel-space, 50vh); }
     .modal-title {
       font-size: 1.2em;
       margin-bottom: 15px;
@@ -1275,14 +1301,8 @@
         }
       });
       input.addEventListener("input", () => autoResizeTextarea(input));
-
-      // Close modal if clicking outside
-      window.addEventListener("click", function(e) {
-        if (e.target === modal) {
-          closeIncorrectModal();
-          // Do not record attempt or advance when canceled
-        }
-      });
+      // No click-outside-to-cancel: the card stays usable behind the docked dialog
+      // (select and copy from it); Cancel or Escape closes it.
     }
 
     function showIncorrectModal() {
@@ -1290,13 +1310,22 @@
       const input = document.getElementById("incorrect-reason");
       input.value = "";
       modal.style.display = "block";
+      document.body.classList.add("answering");
       autoResizeTextarea(input); // shrink back after a long previous reason
-      setTimeout(() => input.focus(), 100);
+      setTimeout(() => input.focus({ preventScroll: true }), 100);
     }
+
+    // Keep enough space under the card for the docked dialog, whatever its height.
+    new ResizeObserver(() => {
+      const content = document.querySelector("#incorrect-modal .modal-content");
+      const bottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--answer-panel-bottom")) || 0;
+      document.body.style.setProperty("--answer-panel-space", `${content.offsetHeight + bottom + 20}px`);
+    }).observe(document.querySelector("#incorrect-modal .modal-content"));
 
     function closeIncorrectModal() {
       const modal = document.getElementById("incorrect-modal");
       modal.style.display = "none";
+      document.body.classList.remove("answering");
       // Hiding the dialog can leave its textarea focused, and keys typed into a
       // hidden field never reach the c/x shortcuts.
       document.getElementById("incorrect-reason").blur();
@@ -2339,6 +2368,7 @@
       // Mobile action buttons
       // ← / → work in edit mode too (like the arrow keys): unsaved edits ask first, then the next card opens in edit mode
       document.getElementById("mobile-prev").addEventListener("click", function() {
+        if (incorrectModalOpen()) return; // answering: Submit or Cancel first
         if (currentIndex > 0 && guardEdits(() => this.click())) {
           currentIndex--;
           showingFront = true;
@@ -2348,6 +2378,7 @@
       });
       
       document.getElementById("mobile-next").addEventListener("click", function() {
+        if (incorrectModalOpen()) return; // answering: Submit or Cancel first
         if (currentIndex < flashcards.length - 1 && guardEdits(() => this.click())) {
           currentIndex++;
           showingFront = true;
@@ -2357,6 +2388,7 @@
       });
       
       document.getElementById("mobile-correct").addEventListener("click", function() {
+        if (incorrectModalOpen()) return; // answering: Submit or Cancel first
         if (editMode) {
           saveCardEdits(); // in edit mode this is the Save button (and stays editing); it never marks it correct
           return;
@@ -2367,6 +2399,7 @@
       });
       
       document.getElementById("mobile-incorrect").addEventListener("click", function() {
+        if (incorrectModalOpen()) return; // answering: Submit or Cancel first
         if (editMode) {
           // Exit without saving: unsaved edits ask first (Cancel is the default); OK reverts them, then exits
           if (guardEdits(() => setEditMode(false))) setEditMode(false);
@@ -2497,6 +2530,7 @@
       
       // Handle Cmd+C/Ctrl+C copy shortcut first
       if ((e.metaKey || e.ctrlKey) && e.key === "c") {
+        if (window.getSelection().toString()) return; // copy the selected text, not the whole card
         e.preventDefault();
         copyCardContent();
         return;
@@ -2504,6 +2538,10 @@
       
       // Other modified keys belong to the browser (e.g. Cmd+R must reload, not toggle "required")
       if (e.metaKey || e.altKey || (e.ctrlKey && e.key !== "r")) return;
+
+      // While answering "What did you get wrong?" (focus may be on the card, to copy from it)
+      // the card must not change underneath the answer: only flipping it works.
+      if (incorrectModalOpen() && ![" ", "ArrowUp", "ArrowDown"].includes(e.key)) return;
 
       // Help panel
       if (e.key === "?") {
