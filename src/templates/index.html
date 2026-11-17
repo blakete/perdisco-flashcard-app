@@ -1451,19 +1451,35 @@
         formTags.join("\n") !== card.tags.join("\n");
     }
 
-    // Save the edit form into the current card (and the server), then redraw it.
-    function saveCardEdits() {
+    // Send the edit form to the server. Only once the server confirms is the card
+    // updated, "Saved" shown and the card redrawn; on failure the card and the form
+    // are left as they were, so the draft still counts as unsaved (and is guarded).
+    // Resolves true when the edits were saved.
+    let savingCard = false;
+    async function saveCardEdits() {
       const front = document.getElementById("edit-front");
       const back = document.getElementById("edit-back");
       const tags = document.getElementById("edit-tags");
-      if (!editMode || flashcards.length === 0 || !front || !back || !tags) return;
+      if (!editMode || flashcards.length === 0 || !front || !back || !tags || savingCard) return false;
       const card = flashcards[currentIndex];
-      card.front = front.value;
-      card.back = back.value;
-      card.tags = tags.value.split(",").map(t => t.trim()).filter(t => t.length > 0);
-      api("PATCH", `/api/cards/${card.id}`, { front: card.front, back: card.back, tags: card.tags });
+      const edits = {
+        front: front.value,
+        back: back.value,
+        tags: tags.value.split(",").map(t => t.trim()).filter(t => t.length > 0),
+      };
+      savingCard = true;
+      let saved;
+      try {
+        saved = await api("PATCH", `/api/cards/${card.id}`, edits);
+      } finally {
+        savingCard = false;
+      }
+      if (!saved) return false;
+      Object.assign(card, edits);
       showSaveNotification();
-      renderCard();
+      // Redraw only if the form still shows what was saved (keeps anything typed meanwhile).
+      if (editMode && flashcards[currentIndex] === card && !hasUnsavedEdits()) renderCard();
+      return true;
     }
     // Call before anything that shows another card (leaving edit mode saves instead):
     //   if (!guardEdits(() => sameActionAgain())) return;
@@ -1505,8 +1521,9 @@
     });
 
     // ===== Command bar =====
-    function setEditMode(on) {
-      if (!on && hasUnsavedEdits()) saveCardEdits(); // Done (✓) / e saves the card on the way out
+    async function setEditMode(on) {
+      // Done (✓) / e saves the card on the way out; if the save fails, stay in edit mode with the draft.
+      if (!on && hasUnsavedEdits() && !(await saveCardEdits())) return;
       editMode = on;
       if (!editMode) showingFront = true;
       document.body.classList.toggle("editing", editMode);
