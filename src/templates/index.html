@@ -2488,6 +2488,14 @@
       });
     });
 
+    // A clicked button should not keep keyboard focus: the browser would draw its focus ring
+    // on the next key press, and Enter would press the button again. Buttons reached from
+    // the keyboard (click with detail 0) keep focus, so keyboard navigation still works.
+    document.addEventListener("click", e => {
+      const button = e.target.closest("button");
+      if (button && e.detail > 0 && document.activeElement === button) button.blur();
+    });
+
     document.addEventListener('keydown', function(e) {
       if (discardModalOpen()) {
         // Enter/Space press the focused button (Cancel by default); no shortcuts underneath
