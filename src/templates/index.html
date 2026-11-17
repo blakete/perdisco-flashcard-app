@@ -1455,31 +1455,24 @@
     // updated, "Saved" shown and the card redrawn; on failure the card and the form
     // are left as they were, so the draft still counts as unsaved (and is guarded).
     // Resolves true when the edits were saved.
-    let savingCard = false;
-    async function saveCardEdits() {
-      const front = document.getElementById("edit-front");
-      const back = document.getElementById("edit-back");
-      const tags = document.getElementById("edit-tags");
-      if (!editMode || flashcards.length === 0 || !front || !back || !tags || savingCard) return false;
-      const card = flashcards[currentIndex];
-      const edits = {
-        front: front.value,
-        back: back.value,
-        tags: tags.value.split(",").map(t => t.trim()).filter(t => t.length > 0),
-      };
-      savingCard = true;
-      let saved;
-      try {
-        saved = await api("PATCH", `/api/cards/${card.id}`, edits);
-      } finally {
-        savingCard = false;
-      }
-      if (!saved) return false;
-      Object.assign(card, edits);
-      showSaveNotification();
-      // Redraw only if the form still shows what was saved (keeps anything typed meanwhile).
-      if (editMode && flashcards[currentIndex] === card && !hasUnsavedEdits()) renderCard();
-      return true;
+    function saveCardEdits() {
+      return queueChange(async () => {
+        const front = document.getElementById("edit-front");
+        const back = document.getElementById("edit-back");
+        const tags = document.getElementById("edit-tags");
+        if (!editMode || flashcards.length === 0 || !front || !back || !tags) return false;
+        const card = flashcards[currentIndex];
+        const edits = {
+          front: front.value,
+          back: back.value,
+          tags: tags.value.split(",").map(t => t.trim()).filter(t => t.length > 0),
+        };
+        if (!await api("PATCH", `/api/cards/${card.id}`, edits)) return false;
+        Object.assign(card, edits);
+        showSaveNotification();
+        refreshCard(); // keeps anything typed while the save was in flight
+        return true;
+      });
     }
     // Call before anything that shows another card (leaving edit mode saves instead):
     //   if (!guardEdits(() => sameActionAgain())) return;
@@ -1652,19 +1645,43 @@
       });
     }
 
-    // Tell the server where a card now sits in the full deck (after its new left neighbour).
-    function persistPosition(cardId) {
-      const idx = allFlashcards.findIndex(c => c.id === cardId);
-      if (idx === -1) return;
-      return api("POST", `/api/cards/${cardId}/move`, { after_id: idx > 0 ? allFlashcards[idx - 1].id : null });
+    // Every change to the deck asks the server first and changes what the app shows
+    // only once the server confirms; on failure api() has already said so and nothing
+    // changes. Changes run one at a time, in order, so each starts from the result of
+    // the last (pressing "move up" three times quickly moves the card three places).
+    // `change` is an async function; the returned promise resolves to its result.
+    let pendingChanges = Promise.resolve();
+    function queueChange(change) {
+      const run = pendingChanges.then(change);
+      pendingChanges = run.catch(error => console.error("Change failed", error));
+      return run;
+    }
+
+    // Redraw the current card after a change, unless that would throw away unsaved edits in the form.
+    function refreshCard() {
+      if (!hasUnsavedEdits()) renderCard();
+    }
+
+    // Move a card in the full deck to index `toIdx` (counted with the card taken out),
+    // once the server confirms. Resolves true when moved.
+    async function moveCardTo(cardId, toIdx) {
+      const order = allFlashcards.slice();
+      const from = order.findIndex(c => c.id === cardId);
+      if (from === -1) return false;
+      order.splice(toIdx, 0, order.splice(from, 1)[0]);
+      if (!await api("POST", `/api/cards/${cardId}/move`, { after_id: toIdx > 0 ? order[toIdx - 1].id : null })) return false;
+      allFlashcards = order;
+      return true;
     }
 
     function clearCardAttempts() {
       if (flashcards.length === 0) return;
       const card = flashcards[currentIndex];
-      card.attempts = [];
-      api("DELETE", `/api/cards/${card.id}/attempts`);
-      renderCard();
+      queueChange(async () => {
+        if (!await api("DELETE", `/api/cards/${card.id}/attempts`)) return;
+        card.attempts = [];
+        refreshCard();
+      });
     }
     
     document.getElementById("clear-attempts").addEventListener("click", function() {
@@ -1937,10 +1954,6 @@
     function recordAttempt(correct, reason = null) {
       if (flashcards.length === 0) return;
       const card = flashcards[currentIndex];
-      if (!card.attempts) {
-        card.attempts = [];
-      }
-      
       const attemptData = {
         timestamp: Date.now(),
         correct: correct
@@ -1951,9 +1964,11 @@
         attemptData.reason = reason;
       }
       
-      card.attempts.push(attemptData);
-      api("POST", `/api/cards/${card.id}/attempts`, attemptData);
-      renderCard();
+      queueChange(async () => {
+        if (!await api("POST", `/api/cards/${card.id}/attempts`, attemptData)) return;
+        (card.attempts ||= []).push(attemptData);
+        refreshCard();
+      });
     }
 
     function renderRequiredStar(card) {
@@ -1968,10 +1983,13 @@
     function toggleRequired() {
       if (flashcards.length === 0) return;
       const card = flashcards[currentIndex];
-      card.absolutelyRequired = !card.absolutelyRequired;
-      renderRequiredStar(card);
-      api("PATCH", `/api/cards/${card.id}`, { absolutelyRequired: card.absolutelyRequired });
-      showSaveNotification();
+      queueChange(async () => {
+        const on = !card.absolutelyRequired;
+        if (!await api("PATCH", `/api/cards/${card.id}`, { absolutelyRequired: on })) return;
+        card.absolutelyRequired = on;
+        if (flashcards[currentIndex] === card) renderRequiredStar(card);
+        showSaveNotification();
+      });
     }
 
     function timeAgo(ts) {
@@ -2097,23 +2115,14 @@
     // Function to delete an incorrect attempt
     function deleteIncorrectAttempt(timestamp) {
       if (flashcards.length === 0) return;
-      
       const card = flashcards[currentIndex];
-      if (!card.attempts) return;
-      
-      // Find the attempt with the matching timestamp
-      const attemptIndex = card.attempts.findIndex(attempt => attempt.timestamp === parseInt(timestamp, 10));
-      
-      if (attemptIndex !== -1) {
-        // Remove the attempt
-        card.attempts.splice(attemptIndex, 1);
-        
-        // Persist the change
-        api("DELETE", `/api/cards/${card.id}/attempts/${parseInt(timestamp, 10)}`);
-        
-        // Re-render the list
+      const ts = parseInt(timestamp, 10);
+      if (!card.attempts || !card.attempts.some(attempt => attempt.timestamp === ts)) return;
+      queueChange(async () => {
+        if (!await api("DELETE", `/api/cards/${card.id}/attempts/${ts}`)) return;
+        card.attempts = card.attempts.filter(attempt => attempt.timestamp !== ts);
         renderIncorrectAttempts();
-      }
+      });
     }
     
     // Card text is HTML plus a little markdown, typed by a person. formatCardHtml turns it
@@ -2359,125 +2368,75 @@
       if (!guardEdits(() => this.click())) return;
       const tagInput = document.getElementById("tag-filter").value.trim();
       const defaultTags = tagInput ? tagInput.split(",").map(tag => tag.trim()).filter(tag => tag !== "") : [];
-      
-      // Get the current "Absolutely Required" filter value
-      const requiredFilter = document.getElementById("required-filter").value;
-      // Set the new card's absolutelyRequired property based on current filter
-      const isAbsolutelyRequired = requiredFilter === "true";
-      
-      // Create the new card with a unique timestamp ID
-      const newCard = {
-        "id": Date.now(),
-        "front": "",
-        "back": "",
-        "tags": defaultTags,
-        "understanding": 1,
-        "absolutelyRequired": isAbsolutelyRequired, // Now dynamic based on filter
-        "attempts": []
-      };
-      
-      if (flashcards.length > 0) {
-        // Get the current card's ID
-        const currentCardId = flashcards[currentIndex].id;
-        
-        // Find its position in the full card list
-        const masterIndex = allFlashcards.findIndex(card => card.id === currentCardId);
-
-        console.log("currentCardId: ", currentCardId);
-        console.log("masterIndex: ", masterIndex);
-        
-        if (masterIndex !== -1) {
-          // Insert new card after current card in master list
-          allFlashcards.splice(masterIndex + 1, 0, newCard);
-          
-          // Check if we're in a filtered view
-          const isFiltered = tagInput !== "" || 
-                          document.getElementById("search-input").value.trim() !== "" ||
-                          document.getElementById("required-filter").value !== "any";
-          
-          if (isFiltered) {
-            // For filtered views, check if the new card will be visible with current filters
-            
-            // First, store the current filter state
-            const currentTagFilter = document.getElementById("tag-filter").value;
-            const currentSearchFilter = document.getElementById("search-input").value;
-            const currentRequiredFilter = document.getElementById("required-filter").value;
-            
-            // Apply current filters to see if new card is included
-            const filteredWithNewCard = applyCurrentFilter();
-            const newCardIndex = filteredWithNewCard.findIndex(card => card.id === newCard.id);
-            
-            if (newCardIndex !== -1) {
-              // New card is visible in current filter, set current index to it
-              currentIndex = newCardIndex;
-            } else {
-              // New card is not visible in current filter
-              const userWantsToClearFilters = confirm("The new card doesn't match your current filters. Would you like to clear filters to see it?");
-              
-              if (userWantsToClearFilters) {
-                // Clear filters and show the new card
-                document.getElementById("tag-filter").value = "";
-                document.getElementById("search-input").value = "";
-                document.getElementById("required-filter").value = "any";
-                
-                // Apply empty filter to get all cards
-                flashcards = allFlashcards.slice();
-                
-                // Find the new card in the full list
-                currentIndex = flashcards.findIndex(card => card.id === newCard.id);
-              }
-              // If user doesn't want to clear filters, keep current position
-            }
-          } else {
-            // For unfiltered view, we can directly set the index to the inserted position
-            flashcards = allFlashcards.slice(); // Ensure flashcards is up to date
-            currentIndex = masterIndex + 1; // Set to the position right after the current card
-          }
-        } else {
-          // Fallback if card ID not found (shouldn't happen)
-          allFlashcards.push(newCard);
-          flashcards = allFlashcards.slice();
-          currentIndex = flashcards.length - 1;
-        }
-      } else {
-        // No cards in current view
-        allFlashcards.push(newCard);
-        
-        // Clear any filters
+      // A new card is "absolutely required" when that is what the filter shows
+      const isAbsolutelyRequired = document.getElementById("required-filter").value === "true";
+      const clearFilters = () => {
         document.getElementById("tag-filter").value = "";
         document.getElementById("search-input").value = "";
         document.getElementById("required-filter").value = "any";
-        
-        // Update flashcards array
-        flashcards = allFlashcards.slice();
-        currentIndex = flashcards.length - 1;
-      }
-      
-      // Save the new card right after its left neighbour in the full deck
-      const newIdx = allFlashcards.findIndex(c => c.id === newCard.id);
-      api("POST", "/api/cards", { card: newCard, after_id: newIdx > 0 ? allFlashcards[newIdx - 1].id : null })
-        .then(data => {
-          // The server picks a new id if this one is already taken
-          if (data && data.card && data.card.id !== newCard.id) newCard.id = data.card.id;
-        });
-      renderCard();
-      saveStateToLocalStorage();
+      };
+
+      queueChange(async () => {
+        const newCard = {
+          "id": Date.now(),
+          "front": "",
+          "back": "",
+          "tags": defaultTags,
+          "understanding": 1,
+          "absolutelyRequired": isAbsolutelyRequired,
+          "attempts": []
+        };
+        // It goes right after the current card in the full deck (at the end if there is none)
+        const masterIndex = flashcards.length > 0 ? allFlashcards.findIndex(card => card.id === flashcards[currentIndex].id) : -1;
+        const insertAt = masterIndex !== -1 ? masterIndex + 1 : allFlashcards.length;
+        const data = await api("POST", "/api/cards", { card: newCard, after_id: insertAt > 0 ? allFlashcards[insertAt - 1].id : null });
+        if (!data) return;
+        if (data.card) newCard.id = data.card.id; // the server picks a new id if this one is already taken
+        allFlashcards.splice(insertAt, 0, newCard);
+
+        const isFiltered = tagInput !== "" ||
+                        document.getElementById("search-input").value.trim() !== "" ||
+                        document.getElementById("required-filter").value !== "any";
+        if (masterIndex !== -1 && isFiltered) {
+          applyCurrentFilter();
+          const newCardIndex = flashcards.findIndex(card => card.id === newCard.id);
+          if (newCardIndex !== -1) {
+            currentIndex = newCardIndex;
+          } else if (confirm("The new card doesn't match your current filters. Would you like to clear filters to see it?")) {
+            clearFilters();
+            flashcards = allFlashcards.slice();
+            currentIndex = flashcards.findIndex(card => card.id === newCard.id);
+          }
+          // otherwise stay on the current card
+        } else {
+          if (flashcards.length === 0) clearFilters(); // nothing in view: show the whole deck
+          flashcards = allFlashcards.slice();
+          currentIndex = flashcards.findIndex(card => card.id === newCard.id);
+        }
+        renderCard();
+        saveStateToLocalStorage();
+      });
     });
 
     document.getElementById("delete-card").addEventListener("click", function() {
       if (flashcards.length === 0) return;
       if (!confirm("Are you sure you want to delete this card?")) return;
       const cardId = flashcards[currentIndex].id;
-      allFlashcards = allFlashcards.filter(card => card.id !== cardId);
-      const savedCurrentIdx = currentIndex;
-      applyCurrentFilter();
-      currentIndex = savedCurrentIdx;
-      if (currentIndex >= flashcards.length) {
-        currentIndex = flashcards.length - 1;
-      }
-      api("DELETE", `/api/cards/${cardId}`);
-      renderCard();
-      saveStateToLocalStorage();
+      queueChange(async () => {
+        if (!await api("DELETE", `/api/cards/${cardId}`)) return;
+        const shownId = flashcards[currentIndex]?.id;
+        const shownIndex = currentIndex;
+        allFlashcards = allFlashcards.filter(card => card.id !== cardId);
+        applyCurrentFilter();
+        if (shownId === cardId) {
+          currentIndex = Math.min(shownIndex, flashcards.length - 1); // the next card takes its place
+          renderCard();
+        } else {
+          currentIndex = Math.max(0, flashcards.findIndex(card => card.id === shownId));
+          refreshCard();
+        }
+        saveStateToLocalStorage();
+      });
     });
 
     document.addEventListener('keydown', function(e) {
@@ -2784,154 +2743,77 @@ ${backContent}
       modal.style.display = "none";
     }
 
-    // Function to move the current card up one position
+    // Move the current card in the full deck from its index m to `target(m)`; once the
+    // server confirms, show it where it landed (or stay put if the filter now hides it).
+    function moveCurrentCard(target, message) {
+      const cardId = flashcards[currentIndex].id;
+      queueChange(async () => {
+        const masterIndex = allFlashcards.findIndex(card => card.id === cardId);
+        const toIdx = target(masterIndex);
+        if (masterIndex === -1 || toIdx < 0 || toIdx >= allFlashcards.length) return;
+        if (!await moveCardTo(cardId, toIdx)) return;
+        const savedIndex = currentIndex;
+        applyCurrentFilter();
+        const newIndex = flashcards.findIndex(card => card.id === cardId);
+        currentIndex = newIndex !== -1 ? newIndex : savedIndex;
+        renderCard();
+        showMoveNotification(message);
+      });
+    }
+
     function moveCardUp() {
       if (!guardEdits(moveCardUp)) return;
       if (flashcards.length === 0 || currentIndex === 0) return;
-      
-      const cardId = flashcards[currentIndex].id;
-      const masterIndex = allFlashcards.findIndex(card => card.id === cardId);
-      
-      if (masterIndex > 0) {
-        // Swap with the card above it
-        const temp = allFlashcards[masterIndex];
-        allFlashcards[masterIndex] = allFlashcards[masterIndex - 1];
-        allFlashcards[masterIndex - 1] = temp;
-        
-        // Re-apply filter to update flashcards array
-        const savedIndex = currentIndex;
-        applyCurrentFilter();
-        
-        // Find the new position of the card in filtered view
-        const newIndex = flashcards.findIndex(card => card.id === cardId);
-        if (newIndex !== -1) {
-          currentIndex = newIndex;
-        } else {
-          // If card is no longer in filtered view, revert to saved index
-          currentIndex = savedIndex;
-        }
-        
-        persistPosition(cardId);
-        renderCard();
-        showMoveNotification("Card moved up");
-      }
+      moveCurrentCard(m => m - 1, "Card moved up");
     }
 
-    // Function to move the current card down one position
     function moveCardDown() {
       if (!guardEdits(moveCardDown)) return;
       if (flashcards.length === 0) return;
-      
-      const cardId = flashcards[currentIndex].id;
-      const masterIndex = allFlashcards.findIndex(card => card.id === cardId);
-      
-      // Check if this is the last card in the master list
-      if (masterIndex >= allFlashcards.length - 1) return;
-      
-      // Swap with the card below it
-      const temp = allFlashcards[masterIndex];
-      allFlashcards[masterIndex] = allFlashcards[masterIndex + 1];
-      allFlashcards[masterIndex + 1] = temp;
-      
-      // Re-apply filter to update flashcards array
-      const savedIndex = currentIndex;
-      applyCurrentFilter();
-      
-      // Find the new position of the card in filtered view
-      const newIndex = flashcards.findIndex(card => card.id === cardId);
-      if (newIndex !== -1) {
-        currentIndex = newIndex;
-      } else {
-        // If card is no longer in filtered view, revert to saved index
-        currentIndex = savedIndex;
-      }
-      
-      persistPosition(cardId);
-      renderCard();
-      showMoveNotification("Card moved down");
+      moveCurrentCard(m => m + 1, "Card moved down");
     }
 
-    // Function to move the current card to a specific position in the filtered view
+    // Move the current card to a position in the filtered view
     function moveCardToPosition(newFilteredPosition) {
-      if (flashcards.length === 0 || 
-          newFilteredPosition < 0 || 
-          newFilteredPosition >= flashcards.length) return;
-      
-      const cardId = flashcards[currentIndex].id;
-      const masterIndex = allFlashcards.findIndex(card => card.id === cardId);
-      
-      // Find where in the master list to insert the card
-      let targetMasterIndex;
-      
-      if (newFilteredPosition === 0) {
-        // If moving to first position in filtered view, find master index of first filtered card
-        if (flashcards.length > 0) {
-          const firstFilteredCardId = flashcards[0].id;
-          const firstFilteredCardMasterIndex = allFlashcards.findIndex(card => card.id === firstFilteredCardId);
-          targetMasterIndex = firstFilteredCardMasterIndex;
-        } else {
-          // If no cards in filtered view (shouldn't happen), just use position 0
-          targetMasterIndex = 0;
-        }
-      } else if (newFilteredPosition === flashcards.length - 1) {
-        // If moving to last position, find master index of last filtered card + 1
-        // Special case: if we're already the last card, we can't determine position this way
-        if (currentIndex === flashcards.length - 1) {
-          // We're already the last card - no need to move
-          closeMoveToModal();
-          return;
-        }
-        
-        const lastFilteredCardId = flashcards[flashcards.length - 1].id;
-        const lastFilteredCardMasterIndex = allFlashcards.findIndex(card => card.id === lastFilteredCardId);
-        targetMasterIndex = lastFilteredCardMasterIndex + 1;
-      } else {
-        // If moving to middle position, find master index of card at position and insert after it
-        const previousFilteredCardId = flashcards[newFilteredPosition].id;
-        const previousFilteredCardMasterIndex = allFlashcards.findIndex(card => card.id === previousFilteredCardId);
-        targetMasterIndex = previousFilteredCardMasterIndex + 1;
-      }
-      
-      // Don't move if target position is the same as current position
-      if (targetMasterIndex === masterIndex) {
-        closeMoveToModal();
-        return;
-      }
-      
-      // If moving backward, adjust for the removal of the card from its current position
-      if (targetMasterIndex > masterIndex) {
-        targetMasterIndex--;
-      }
-      
-      // Remove card from current position
-      const cardToMove = allFlashcards.splice(masterIndex, 1)[0];
-      
-      // Insert at new position
-      allFlashcards.splice(targetMasterIndex, 0, cardToMove);
-      
-      // Re-apply filter to update flashcards array
-      applyCurrentFilter();
-      
-      // Find the new position of the card in filtered view
-      const newIndex = flashcards.findIndex(card => card.id === cardId);
-      if (newIndex !== -1) {
-        currentIndex = newIndex;
-        persistPosition(cardId);
-        renderCard();
-        
-        // Show a notification that indicates we moved within the filtered view
-        const isFiltered = flashcards.length !== allFlashcards.length;
-        const message = isFiltered 
-            ? `Card moved to position ${newFilteredPosition + 1} in filtered view` 
-            : `Card moved to position ${newFilteredPosition + 1}`;
-        showMoveNotification(message);
-      } else {
-        // If card is no longer in filtered view after moving, alert user
-        persistPosition(cardId);
-        alert("Card moved but is no longer visible in the current filter.");
-      }
-      
       closeMoveToModal();
+      if (flashcards.length === 0 ||
+          newFilteredPosition < 0 ||
+          newFilteredPosition >= flashcards.length) return;
+      const cardId = flashcards[currentIndex].id;
+
+      queueChange(async () => {
+        const fromPosition = flashcards.findIndex(card => card.id === cardId);
+        const masterIndex = allFlashcards.findIndex(card => card.id === cardId);
+        if (fromPosition === -1 || masterIndex === -1) return;
+        const masterIndexOf = position => allFlashcards.findIndex(card => card.id === flashcards[position].id);
+
+        // Where in the full deck it goes
+        let targetMasterIndex;
+        if (newFilteredPosition === 0) {
+          targetMasterIndex = masterIndexOf(0); // before the first card in view
+        } else if (newFilteredPosition === flashcards.length - 1) {
+          if (fromPosition === flashcards.length - 1) return; // already last
+          targetMasterIndex = masterIndexOf(flashcards.length - 1) + 1; // after the last card in view
+        } else {
+          targetMasterIndex = masterIndexOf(newFilteredPosition) + 1; // after the card now at that position
+        }
+        if (targetMasterIndex === masterIndex) return;
+        if (targetMasterIndex > masterIndex) targetMasterIndex--; // the card itself is taken out first
+
+        if (!await moveCardTo(cardId, targetMasterIndex)) return;
+        applyCurrentFilter();
+        const newIndex = flashcards.findIndex(card => card.id === cardId);
+        if (newIndex !== -1) {
+          currentIndex = newIndex;
+          renderCard();
+          const isFiltered = flashcards.length !== allFlashcards.length;
+          showMoveNotification(isFiltered
+            ? `Card moved to position ${newFilteredPosition + 1} in filtered view`
+            : `Card moved to position ${newFilteredPosition + 1}`);
+        } else {
+          alert("Card moved but is no longer visible in the current filter.");
+        }
+      });
     }
 
     // Show notification when card is moved
