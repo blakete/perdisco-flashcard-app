@@ -20,6 +20,11 @@ def index():
     return render_template("index.html", flashcards=store.all_cards())
 
 
+@app.route("/progress")
+def progress():
+    return render_template("progress.html", flashcards=store.all_cards())
+
+
 @app.route("/assets/<filename>")
 def serve_asset(filename):
     # Uploads go to the data folder; fall back to images shipped in src/assets.

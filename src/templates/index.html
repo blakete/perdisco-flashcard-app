@@ -18,66 +18,8 @@
   <script id="MathJax-script" async
     src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
   </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
   <style>
-    /* Color tokens: every color in this sheet comes from here. Dark mode only swaps the values. */
-    :root {
-      color-scheme: light;
-      --bg: #eef;
-      --mobile-bar-bg: rgba(240, 240, 245, 0.8);
-      --surface: #fff;
-      --surface-2: #fafafe;
-      --hover: #f4f4fb;
-      --fill: #ececf4;
-      --fill-hover: #e6e6f2;
-      --border: #d8d8ea;
-      --border-strong: #c9c9dc;
-      --divider: #ececf4;
-      --fg: #000;
-      --text: #333;
-      --text-2: #555;
-      --text-3: #888;
-      --text-faint: #b0b0bf;
-      --accent: #4682B4;
-      --success: #28a745;
-      --danger: #dc3545;
-      --warning: #ffc107;
-      --neutral: #6c757d;
-      --star: #f5a623;
-      --badge: #fd7e14;
-      --edit: #6610f2;
-      --chip-bg: #fff4ea;
-      --chip-border: #f3b27a;
-      --chip-text: #8a4a10;
-    }
-    :root[data-theme="dark"] {
-      color-scheme: dark;
-      --bg: #15161c;
-      --mobile-bar-bg: rgba(40, 41, 52, 0.85);
-      --surface: #1f2029;
-      --surface-2: #252631;
-      --hover: #2c2d3a;
-      --fill: #2e2f3c;
-      --fill-hover: #383a48;
-      --border: #383a48;
-      --border-strong: #464858;
-      --divider: #2e2f3c;
-      --fg: #e8e8f0;
-      --text: #d6d6e0;
-      --text-2: #b4b4c2;
-      --text-3: #8c8c9c;
-      --text-faint: #5c5c6c;
-      --accent: #4f8fc9;
-      --success: #2ea44f;
-      --danger: #e5534b;
-      --warning: #ffc107;
-      --neutral: #5a6270;
-      --star: #f5a623;
-      --badge: #fd7e14;
-      --edit: #a78bfa;
-      --chip-bg: #3a2a1c;
-      --chip-border: #8a5a2e;
-      --chip-text: #f3b27a;
-    }
 
     /* Disable double-tap zoom on all elements */
     * {
@@ -996,30 +938,7 @@
       .cb-mobile { display: none !important; }
     }
   </style>
-  <script>
-    // Single place the theme is applied: page colors (data-theme) and the browser's own
-    // toolbar/status bar (theme-color, from the page background). Runs here, after the
-    // stylesheet and before first paint, so there is no white flash.
-    function applyTheme(theme) {
-      const root = document.documentElement;
-      root.dataset.theme = theme;
-      // Resolved rgb() rather than the raw token (mobile browsers reject e.g. "#eef"), and a
-      // fresh <meta> rather than editing content (some browsers, notably Safari, miss edits).
-      const meta = document.createElement('meta');
-      meta.name = 'theme-color';
-      meta.content = getComputedStyle(root).backgroundColor;
-      document.querySelector('meta[name="theme-color"]').replaceWith(meta);
-    }
-    (function () {
-      // A saved choice wins; otherwise follow the system.
-      let theme;
-      try { theme = JSON.parse(localStorage.getItem('flashcardState') || '{}').theme; } catch (e) {}
-      if (theme !== 'dark' && theme !== 'light') {
-        theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      }
-      applyTheme(theme);
-    })();
-  </script>
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
 </head>
 <body>
   <!-- Command bar: one bar for desktop and mobile -->
@@ -1095,6 +1014,7 @@
       <button class="menu-item cb-mobile" data-action="edit" role="menuitem"><span class="material-icons">edit</span>Edit card<kbd>e</kbd></button>
       <button class="menu-item cb-mobile" data-action="history" role="menuitem"><span class="material-icons">history</span><span class="history-label">Hide mistakes</span><kbd>h</kbd></button>
       <button class="menu-item" data-action="copy" role="menuitem"><span class="material-icons">content_copy</span>Copy card<kbd>⌘C</kbd></button>
+      <button class="menu-item" data-action="progress" role="menuitem"><span class="material-icons">insights</span>Progress</button>
       <button class="menu-item" data-action="focus" role="menuitem"><span class="material-icons">center_focus_strong</span>Focus mode<kbd>f</kbd></button>
       <button class="menu-item" data-action="theme" role="menuitem"><span class="material-icons theme-icon">dark_mode</span><span class="theme-label">Dark mode</span><kbd>t</kbd></button>
       <button class="menu-item" data-action="help" role="menuitem"><span class="material-icons">help_outline</span>Shortcuts &amp; help<kbd>?</kbd></button>
@@ -1200,6 +1120,7 @@
   <!-- Bottom spacer to allow scrolling content to the top of viewport -->
   <div id="bottom-spacer" style="min-height: 33vh; height: auto; width: 100%;"></div>
 
+  <script src="{{ url_for('static', filename='deck_filter.js') }}"></script>
   <script>
     let allFlashcards = {{ flashcards | tojson }};
     let flashcards = allFlashcards.slice();
@@ -1633,6 +1554,12 @@
         history: () => { closePopovers(); toggleMistakesHistoryVisibility(); },
         copy: () => { closePopovers(); copyCardContent(); },
         help: () => { closePopovers(); toggleHelp(true); },
+        // The progress page shows the cards of the current filter.
+        progress: () => {
+          if (!guardEdits(() => actions.progress())) return;
+          const query = DeckFilter.toQuery(appliedFilter);
+          location.href = "/progress" + (query ? "?" + query : "");
+        },
         filters: () => {
           const opened = togglePopover("filters-open", "filter-toggle");
           if (opened) {
@@ -1860,38 +1787,11 @@
     });
 
     function applyCurrentFilter() {
-      let filteredCards = allFlashcards.slice();
-      const tagInput = document.getElementById("tag-filter").value.trim().toLowerCase();
-      if (tagInput !== "") {
-        const filterTags = tagInput.split(",").map(tag => tag.trim()).filter(tag => tag !== "");
-        filteredCards = filteredCards.filter(card => {
-          const cardTags = card.tags.map(tag => tag.toLowerCase());
-          return filterTags.every(filterTag => cardTags.includes(filterTag));
-        });
-      }
-      const searchText = document.getElementById("search-input").value.trim().toLowerCase();
-      if (searchText !== "") {
-        filteredCards = filteredCards.filter(card =>
-          card.front.toLowerCase().includes(searchText) ||
-          card.back.toLowerCase().includes(searchText)
-        );
-      }
-      
-      // Apply the absolutely required filter (NEW)
-      const requiredFilter = document.getElementById("required-filter").value;
-      if (requiredFilter !== "any") {
-        const isRequired = requiredFilter === "true";
-        filteredCards = filteredCards.filter(card => 
-          card.absolutelyRequired === isRequired
-        );
-      }
-      
-      flashcards = filteredCards;
-      appliedFilter = {
-        content: searchText,
-        tags: tagInput === "" ? [] : tagInput.split(",").map(tag => tag.trim()).filter(tag => tag !== ""),
-        required: requiredFilter
-      };
+      appliedFilter = DeckFilter.fromInputs(
+        document.getElementById("tag-filter").value,
+        document.getElementById("search-input").value,
+        document.getElementById("required-filter").value);
+      flashcards = DeckFilter.apply(allFlashcards, appliedFilter);
       updateFilterSummary();
       saveStateToLocalStorage();
       return flashcards;

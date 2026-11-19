@@ -1,0 +1,130 @@
+/* Progress page. Page colors come from theme.css; the chart colors below are the data colors,
+   chosen per theme (validated: the card-state ramp is one blue hue, light to dark by state). */
+:root {
+  --viz-new: #c3c2b7;
+  --viz-missed: #e34948;
+  --viz-learning: #86b6ef;
+  --viz-known: #2a78d6;
+  --viz-solid: #104281;
+  --ink-new: #0b0b0b; --ink-missed: #fff; --ink-learning: #0b0b0b; --ink-known: #fff; --ink-solid: #fff;
+  --viz-series-1: #2a78d6;
+  --viz-series-2: #eb6834;
+  --viz-grid: #e1e0d9;
+  --viz-axis: #c3c2b7;
+}
+:root[data-theme="dark"] {
+  --viz-new: #5f5e5a;
+  --viz-missed: #e66767;
+  --viz-learning: #1c5cab;
+  --viz-known: #5598e7;
+  --viz-solid: #b7d3f6;
+  --ink-new: #fff; --ink-missed: #fff; --ink-learning: #fff; --ink-known: #0b0b0b; --ink-solid: #0b0b0b;
+  --viz-series-1: #3987e5;
+  --viz-series-2: #d95926;
+  --viz-grid: #2c2c2a;
+  --viz-axis: #383835;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.pg-bar {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 10px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.pg-bar h1 { font-size: 20px; margin: 0; color: var(--fg); flex: 1; }
+.pg-back {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--accent); text-decoration: none; font-size: 15px;
+}
+.pg-back .material-icons { font-size: 20px; }
+.pg-by { font-size: 14px; color: var(--text-2); }
+.pg-by select {
+  margin-left: 6px; font: inherit; padding: 4px 6px;
+  color: var(--text); background: var(--surface-2);
+  border: 1px solid var(--border-strong); border-radius: 6px;
+}
+
+.pg-main { max-width: 960px; margin: 0 auto; padding: 16px 20px 60px; }
+.pg-scope { color: var(--text-2); margin: 4px 0 16px; }
+.pg-scope .tag {
+  display: inline-block; padding: 1px 8px; margin: 0 2px; border-radius: 10px;
+  background: var(--chip-bg); border: 1px solid var(--chip-border); color: var(--chip-text); font-size: 13px;
+}
+
+.pg-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.pg-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.pg-tile .label { font-size: 13px; color: var(--text-2); }
+.pg-tile .value { font-size: 28px; font-weight: 600; color: var(--fg); margin-top: 4px; }
+.pg-tile .sub { font-size: 13px; color: var(--text-3); margin-top: 2px; }
+
+.pg-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px 18px; margin-bottom: 16px;
+}
+.pg-card h2 { font-size: 17px; margin: 0 0 4px; color: var(--fg); }
+.pg-card h2:not(:first-child) { margin-top: 22px; }
+.pg-note { font-size: 13px; color: var(--text-3); margin: 0 0 12px; }
+
+/* Segmented bar: one whole split into the card states; 2px surface gap between parts. */
+.pg-segbar { display: flex; gap: 2px; width: 100%; }
+.pg-segbar.tall { height: 28px; }
+.pg-segbar.thin { height: 8px; min-width: 120px; }
+.pg-segbar .seg { min-width: 0; display: flex; align-items: center; overflow: visible; }
+.pg-segbar.tall .seg { border-radius: 4px; padding-left: 6px; }
+.pg-segbar.thin .seg { border-radius: 4px; }
+.pg-segbar.empty { background: var(--fill); border-radius: 4px; }
+.pg-segbar .seg span { font-size: 13px; font-weight: 600; white-space: nowrap; }
+.pg-segbar .seg:hover, .pg-segbar .seg:focus { filter: brightness(1.12); outline: none; }
+.seg.new { background: var(--viz-new); color: var(--ink-new); }
+.seg.missed { background: var(--viz-missed); color: var(--ink-missed); }
+.seg.learning { background: var(--viz-learning); color: var(--ink-learning); }
+.seg.known { background: var(--viz-known); color: var(--ink-known); }
+.seg.solid { background: var(--viz-solid); color: var(--ink-solid); }
+
+.pg-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 0; margin: 10px 0 4px; font-size: 13px; color: var(--text-2); }
+.pg-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.pg-legend .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+.pg-chart { width: 100%; }
+.pg-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.pg-chart text { fill: var(--text-3); font-size: 11px; font-variant-numeric: tabular-nums; }
+.pg-chart .grid { stroke: var(--viz-grid); stroke-width: 1; }
+.pg-chart .baseline { stroke: var(--viz-axis); stroke-width: 1; }
+.pg-chart .hit { fill: transparent; }
+.pg-chart .hit:hover, .pg-chart .hit:focus { fill: var(--hover); outline: none; }
+.pg-chart .s1 { fill: var(--viz-series-1); }
+.pg-chart .s2 { fill: var(--viz-series-2); }
+.pg-chart .empty-note { fill: var(--text-3); font-size: 13px; }
+
+.pg-table-view { margin-top: 12px; font-size: 13px; color: var(--text-2); }
+.pg-table-view summary { cursor: pointer; color: var(--accent); }
+table { border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+th, td { padding: 5px 10px; text-align: right; border-bottom: 1px solid var(--divider); font-variant-numeric: tabular-nums; }
+th { color: var(--text-2); font-weight: 600; }
+th:first-child, td:first-child { text-align: left; }
+.pg-table-wrap { overflow-x: auto; }
+.pg-sections { width: 100%; }
+.pg-sections a { color: var(--accent); text-decoration: none; }
+.pg-sections td.bar { width: 30%; }
+
+.pg-tooltip {
+  position: fixed; z-index: 10; pointer-events: none;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border-strong); border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  padding: 8px 10px; font-size: 13px; min-width: 120px;
+}
+.pg-tooltip .tt-title { color: var(--text-2); margin-bottom: 4px; }
+.pg-tooltip .tt-row { display: flex; align-items: center; gap: 6px; }
+.pg-tooltip .tt-key { width: 12px; height: 2px; display: inline-block; }
+.pg-tooltip .tt-value { font-weight: 600; color: var(--fg); }

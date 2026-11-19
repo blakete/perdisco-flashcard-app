@@ -1,0 +1,59 @@
+/* Perdisco color tokens, shared by every page: all colors come from here. Dark mode only swaps the values. */
+:root {
+  color-scheme: light;
+  --bg: #eef;
+  --mobile-bar-bg: rgba(240, 240, 245, 0.8);
+  --surface: #fff;
+  --surface-2: #fafafe;
+  --hover: #f4f4fb;
+  --fill: #ececf4;
+  --fill-hover: #e6e6f2;
+  --border: #d8d8ea;
+  --border-strong: #c9c9dc;
+  --divider: #ececf4;
+  --fg: #000;
+  --text: #333;
+  --text-2: #555;
+  --text-3: #888;
+  --text-faint: #b0b0bf;
+  --accent: #4682B4;
+  --success: #28a745;
+  --danger: #dc3545;
+  --warning: #ffc107;
+  --neutral: #6c757d;
+  --star: #f5a623;
+  --badge: #fd7e14;
+  --edit: #6610f2;
+  --chip-bg: #fff4ea;
+  --chip-border: #f3b27a;
+  --chip-text: #8a4a10;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #15161c;
+  --mobile-bar-bg: rgba(40, 41, 52, 0.85);
+  --surface: #1f2029;
+  --surface-2: #252631;
+  --hover: #2c2d3a;
+  --fill: #2e2f3c;
+  --fill-hover: #383a48;
+  --border: #383a48;
+  --border-strong: #464858;
+  --divider: #2e2f3c;
+  --fg: #e8e8f0;
+  --text: #d6d6e0;
+  --text-2: #b4b4c2;
+  --text-3: #8c8c9c;
+  --text-faint: #5c5c6c;
+  --accent: #4f8fc9;
+  --success: #2ea44f;
+  --danger: #e5534b;
+  --warning: #ffc107;
+  --neutral: #5a6270;
+  --star: #f5a623;
+  --badge: #fd7e14;
+  --edit: #a78bfa;
+  --chip-bg: #3a2a1c;
+  --chip-border: #8a5a2e;
+  --chip-text: #f3b27a;
+}
