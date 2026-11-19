@@ -92,5 +92,16 @@ def api_delete_attempt(card_id, timestamp):
     return _ok(store.delete_attempt(card_id, timestamp))
 
 
+def _ssl_context():
+    """(cert, key) when PERDISCO_TLS_CERT and PERDISCO_TLS_KEY are set, else None (plain HTTP)."""
+    cert, key = os.environ.get("PERDISCO_TLS_CERT"), os.environ.get("PERDISCO_TLS_KEY")
+    if bool(cert) != bool(key):
+        raise SystemExit("[perdisco] set both PERDISCO_TLS_CERT and PERDISCO_TLS_KEY, or neither")
+    return (cert, key) if cert else None
+
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PERDISCO_PORT", "8006")), debug=True)
+    ssl_context = _ssl_context()
+    print(f"[perdisco] serving {'https' if ssl_context else 'http'}")
+    app.run(host="0.0.0.0", port=int(os.environ.get("PERDISCO_PORT", "8006")), debug=True,
+            ssl_context=ssl_context)

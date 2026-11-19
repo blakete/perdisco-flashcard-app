@@ -128,6 +128,8 @@ On a phone: tap the card to flip it, swipe to change cards, and use the bottom b
 
 To run on a different port, set `PERDISCO_PORT` (e.g. `PERDISCO_PORT=8007 ./start.sh`).
 
+To serve HTTPS, point `PERDISCO_TLS_CERT` and `PERDISCO_TLS_KEY` at a PEM certificate and key (e.g. in `local.env`). With both unset the app serves plain HTTP. `tools/make_tls_cert.sh` makes a self-signed pair for this host.
+
 ## Your Data
 
 The deck is stored in SQLite (`perdisco.db`). Every action (grading, starring, editing, adding, moving, deleting) is saved immediately as its own small change, so several open tabs or devices don't overwrite each other.
