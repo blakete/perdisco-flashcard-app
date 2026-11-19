@@ -42,9 +42,16 @@ CREATE TABLE IF NOT EXISTS attempts (
   reason  TEXT
 );
 CREATE INDEX IF NOT EXISTS attempts_card ON attempts(card_id, ts);
+CREATE TABLE IF NOT EXISTS notes (
+  id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  card_id INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+  ts      INTEGER NOT NULL,
+  text    TEXT    NOT NULL
+);
+CREATE INDEX IF NOT EXISTS notes_card ON notes(card_id, ts);
 """
 
-CORE_FIELDS = {"id", "front", "back", "tags", "absolutelyRequired", "attempts"}
+CORE_FIELDS = {"id", "front", "back", "tags", "absolutelyRequired", "attempts", "notes"}
 
 
 def data_dir():
@@ -110,6 +117,8 @@ def _insert_card(conn, card, position):
     for a in card.get("attempts", []):
         conn.execute("INSERT INTO attempts (card_id, ts, correct, reason) VALUES (?, ?, ?, ?)",
                      (card["id"], a["timestamp"], 1 if a["correct"] else 0, a.get("reason")))
+    for n in card.get("notes", []):
+        conn.execute("INSERT INTO notes (card_id, ts, text) VALUES (?, ?, ?)", (card["id"], n["timestamp"], n["text"]))
 
 
 def import_cards(cards):
@@ -123,6 +132,7 @@ def import_cards(cards):
     next_id = max([c["id"] for c in cards] + [now_ms()]) + 1
     with connect() as conn:
         conn.executescript(SCHEMA)
+        conn.execute("DELETE FROM notes")
         conn.execute("DELETE FROM attempts")
         conn.execute("DELETE FROM tags")
         conn.execute("DELETE FROM cards")
@@ -156,6 +166,8 @@ def _card_dict(conn, row):
         if a["reason"]:
             attempt["reason"] = a["reason"]
         card["attempts"].append(attempt)
+    card["notes"] = [{"timestamp": n["ts"], "text": n["text"]} for n in conn.execute(
+        "SELECT ts, text FROM notes WHERE card_id = ? ORDER BY ts, id", (row["id"],))]
     return card
 
 
@@ -269,6 +281,24 @@ def add_attempt(card_id, timestamp, correct, reason=None):
 def delete_attempt(card_id, timestamp):
     with connect() as conn:
         return conn.execute("DELETE FROM attempts WHERE card_id = ? AND ts = ?",
+                            (card_id, int(timestamp))).rowcount > 0
+
+
+def add_note(card_id, timestamp, text):
+    """Append a note (ideas, questions, ...) to a card. Empty text is refused."""
+    text = (text or "").strip()
+    if not text:
+        return False
+    with connect() as conn:
+        if not conn.execute("SELECT 1 FROM cards WHERE id = ?", (card_id,)).fetchone():
+            return False
+        conn.execute("INSERT INTO notes (card_id, ts, text) VALUES (?, ?, ?)", (card_id, int(timestamp), text))
+    return True
+
+
+def delete_note(card_id, timestamp):
+    with connect() as conn:
+        return conn.execute("DELETE FROM notes WHERE card_id = ? AND ts = ?",
                             (card_id, int(timestamp))).rowcount > 0
 
 

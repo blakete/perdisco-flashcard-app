@@ -97,6 +97,19 @@ def api_delete_attempt(card_id, timestamp):
     return _ok(store.delete_attempt(card_id, timestamp))
 
 
+@app.route("/api/cards/<int:card_id>/notes", methods=["POST"])
+def api_add_note(card_id):
+    n = request.get_json(force=True)
+    if not str(n.get("text") or "").strip():
+        return jsonify({"success": False, "error": "empty note"}), 400
+    return _ok(store.add_note(card_id, n["timestamp"], n["text"]), 201)
+
+
+@app.route("/api/cards/<int:card_id>/notes/<int:timestamp>", methods=["DELETE"])
+def api_delete_note(card_id, timestamp):
+    return _ok(store.delete_note(card_id, timestamp))
+
+
 def _ssl_context():
     """(cert, key) when PERDISCO_TLS_CERT and PERDISCO_TLS_KEY are set, else None (plain HTTP)."""
     cert, key = os.environ.get("PERDISCO_TLS_CERT"), os.environ.get("PERDISCO_TLS_KEY")

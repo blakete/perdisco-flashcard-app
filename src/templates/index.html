@@ -88,6 +88,31 @@
       white-space: pre-wrap; /* keep the line breaks typed into the reason box */
     }
     
+    /* Notes on a card: the same list style as mistakes, in the accent color; hidden in focus mode */
+    #card-notes {
+      margin: 20px auto;
+      width: 60%;
+      max-width: 600px;
+      text-align: left;
+    }
+    #card-notes h3 {
+      color: var(--text-2);
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    #card-notes-list { list-style-type: none; padding: 0; margin: 0; }
+    .note-item {
+      padding: 10px;
+      margin-bottom: 8px;
+      border-left: 3px solid var(--accent);
+      background-color: var(--surface-2);
+      border-radius: 4px;
+      position: relative;
+    }
+    .note-date { font-size: 14px; color: var(--text-3); margin-bottom: 5px; padding-right: 25px; }
+    .note-text { font-size: 16px; white-space: pre-wrap; }
+    body.focus #card-notes { display: none !important; }
+
     .no-attempts-message {
       color: var(--text-3);
       font-style: italic;
@@ -205,7 +230,7 @@
       padding: 15px !important;
     }
     
-    #incorrect-attempts-history {
+    #incorrect-attempts-history, #card-notes {
       width: 90% !important;
     }
     
@@ -404,32 +429,32 @@
       border-radius: 5px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
-    /* "What did you get wrong?" docks at the bottom of the screen instead of covering
-       the card, so the card behind stays visible, scrollable and selectable. */
-    #incorrect-modal {
+    /* The text panel ("What did you get wrong?", "Note") docks at the bottom of the screen instead
+       of covering the card, so the card behind stays visible, scrollable and selectable. */
+    #text-panel {
       background-color: transparent;
       pointer-events: none; /* clicks and scrolls reach the card */
     }
-    #incorrect-modal .modal-content {
+    #text-panel .modal-content {
       pointer-events: auto;
       position: fixed;
       left: 0;
       right: 0;
-      bottom: var(--answer-panel-bottom);
+      bottom: var(--text-panel-bottom);
       margin: 0 auto;
       width: 90%;
       max-width: 600px;
       box-sizing: border-box;
       box-shadow: 0 4px 16px rgba(0,0,0,0.3);
     }
-    :root { --answer-panel-bottom: 20px; }
+    :root { --text-panel-bottom: 20px; }
     @media (max-width: 768px) {
       /* just above the floating mobile-actions bar (20px offset + 80px tall + 10px gap) */
-      :root { --answer-panel-bottom: 110px; }
+      :root { --text-panel-bottom: 110px; }
     }
     /* Room under the card so its end can be scrolled above the docked dialog
-       (--answer-panel-space is set from the dialog's height while it is open). */
-    body.answering { padding-bottom: var(--answer-panel-space, 50vh); }
+       (--text-panel-space is set from the dialog's height while it is open). */
+    body.panel-open { padding-bottom: var(--text-panel-space, 50vh); }
     .modal-title {
       font-size: 1.2em;
       margin-bottom: 15px;
@@ -1014,6 +1039,7 @@
       <button class="menu-item cb-mobile" data-action="edit" role="menuitem"><span class="material-icons">edit</span>Edit card<kbd>e</kbd></button>
       <button class="menu-item cb-mobile" data-action="history" role="menuitem"><span class="material-icons">history</span><span class="history-label">Hide mistakes</span><kbd>h</kbd></button>
       <button class="menu-item" data-action="copy" role="menuitem"><span class="material-icons">content_copy</span>Copy card<kbd>⌘C</kbd></button>
+      <button class="menu-item" data-action="note" role="menuitem"><span class="material-icons">sticky_note_2</span>Add note<kbd>n</kbd></button>
       <button class="menu-item" data-action="progress" role="menuitem"><span class="material-icons">insights</span>Progress</button>
       <button class="menu-item" data-action="focus" role="menuitem"><span class="material-icons">center_focus_strong</span>Focus mode<kbd>f</kbd></button>
       <button class="menu-item" data-action="theme" role="menuitem"><span class="material-icons theme-icon">dark_mode</span><span class="theme-label">Dark mode</span><kbd>t</kbd></button>
@@ -1063,6 +1089,12 @@
     </div>
   </div> -->
 
+  <!-- Notes on the current card (ideas, questions); filled by renderNotes -->
+  <div id="card-notes" style="display: none;">
+    <h3>Notes</h3>
+    <ul id="card-notes-list"></ul>
+  </div>
+
   <!-- Incorrect attempts history section -->
   <div id="incorrect-attempts-history">
     <h3>Previous Mistakes</h3>
@@ -1071,14 +1103,14 @@
     </ul>
   </div>
 
-  <!-- Modal for incorrect answer feedback -->
-  <div id="incorrect-modal" class="modal">
+  <!-- Docked text panel: asks for one piece of text about the card (a mistake, a note) -->
+  <div id="text-panel" class="modal">
     <div class="modal-content">
-      <div class="modal-title">What did you get wrong?</div>
-      <textarea id="incorrect-reason" class="modal-input" rows="3" style="resize: vertical; overflow: hidden;" placeholder="Describe what you got wrong (optional)"></textarea>
+      <div class="modal-title" id="text-panel-title"></div>
+      <textarea id="text-panel-input" class="modal-input" rows="3" style="resize: vertical; overflow: hidden;"></textarea>
       <div class="modal-buttons">
-        <button class="modal-button modal-submit" id="incorrect-submit">Submit</button>
-        <button class="modal-button modal-cancel" id="incorrect-cancel">Cancel</button>
+        <button class="modal-button modal-submit" id="text-panel-submit">Submit</button>
+        <button class="modal-button modal-cancel" id="text-panel-cancel">Cancel</button>
       </div>
     </div>
   </div>
@@ -1141,7 +1173,7 @@
       loadStateFromLocalStorage();
       updateThemeMenuItem();
       renderCard();
-      setupIncorrectModal();
+      setupTextPanel();
       setupMoveToModal(); // Initialize move to modal
       updateMistakesHistoryVisibility(); // Apply history visibility
       initMobileHandlers(); // Initialize mobile touch and UI handlers
@@ -1197,23 +1229,24 @@
       }
     }
 
-    function setupIncorrectModal() {
-      const modal = document.getElementById("incorrect-modal");
-      const submitBtn = document.getElementById("incorrect-submit");
-      const cancelBtn = document.getElementById("incorrect-cancel");
-      const input = document.getElementById("incorrect-reason");
+    // ===== Docked text panel =====
+    // One panel for every "type something about this card" question. openTextPanel({ title, placeholder,
+    // submitLabel, onSubmit(text) }); onSubmit gets the trimmed text after the panel closes. While it is
+    // open the card stays put (only flipping works); Cancel or Escape closes it without calling onSubmit.
+    let textPanelSubmit = null;
+
+    function setupTextPanel() {
+      const submitBtn = document.getElementById("text-panel-submit");
+      const cancelBtn = document.getElementById("text-panel-cancel");
+      const input = document.getElementById("text-panel-input");
 
       submitBtn.addEventListener("click", function() {
-        const reason = input.value.trim();
-        const recorded = recordAttempt(false, reason);
-        closeIncorrectModal();
-        advanceAfterAnswer(recorded);
+        const onSubmit = textPanelSubmit;
+        const text = input.value.trim();
+        closeTextPanel();
+        if (onSubmit) onSubmit(text);
       });
-
-      cancelBtn.addEventListener("click", function() {
-        closeIncorrectModal();
-        // Do not record attempt or advance when canceled
-      });
+      cancelBtn.addEventListener("click", closeTextPanel);
 
       // Enter submits; ⌘/Ctrl+Enter (or Shift+Enter) adds a line. Enter that confirms an IME composition is left alone.
       input.addEventListener("keydown", function(e) {
@@ -1228,38 +1261,114 @@
         }
       });
       input.addEventListener("input", () => autoResizeTextarea(input));
-      // No click-outside-to-cancel: the card stays usable behind the docked dialog
+      // No click-outside-to-cancel: the card stays usable behind the docked panel
       // (select and copy from it); Cancel or Escape closes it.
+
+      // Keep enough space under the card for the docked panel, whatever its height.
+      new ResizeObserver(() => {
+        const content = document.querySelector("#text-panel .modal-content");
+        const bottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--text-panel-bottom")) || 0;
+        document.body.style.setProperty("--text-panel-space", `${content.offsetHeight + bottom + 20}px`);
+      }).observe(document.querySelector("#text-panel .modal-content"));
     }
 
-    function showIncorrectModal() {
-      const modal = document.getElementById("incorrect-modal");
-      const input = document.getElementById("incorrect-reason");
+    function openTextPanel({ title, placeholder = "", submitLabel = "Submit", onSubmit }) {
+      const input = document.getElementById("text-panel-input");
+      document.getElementById("text-panel-title").textContent = title;
+      document.getElementById("text-panel-submit").textContent = submitLabel;
+      input.placeholder = placeholder;
       input.value = "";
-      modal.style.display = "block";
-      document.body.classList.add("answering");
-      autoResizeTextarea(input); // shrink back after a long previous reason
+      textPanelSubmit = onSubmit;
+      document.getElementById("text-panel").style.display = "block";
+      document.body.classList.add("panel-open");
+      autoResizeTextarea(input); // shrink back after a long previous text
       setTimeout(() => input.focus({ preventScroll: true }), 100);
     }
 
-    // Keep enough space under the card for the docked dialog, whatever its height.
-    new ResizeObserver(() => {
-      const content = document.querySelector("#incorrect-modal .modal-content");
-      const bottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--answer-panel-bottom")) || 0;
-      document.body.style.setProperty("--answer-panel-space", `${content.offsetHeight + bottom + 20}px`);
-    }).observe(document.querySelector("#incorrect-modal .modal-content"));
-
-    function closeIncorrectModal() {
-      const modal = document.getElementById("incorrect-modal");
-      modal.style.display = "none";
-      document.body.classList.remove("answering");
-      // Hiding the dialog can leave its textarea focused, and keys typed into a
+    function closeTextPanel() {
+      textPanelSubmit = null;
+      document.getElementById("text-panel").style.display = "none";
+      document.body.classList.remove("panel-open");
+      // Hiding the panel can leave its textarea focused, and keys typed into a
       // hidden field never reach the c/x shortcuts.
-      document.getElementById("incorrect-reason").blur();
+      document.getElementById("text-panel-input").blur();
     }
 
-    function incorrectModalOpen() {
-      return document.getElementById("incorrect-modal").style.display === "block";
+    function textPanelOpen() {
+      return document.getElementById("text-panel").style.display === "block";
+    }
+
+    // x: record a wrong answer (with an optional reason) and go on to the next card.
+    function showIncorrectModal() {
+      openTextPanel({
+        title: "What did you get wrong?",
+        placeholder: "Describe what you got wrong (optional)",
+        onSubmit: reason => advanceAfterAnswer(recordAttempt(false, reason)),
+      });
+    }
+
+    // ===== Notes on a card (n) =====
+    // Ideas for other cards, questions, ...: appended to the card's notes, shown under the card
+    // outside focus mode. Adding one is not an answer: the card stays.
+    function showNotePanel() {
+      if (flashcards.length === 0) return;
+      const card = flashcards[currentIndex];
+      openTextPanel({
+        title: "Note",
+        placeholder: "An idea for another card, a question, ...",
+        submitLabel: "Add note",
+        onSubmit: text => { if (text) addNote(card, text); },
+      });
+    }
+
+    function addNote(card, text) {
+      const note = { timestamp: Date.now(), text };
+      return queueChange(async () => {
+        if (!await api("POST", `/api/cards/${card.id}/notes`, note)) return false;
+        (card.notes ||= []).push(note);
+        renderNotes();
+        showNotice("Note added.");
+        return true;
+      });
+    }
+
+    function deleteNote(card, timestamp) {
+      if (!confirm("Delete this note?")) return;
+      queueChange(async () => {
+        if (!await api("DELETE", `/api/cards/${card.id}/notes/${timestamp}`)) return;
+        card.notes = (card.notes || []).filter(n => n.timestamp !== timestamp);
+        renderNotes();
+      });
+    }
+
+    // Newest first; the whole section is hidden when the card has none.
+    function renderNotes() {
+      const section = document.getElementById("card-notes");
+      const list = document.getElementById("card-notes-list");
+      list.replaceChildren();
+      const card = flashcards[currentIndex];
+      const notes = card ? (card.notes || []).slice().sort((a, b) => b.timestamp - a.timestamp) : [];
+      section.style.display = notes.length ? "block" : "none";
+      notes.forEach(note => {
+        const item = document.createElement("li");
+        item.className = "note-item";
+        const del = document.createElement("button");
+        del.className = "delete-attempt-button";
+        del.title = "Delete this note";
+        const icon = document.createElement("span");
+        icon.className = "material-icons";
+        icon.textContent = "delete";
+        del.appendChild(icon);
+        del.addEventListener("click", e => { e.stopPropagation(); deleteNote(card, note.timestamp); });
+        const date = document.createElement("div");
+        date.className = "note-date";
+        date.textContent = new Date(note.timestamp).toLocaleString();
+        const text = document.createElement("div");
+        text.className = "note-text";
+        text.textContent = note.text;
+        item.append(del, date, text);
+        list.appendChild(item);
+      });
     }
 
     function saveStateToLocalStorage() {
@@ -1338,6 +1447,7 @@
         [["Space", "↑", "↓"], "Flip card"],
         [["c"], "Mark correct and go to the next card"],
         [["x"], "Mark incorrect (asks what you got wrong; Enter submits, ⌘/Ctrl+Enter adds a line)"],
+        [["n"], "Add a note to the card (ideas, questions); notes show under the card outside focus mode"],
       ]},
       { group: "Modes and views", items: [
         [["f"], "Focus mode on / off"],
@@ -1559,6 +1669,7 @@
         history: () => { closePopovers(); toggleMistakesHistoryVisibility(); },
         copy: () => { closePopovers(); copyCardContent(); },
         help: () => { closePopovers(); toggleHelp(true); },
+        note: () => { closePopovers(); if (!editMode && !textPanelOpen()) showNotePanel(); },
         // The progress page shows the cards of the current filter.
         progress: () => {
           if (!guardEdits(() => actions.progress())) return;
@@ -2170,6 +2281,7 @@
         document.getElementById("tags-info").innerHTML = "";
         document.getElementById("required-toggle").style.visibility = "hidden";
         document.getElementById("incorrect-attempts-list").innerHTML = "<p class='no-attempts-message'>No cards matched the filter.</p>";
+        renderNotes();
         return;
       }
       document.getElementById("required-toggle").style.visibility = "visible";
@@ -2225,6 +2337,8 @@
         forceRepaint(cardEl);
       }
       
+      renderNotes();
+
       // Render the incorrect attempts history
       renderIncorrectAttempts();
       
@@ -2280,7 +2394,7 @@
       // Mobile action buttons
       // ← / → work in edit mode too (like the arrow keys): unsaved edits ask first, then the next card opens in edit mode
       document.getElementById("mobile-prev").addEventListener("click", function() {
-        if (incorrectModalOpen()) return; // answering: Submit or Cancel first
+        if (textPanelOpen()) return; // panel open: Submit or Cancel first
         if (currentIndex > 0 && guardEdits(() => this.click())) {
           currentIndex--;
           showingFront = true;
@@ -2290,7 +2404,7 @@
       });
       
       document.getElementById("mobile-next").addEventListener("click", function() {
-        if (incorrectModalOpen()) return; // answering: Submit or Cancel first
+        if (textPanelOpen()) return; // panel open: Submit or Cancel first
         if (currentIndex < flashcards.length - 1 && guardEdits(() => this.click())) {
           currentIndex++;
           showingFront = true;
@@ -2300,7 +2414,7 @@
       });
       
       document.getElementById("mobile-correct").addEventListener("click", function() {
-        if (incorrectModalOpen()) return; // answering: Submit or Cancel first
+        if (textPanelOpen()) return; // panel open: Submit or Cancel first
         if (editMode) {
           saveCardEdits(); // in edit mode this is the Save button (and stays editing); it never marks it correct
           return;
@@ -2311,7 +2425,7 @@
       });
       
       document.getElementById("mobile-incorrect").addEventListener("click", function() {
-        if (incorrectModalOpen()) return; // answering: Submit or Cancel first
+        if (textPanelOpen()) return; // panel open: Submit or Cancel first
         if (editMode) {
           // Exit without saving: unsaved edits ask first (Cancel is the default); OK reverts them, then exits
           if (guardEdits(() => setEditMode(false))) setEditMode(false);
@@ -2415,8 +2529,8 @@
         return;
       }
       if (e.key === "Escape") {
-        if (incorrectModalOpen()) {
-          closeIncorrectModal(); // cancel: no attempt recorded
+        if (textPanelOpen()) {
+          closeTextPanel(); // cancel: nothing recorded
           e.preventDefault();
           return;
         }
@@ -2459,9 +2573,9 @@
       // Other modified keys belong to the browser (e.g. Cmd+R must reload, not toggle "required")
       if (e.metaKey || e.altKey || (e.ctrlKey && e.key !== "r")) return;
 
-      // While answering "What did you get wrong?" (focus may be on the card, to copy from it)
-      // the card must not change underneath the answer: only flipping it works.
-      if (incorrectModalOpen() && ![" ", "ArrowUp", "ArrowDown"].includes(e.key)) return;
+      // While the text panel is open (focus may be on the card, to copy from it)
+      // the card must not change underneath it: only flipping it works.
+      if (textPanelOpen() && ![" ", "ArrowUp", "ArrowDown"].includes(e.key)) return;
 
       // Help panel
       if (e.key === "?") {
@@ -2496,6 +2610,10 @@
         } else if (e.key === "x") {
           // Show the incorrect answer modal instead of immediately marking incorrect
           showIncorrectModal();
+          return;
+        } else if (e.key === "n") {
+          e.preventDefault(); // keep the "n" out of the note box
+          showNotePanel();
           return;
         }
       }
@@ -2718,7 +2836,7 @@ ${backContent}
     function closeMoveToModal() {
       const modal = document.getElementById("move-to-modal");
       modal.style.display = "none";
-      document.getElementById("move-to-position").blur(); // see closeIncorrectModal
+      document.getElementById("move-to-position").blur(); // see closeTextPanel
     }
 
     function moveToModalOpen() {
