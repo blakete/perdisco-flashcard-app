@@ -1215,9 +1215,14 @@
         // Do not record attempt or advance when canceled
       });
 
-      // Multi-line like the card edit boxes: Enter adds a line, ⌘/Ctrl+Enter submits
+      // Enter submits; ⌘/Ctrl+Enter (or Shift+Enter) adds a line. Enter that confirms an IME composition is left alone.
       input.addEventListener("keydown", function(e) {
-        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        if (e.key !== "Enter" || e.isComposing) return;
+        if (e.metaKey || e.ctrlKey) {
+          e.preventDefault();
+          input.setRangeText("\n", input.selectionStart, input.selectionEnd, "end");
+          input.dispatchEvent(new Event("input")); // grow the box
+        } else if (!e.shiftKey && !e.altKey) {
           e.preventDefault();
           submitBtn.click();
         }
@@ -1332,7 +1337,7 @@
         [["←", "→"], "Previous / next card"],
         [["Space", "↑", "↓"], "Flip card"],
         [["c"], "Mark correct and go to the next card"],
-        [["x"], "Mark incorrect (asks what you got wrong; ⌘/Ctrl+Enter submits)"],
+        [["x"], "Mark incorrect (asks what you got wrong; Enter submits, ⌘/Ctrl+Enter adds a line)"],
       ]},
       { group: "Modes and views", items: [
         [["f"], "Focus mode on / off"],
