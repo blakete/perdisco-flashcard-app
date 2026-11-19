@@ -1206,6 +1206,7 @@
     let currentIndex = 0;
     let showingFront = true;
     let editMode = false;
+    let editEntry = null; // { id, showingFront } captured when edit mode is entered
     let focusMode = false;
     let mistakesHistoryVisible = true; // Track visibility of mistakes history
 
@@ -1547,8 +1548,14 @@
     async function setEditMode(on) {
       // Done (✓) / e saves the card on the way out; if the save fails, stay in edit mode with the draft.
       if (!on && hasUnsavedEdits() && !(await saveCardEdits())) return;
+      // Leaving edit mode returns to the side shown on entry, if the same card is still shown; otherwise the front.
+      if (on && !editMode) editEntry = { id: flashcards[currentIndex]?.id, showingFront };
       editMode = on;
-      if (!editMode) showingFront = true;
+      if (!editMode) {
+        const sameCard = editEntry && flashcards[currentIndex]?.id === editEntry.id;
+        showingFront = sameCard ? editEntry.showingFront : true;
+        editEntry = null;
+      }
       document.body.classList.toggle("editing", editMode);
       document.getElementById("mobile-correct").setAttribute("aria-label", editMode ? "Save card" : "Mark correct");
       document.getElementById("mobile-incorrect").setAttribute("aria-label", editMode ? "Exit edit mode without saving" : "Mark incorrect");
