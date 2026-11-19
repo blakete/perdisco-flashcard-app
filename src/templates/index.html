@@ -875,18 +875,53 @@
       gap: 6px;
       margin-left: auto;
     }
+    /* A tag chip: the name filters by the tag; the × (shown on hover or keyboard focus) removes it from the card */
     .tag-chip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
       min-height: 26px;
       min-width: 0;
-      padding: 0 10px;
       border: 1px solid var(--border);
       border-radius: 13px;
       background: var(--fill);
       color: var(--text-2);
       font-size: 14px;
+    }
+    .tag-chip:hover, .tag-chip:focus-within { background: var(--fill-hover); border-color: var(--border-strong); }
+    .tag-chip-name {
+      min-height: 24px;
+      min-width: 0;
+      padding: 0 10px;
+      border: none;
+      background: none;
+      color: inherit;
+      font: inherit;
       cursor: pointer;
     }
-    .tag-chip:hover { background: var(--fill-hover); border-color: var(--border-strong); }
+    /* A badge on the chip's top-right corner, so showing it never moves the name under the pointer */
+    .tag-chip-remove {
+      display: none;
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      min-width: 0; /* not the 44px touch size of other buttons: it sits on a small chip */
+      min-height: 0;
+      box-sizing: border-box;
+      padding: 0;
+      border: 1px solid var(--border-strong);
+      border-radius: 50%;
+      background: var(--surface);
+      color: var(--text-2);
+      cursor: pointer;
+    }
+    .tag-chip-remove .material-icons { font-size: 13px; }
+    .tag-chip:hover .tag-chip-remove, .tag-chip:focus-within .tag-chip-remove { display: inline-flex; }
+    .tag-chip-remove:hover, .tag-chip-remove:focus-visible { background: var(--danger); border-color: var(--danger); color: #fff; }
     body.editing #tags-info { display: none; }
 
     /* Shortcuts & help panel */
@@ -2100,20 +2135,47 @@
       const el = document.getElementById("tags-info");
       el.innerHTML = "";
       (card.tags || []).forEach(tag => {
-        const chip = document.createElement("button");
+        const chip = document.createElement("span");
         chip.className = "tag-chip";
-        chip.textContent = tag;
-        chip.title = `Show only cards tagged “${tag}”`;
-        chip.addEventListener("click", e => {
+        const name = document.createElement("button");
+        name.className = "tag-chip-name";
+        name.textContent = tag;
+        name.title = `Show only cards tagged “${tag}”`;
+        name.addEventListener("click", e => {
           e.stopPropagation();
-          if (!guardEdits(() => chip.click())) return;
+          if (!guardEdits(() => name.click())) return;
           document.getElementById("tag-filter").value = tag;
           applyCurrentFilter();
           const idx = flashcards.findIndex(c => c.id === card.id);
           currentIndex = idx === -1 ? 0 : idx;
           renderCard();
         });
+        const remove = document.createElement("button");
+        remove.className = "tag-chip-remove";
+        remove.title = `Remove the tag “${tag}” from this card`;
+        remove.setAttribute("aria-label", `Remove tag ${tag}`);
+        const icon = document.createElement("span");
+        icon.className = "material-icons";
+        icon.textContent = "close";
+        remove.appendChild(icon);
+        remove.addEventListener("click", e => {
+          e.stopPropagation();
+          removeTag(card, tag);
+        });
+        chip.append(name, remove);
         el.appendChild(chip);
+      });
+    }
+
+    // Remove one tag from a card, once the server confirms. The card stays on screen even if it
+    // no longer matches the filter; the filter applies again the next time it changes.
+    function removeTag(card, tag) {
+      queueChange(async () => {
+        const tags = (card.tags || []).filter(t => t !== tag);
+        if (!await api("PATCH", `/api/cards/${card.id}`, { tags })) return;
+        card.tags = tags;
+        if (flashcards[currentIndex] === card) renderTagChips(card);
+        showNotice(`Removed the tag “${tag}”.`);
       });
     }
 
